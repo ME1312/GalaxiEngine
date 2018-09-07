@@ -41,10 +41,23 @@ public class GalaxiEngine extends Galaxi {
      * Initialize the Galaxi Engine
      *
      * @see Plugin @Plugin
-     * @param app Main class of the app (annotated with @Plugin)
+     * @param app Main class object of the app (annotated with @Plugin)
      * @return The GalaxiEngine
      */
     public static GalaxiEngine init(Object app) throws Exception {
+        if (Util.isNull(app)) throw new NullPointerException();
+        if (instance == null) {
+            return new GalaxiEngine(PluginInfo.getPluginInfo(app));
+        } else throw new IllegalStateException("Engine already initialized");
+    }
+
+    /**
+     * Initialize the Galaxi Engine
+     *
+     * @param app PluginInfo for the app
+     * @return The GalaxiEngine
+     */
+    public static GalaxiEngine init(PluginInfo app) throws Exception {
         if (Util.isNull(app)) throw new NullPointerException();
         if (instance == null) {
             return new GalaxiEngine(app);
@@ -61,12 +74,10 @@ public class GalaxiEngine extends Galaxi {
     }
 
     @SuppressWarnings("unchecked")
-    private GalaxiEngine(Object app) throws Exception {
-        if (app == null) app = this;
-
+    private GalaxiEngine(PluginInfo app) throws Exception {
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);
-        this.app = PluginInfo.getPluginInfo(app);
+        this.app = (app == null)?engine:app;
         if (GalaxiEngine.class.getPackage().getImplementationVersion() != null)
             engine.setSignature(new Version(GalaxiEngine.class.getPackage().getImplementationVersion()));
 

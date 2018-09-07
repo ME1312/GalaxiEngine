@@ -6,8 +6,8 @@ GalaxiEngine is an engine for use in command line Java applications.
 ## Quick Links
 These are some quick links for common resources of GalaxiEngine.
 
-### How to Install
-> [https://github.com/ME1312/GalaxiEngine/wiki/Install](https://github.com/ME1312/GalaxiEngine/wiki/Install)
+### How to Use
+> [https://github.com/ME1312/GalaxiEngine/wiki/Usage](https://github.com/ME1312/GalaxiEngine/wiki/Usage)
 
 ### Snapshot Downloads
 > [https://src.me1312.net/jenkins/job/GalaxiEngine](https://src.me1312.net/jenkins/job/GalaxiEngine)

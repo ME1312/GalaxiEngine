@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Engine.Standalone;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Log.Logger;
+import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -32,7 +33,7 @@ public class App {
             f.setAccessible(false);
 
             if (!instanceExists) {
-                Constructor m = GalaxiEngine.class.getDeclaredConstructor(Object.class);
+                Constructor m = GalaxiEngine.class.getDeclaredConstructor(PluginInfo.class);
                 m.setAccessible(true);
                 GalaxiEngine engine = (GalaxiEngine) m.newInstance(new Object[]{null});
                 m.setAccessible(false);

@@ -40,7 +40,7 @@ public class DefaultCommands {
                             "  " + System.getProperty("os.name") + ' ' + System.getProperty("os.version") + ',',
                             "  Java " + System.getProperty("java.version") + ',',
                             "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':"")
-                                    + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]":((GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(engine.getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation()))?" [Patched],":",")));
+                                    + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]"+((args.length == 0)?"":","):((GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(engine.getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation()))?" [Patched],":",")));
                     if (engine.getEngineInfo() != engine.getAppInfo())
                         log.message.println("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':"") + ((args.length == 0)?"":","));
 
