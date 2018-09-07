@@ -9,6 +9,7 @@ import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import org.fusesource.jansi.AnsiConsole;
@@ -66,6 +67,8 @@ public class GalaxiEngine extends Galaxi {
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);
         this.app = PluginInfo.getPluginInfo(app);
+        if (GalaxiEngine.class.getPackage().getImplementationVersion() != null)
+            engine.setSignature(new Version(GalaxiEngine.class.getPackage().getImplementationVersion()));
 
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());

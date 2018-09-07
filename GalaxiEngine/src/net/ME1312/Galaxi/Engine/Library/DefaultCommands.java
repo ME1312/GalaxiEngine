@@ -36,12 +36,13 @@ public class DefaultCommands {
             public void command(String handle, String[] args) {
                 if (args.length == 0 || engine.getPluginManager().getPlugins().get(args[0].toLowerCase()) != null) {
                     log.message.println(
-                            "These are the platforms and versions that are running " + ((args.length == 0)?engine.getEngineInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":",
+                            "These are the platforms and versions that are running " + ((args.length == 0)?engine.getAppInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":",
                             "  " + System.getProperty("os.name") + ' ' + System.getProperty("os.version") + ',',
                             "  Java " + System.getProperty("java.version") + ',',
-                            "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':""));
+                            "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':"")
+                                    + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]":((GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(engine.getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation()))?" [Patched],":",")));
                     if (engine.getEngineInfo() != engine.getAppInfo())
-                        log.message.println("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':""));
+                        log.message.println("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':"") + ((args.length == 0)?"":","));
 
                     if (args.length == 0) {
                         log.message.println("");
