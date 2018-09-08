@@ -23,7 +23,6 @@ public class PluginInfo implements ExtraDataHandler {
     private static ArrayList<String> usedNames = new ArrayList<String>();
     private static HashMap<Class<?>, PluginInfo> pluginMap = new HashMap<Class<?>, PluginInfo>();
 
-    private Galaxi engine;
     private Object plugin;
     private String name;
     private String display;
@@ -56,7 +55,7 @@ public class PluginInfo implements ExtraDataHandler {
                 List<String> dependancies = Arrays.asList(mainClass.getAnnotation(Plugin.class).dependencies());
                 List<String> softDependancies = Arrays.asList(mainClass.getAnnotation(Plugin.class).softDependencies());
 
-                PluginInfo plugin = new PluginInfo(Galaxi.getInstance(), main, name, version, authors, description, website, loadBefore, dependancies, softDependancies);
+                PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependancies, softDependancies);
                 plugin.setDisplayName(display);
                 plugin.setSignature(signature);
 
@@ -69,13 +68,12 @@ public class PluginInfo implements ExtraDataHandler {
         return pluginMap.get(mainClass);
     }
 
-    private PluginInfo(Galaxi engine, Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<String> dependencies, List<String> softDependencies) {
-        if (Util.isNull(engine, plugin, name, version, authors)) throw new NullPointerException();
+    private PluginInfo(Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<String> dependencies, List<String> softDependencies) {
+        if (Util.isNull(plugin, name, version, authors)) throw new NullPointerException();
         if (name.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty name");
         if (version.toString().length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty version");
         if (authors.size() == 0) throw new ArrayIndexOutOfBoundsException("Cannot use an empty authors list");
         if (description != null && description.length() == 0) description = null;
-        this.engine = engine;
         this.plugin = plugin;
         this.name = name;
         this.version = version;
@@ -243,6 +241,7 @@ public class PluginInfo implements ExtraDataHandler {
      * @param value Value
      */
     public void setLogger(Logger value) {
+        if (Util.isNull(value)) throw new NullPointerException();
         logger = value;
     }
 
@@ -262,7 +261,7 @@ public class PluginInfo implements ExtraDataHandler {
      * @return Data Folder
      */
     public File getDataFolder() {
-        File dir = new File(engine.getRuntimeDirectory(), "Plugins" + File.separator + name);
+        File dir = new File(Galaxi.getInstance().getRuntimeDirectory(), "Plugins" + File.separator + name);
         if (!dir.exists()) dir.mkdirs();
         return dir;
     }

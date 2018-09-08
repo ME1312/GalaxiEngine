@@ -27,26 +27,19 @@ public class App {
 
     private static void start() {
         try {
-            Field f = GalaxiEngine.class.getDeclaredField("instance");
-            f.setAccessible(true);
-            boolean instanceExists = f.get(null) != null;
-            f.setAccessible(false);
-
-            if (!instanceExists) {
+            if (GalaxiEngine.getInstance() == null) {
                 Constructor m = GalaxiEngine.class.getDeclaredConstructor(PluginInfo.class);
                 m.setAccessible(true);
                 GalaxiEngine engine = (GalaxiEngine) m.newInstance(new Object[]{null});
                 m.setAccessible(false);
 
                 Logger log = engine.getAppInfo().getLogger();
-                log.warn.println("GalaxiEngine is running in standalone mode");
 
                 long begin = Calendar.getInstance().getTime().getTime();
                 log.info.println("", "Searching for Plugins...");
                 int loaded = engine.getPluginManager().loadPlugins(new File(engine.getRuntimeDirectory(), "Plugins"));
                 log.info.println(loaded + " Plugin"+((loaded == 1)?"":"s") + " loaded in " + new DecimalFormat("0.000").format((Calendar.getInstance().getTime().getTime() - begin) / 1000D) + "s");
-
-
+                
                 engine.start(App::stop);
             }
         } catch (Exception e) {

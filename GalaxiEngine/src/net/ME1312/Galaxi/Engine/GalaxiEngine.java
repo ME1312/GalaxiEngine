@@ -6,6 +6,7 @@ import net.ME1312.Galaxi.Engine.Library.Log.SystemLogger;
 import net.ME1312.Galaxi.Event.GalaxiStartEvent;
 import net.ME1312.Galaxi.Event.GalaxiStopEvent;
 import net.ME1312.Galaxi.Galaxi;
+import net.ME1312.Galaxi.Library.Config.YAMLSection;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
@@ -13,12 +14,21 @@ import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import org.fusesource.jansi.AnsiConsole;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.jar.Manifest;
 
 /**
  * Galaxi Engine Main Class
@@ -36,6 +46,7 @@ public class GalaxiEngine extends Galaxi {
 
     private final Container<Boolean> running = new Container<>(false);
     private Runnable onStop = null;
+    private Runnable updateChecker = null;
 
     /**
      * Initialize the Galaxi Engine
@@ -78,8 +89,10 @@ public class GalaxiEngine extends Galaxi {
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);
         this.app = (app == null)?engine:app;
-        if (GalaxiEngine.class.getPackage().getImplementationVersion() != null)
-            engine.setSignature(new Version(GalaxiEngine.class.getPackage().getImplementationVersion()));
+
+        Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
+        if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
+            engine.setSignature(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
 
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
@@ -99,6 +112,7 @@ public class GalaxiEngine extends Galaxi {
         f.setAccessible(false);
 
         this.app.getLogger().info.println("Loading " + engine.getName() + " v" + engine.getVersion().toString() + " Libraries");
+        if (app == null) this.app.getLogger().warn.println("GalaxiEngine is running in standalone mode");
 
         console = new ConsoleReader(this, jline, running);
         DefaultCommands.load(this);
@@ -123,6 +137,30 @@ public class GalaxiEngine extends Galaxi {
                 running.set(true);
                 console.start();
                 pluginManager.executeEvent(new GalaxiStartEvent(this));
+            } catch (Exception e) {}
+
+            if (getEngineInfo() == getAppInfo() || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation())) new Thread(() -> {
+                try {
+                    YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
+                    List<Version> versions = new LinkedList<Version>();
+
+                    Version updversion = getEngineInfo().getVersion();
+                    int updcount = 0;
+                    for (YAMLSection tag : tags.getSectionList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
+                    Collections.sort(versions);
+                    for (Version version : versions) {
+                        if (version.compareTo(updversion) > 0) {
+                            updversion = version;
+                            updcount++;
+                        }
+                    }
+                    if (updcount != 0) {
+                        getAppInfo().getLogger().message.println(getEngineInfo().getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
+                    }
+                } catch (Exception e) {}
+            }).start();
+            try {
+                if (updateChecker != null) updateChecker.run();
             } catch (Exception e) {}
         }
     }
@@ -151,6 +189,15 @@ public class GalaxiEngine extends Galaxi {
 
             System.exit(0);
         }
+    }
+
+    /**
+     * Set the update checker for this app
+     *
+     * @param checker Update Checker
+     */
+    public void setUpdateChecker(Runnable checker) {
+        this.updateChecker = checker;
     }
 
     /**

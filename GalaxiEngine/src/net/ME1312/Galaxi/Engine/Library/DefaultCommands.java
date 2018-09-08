@@ -35,18 +35,19 @@ public class DefaultCommands {
             @Override
             public void command(String handle, String[] args) {
                 if (args.length == 0 || engine.getPluginManager().getPlugins().get(args[0].toLowerCase()) != null) {
+                    boolean patched = GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(engine.getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation());
                     log.message.println(
                             "These are the platforms and versions that are running " + ((args.length == 0)?engine.getAppInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":",
                             "  " + System.getProperty("os.name") + ' ' + System.getProperty("os.version") + ',',
                             "  Java " + System.getProperty("java.version") + ',',
                             "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':"")
-                                    + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]"+((args.length == 0)?"":","):((GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(engine.getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation()))?" [Patched],":",")));
+                                    + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]"+((args.length == 0)?"":","):((patched)?" [Patched],":",")));
                     if (engine.getEngineInfo() != engine.getAppInfo())
                         log.message.println("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':"") + ((args.length == 0)?"":","));
 
                     if (args.length == 0) {
                         log.message.println("");
-                        new Thread(() -> {
+                        if (engine.getEngineInfo() == engine.getAppInfo() || !patched) new Thread(() -> {
                             try {
                                 YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
                                 List<Version> versions = new LinkedList<Version>();
@@ -61,13 +62,18 @@ public class DefaultCommands {
                                         updcount++;
                                     }
                                 }
-                                if (updcount == 0) {
-                                    log.message.println("You are on the latest version.");
-                                } else {
+                                if (updcount != 0) {
                                     log.message.println(engine.getEngineInfo().getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
                                 }
                             } catch (Exception e) {}
                         }).start();
+                        try {
+                            Field f = GalaxiEngine.class.getDeclaredField("updateChecker");
+                            f.setAccessible(true);
+                            Runnable checker = (Runnable) f.get(GalaxiEngine.getInstance());
+                            f.setAccessible(false);
+                            if (checker != null) checker.run();
+                        } catch (Exception e) {}
                     } else {
                         PluginInfo plugin = engine.getPluginManager().getPlugin(args[0]);
                         String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + plugin.getSignature() + ')':"");

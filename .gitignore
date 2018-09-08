@@ -35,6 +35,6 @@ crashlytics-build.properties
 # Hide Others
 /Artifacts/
 /Javadoc/
-/Test/
+/GalaxiTest/
 /build.log
 .DS_STORE
