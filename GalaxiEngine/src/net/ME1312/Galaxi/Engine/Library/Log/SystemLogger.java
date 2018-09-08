@@ -30,12 +30,12 @@ public final class SystemLogger extends OutputStream {
         if (Util.isNull(out, err)) throw new NullPointerException();
         Field f = Logger.class.getDeclaredField("pso");
         f.setAccessible(true);
-        f.set(null, new Container<PrintStream>(new PrintStream(new FileLogger(new ConsoleStream(in, out)))));
+        ((Container<PrintStream>) f.get(null)).set(new PrintStream(new FileLogger(new ConsoleStream(in, out))));
         f.setAccessible(false);
 
         f = Logger.class.getDeclaredField("pse");
         f.setAccessible(true);
-        f.set(null, new Container<PrintStream>(new PrintStream(new FileLogger(new ConsoleStream(in, err)))));
+        ((Container<PrintStream>) f.get(null)).set(new PrintStream(new FileLogger(new ConsoleStream(in, err))));
         f.setAccessible(false);
 
         System.setOut(new PrintStream(new SystemLogger(false)));

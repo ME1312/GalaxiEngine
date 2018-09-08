@@ -44,7 +44,7 @@ public class PluginInfo implements ExtraDataHandler {
         if (!pluginMap.keySet().contains(mainClass)) {
 
             try {
-                String name = mainClass.getAnnotation(Plugin.class).name().replaceAll("#|<|\\$|\\+|%|>|!|`|&|\\*|'|\\||\\{|\\?|\"|=|}|/|\\\\|\\s|@|\\.|\\n", "-");
+                String name = mainClass.getAnnotation(Plugin.class).name().replaceAll("<|>|:|\\*|\\||\\?|\"|/|\\\\|\\n", "-");
                 String display = mainClass.getAnnotation(Plugin.class).name();
                 Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
                 Version signature = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).signature()):null;
