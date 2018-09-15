@@ -122,6 +122,16 @@ public class LogStream {
     }
 
     /**
+     * Print an empty line
+     */
+    public void println() {
+        sync();
+        writing++;
+        write('\n');
+        writing--;
+    }
+
+    /**
      * Print multiple Objects (separated by a new line)
      *
      * @param obj Objects

@@ -47,33 +47,6 @@ public class DefaultCommands {
 
                     if (args.length == 0) {
                         log.message.println("");
-                        if (engine.getEngineInfo() == engine.getAppInfo() || !patched) new Thread(() -> {
-                            try {
-                                YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
-                                List<Version> versions = new LinkedList<Version>();
-
-                                Version updversion = engine.getEngineInfo().getVersion();
-                                int updcount = 0;
-                                for (YAMLSection tag : tags.getSectionList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
-                                Collections.sort(versions);
-                                for (Version version : versions) {
-                                    if (version.compareTo(updversion) > 0) {
-                                        updversion = version;
-                                        updcount++;
-                                    }
-                                }
-                                if (updcount != 0) {
-                                    log.message.println(engine.getEngineInfo().getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
-                                }
-                            } catch (Exception e) {}
-                        }).start();
-                        try {
-                            Field f = GalaxiEngine.class.getDeclaredField("updateChecker");
-                            f.setAccessible(true);
-                            Runnable checker = (Runnable) f.get(GalaxiEngine.getInstance());
-                            f.setAccessible(false);
-                            if (checker != null) checker.run();
-                        } catch (Exception e) {}
                     } else {
                         PluginInfo plugin = engine.getPluginManager().getPlugin(args[0]);
                         String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + plugin.getSignature() + ')':"");
@@ -103,6 +76,13 @@ public class DefaultCommands {
                         log.message.println(title, subtitle);
                         if (plugin.getDescription() != null) log.message.println("", plugin.getDescription());
                     }
+
+                    log.message.println();
+                    try {
+                        if (engine.getEngineInfo().getUpdateChecker() != null) engine.getEngineInfo().getUpdateChecker().run();
+                        if (engine.getAppInfo().getUpdateChecker() != null) engine.getAppInfo().getUpdateChecker().run();
+                        if (args.length > 0 && engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run();
+                    } catch (Exception e) {}
                 } else {
                     log.message.println("There is no plugin with that name");
                 }

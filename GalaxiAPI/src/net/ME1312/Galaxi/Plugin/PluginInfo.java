@@ -36,6 +36,7 @@ public class PluginInfo implements ExtraDataHandler {
     private List<String> softDepend;
 
     private Logger logger = null;
+    private Runnable updateChecker = null;
     private boolean enabled = false;
     private YAMLSection extra = new YAMLSection();
 
@@ -253,6 +254,24 @@ public class PluginInfo implements ExtraDataHandler {
     public Logger getLogger() {
         if (logger == null) logger = new Logger(name);
         return logger;
+    }
+
+    /**
+     * Get the Update Checker for this Plugin
+     *
+     * @return Update Checker
+     */
+    public Runnable getUpdateChecker() {
+        return updateChecker;
+    }
+
+    /**
+     * Set the Update Checker for this Plugin
+     *
+     * @param checker Value
+     */
+    public void setUpdateChecker(Runnable checker) {
+        this.updateChecker = checker;
     }
 
     /**

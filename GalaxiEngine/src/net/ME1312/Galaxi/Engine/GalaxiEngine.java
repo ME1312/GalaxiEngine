@@ -24,16 +24,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;
 
 /**
  * Galaxi Engine Main Class
  */
-@Plugin(name = "GalaxiEngine", version = "3.0.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@Plugin(name = "GalaxiEngine", version = "3.0.1a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
@@ -46,7 +44,6 @@ public class GalaxiEngine extends Galaxi {
 
     private final Container<Boolean> running = new Container<>(false);
     private Runnable onStop = null;
-    private Runnable updateChecker = null;
 
     /**
      * Initialize the Galaxi Engine
@@ -116,6 +113,27 @@ public class GalaxiEngine extends Galaxi {
 
         console = new ConsoleReader(this, jline, running);
         DefaultCommands.load(this);
+
+        engine.setUpdateChecker(() -> {
+            if (engine == this.app || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(this.app.get().getClass().getProtectionDomain().getCodeSource().getLocation())) try {
+                YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
+                List<Version> versions = new LinkedList<Version>();
+
+                Version updversion = getEngineInfo().getVersion();
+                int updcount = 0;
+                for (YAMLSection tag : tags.getSectionList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
+                Collections.sort(versions);
+                for (Version version : versions) {
+                    if (version.compareTo(updversion) > 0) {
+                        updversion = version;
+                        updcount++;
+                    }
+                }
+                if (updcount != 0) {
+                    getAppInfo().getLogger().message.println(engine.getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
+                }
+            } catch (Exception e) {}
+        });
     }
 
     /**
@@ -139,29 +157,15 @@ public class GalaxiEngine extends Galaxi {
                 pluginManager.executeEvent(new GalaxiStartEvent(this));
             } catch (Exception e) {}
 
-            if (getEngineInfo() == getAppInfo() || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation())) new Thread(() -> {
-                try {
-                    YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
-                    List<Version> versions = new LinkedList<Version>();
-
-                    Version updversion = getEngineInfo().getVersion();
-                    int updcount = 0;
-                    for (YAMLSection tag : tags.getSectionList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
-                    Collections.sort(versions);
-                    for (Version version : versions) {
-                        if (version.compareTo(updversion) > 0) {
-                            updversion = version;
-                            updcount++;
-                        }
-                    }
-                    if (updcount != 0) {
-                        getAppInfo().getLogger().message.println(getEngineInfo().getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
-                    }
-                } catch (Exception e) {}
-            }).start();
-            try {
-                if (updateChecker != null) updateChecker.run();
-            } catch (Exception e) {}
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        if (engine.getUpdateChecker() != null) engine.getUpdateChecker().run();
+                        if (engine != app && app.getUpdateChecker() != null) app.getUpdateChecker().run();
+                    } catch (Exception e) {}
+                }
+            }, 0, TimeUnit.DAYS.toMillis(2));
         }
     }
 
@@ -189,15 +193,6 @@ public class GalaxiEngine extends Galaxi {
 
             System.exit(0);
         }
-    }
-
-    /**
-     * Set the update checker for this app
-     *
-     * @param checker Update Checker
-     */
-    public void setUpdateChecker(Runnable checker) {
-        this.updateChecker = checker;
     }
 
     /**
