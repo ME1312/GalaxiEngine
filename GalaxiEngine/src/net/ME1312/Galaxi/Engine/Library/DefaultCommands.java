@@ -45,11 +45,9 @@ public class DefaultCommands {
                     if (engine.getEngineInfo() != engine.getAppInfo())
                         log.message.println("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':"") + ((args.length == 0)?"":","));
 
-                    if (args.length == 0) {
-                        log.message.println("");
-                    } else {
+                    if (args.length > 0) {
                         PluginInfo plugin = engine.getPluginManager().getPlugin(args[0]);
-                        String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + plugin.getSignature() + ')':"");
+                        String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"");
                         String subtitle = "    by ";
                         int i = 0;
                         for (String author : plugin.getAuthors()) {
