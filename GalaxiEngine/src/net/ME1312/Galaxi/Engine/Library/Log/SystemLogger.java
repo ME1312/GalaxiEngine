@@ -60,7 +60,7 @@ public final class SystemLogger extends OutputStream {
         String origin = java.lang.System.class.getCanonicalName();
         for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
             if (i > 1 && getKnownClasses().contains(element.getClassName())) {
-                origin = element.getClassName().replaceFirst("\\$.*", "");
+                origin = element.getClassName().replaceAll("\\$([^.$\\d]+)", ".$1").replaceAll("\\$[\\d]+", "");
                 break;
             }
             i++;

@@ -55,14 +55,15 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
     /**
      * Load plugins
      *
-     * @param directory Directory to search
+     * @param directories Directories to search
      */
-    public int loadPlugins(File directory) {
-        directory.mkdirs();
-
+    public int loadPlugins(File... directories) {
         LinkedList<File> pljars = new LinkedList<File>();
-        if (directory.exists() && directory.isDirectory()) for (File file : directory.listFiles()) {
-            if (file.getName().endsWith(".jar")) pljars.add(file);
+        for (File directory : directories) {
+            directory.mkdirs();
+            if (directory.exists() && directory.isDirectory()) for (File file : directory.listFiles()) {
+                if (file.getName().endsWith(".jar")) pljars.add(file);
+            }
         }
         if (pljars.size() > 0) {
             long begin = Calendar.getInstance().getTime().getTime();
@@ -192,6 +193,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
              * (Ordered by LoadBefore & Dependencies)
              */
             int i = 0;
+            int unstick = 0;
             while (plugins.size() > 0) {
                 List<String> loaded = new ArrayList<String>();
                 for (PluginInfo plugin : plugins.values()) {
@@ -199,19 +201,31 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                         boolean load = true;
                         for (String depend : plugin.getDependancies()) {
                             if (plugins.keySet().contains(depend.toLowerCase())) {
-                                load = false;
+                                if (unstick != 2) {
+                                    load = false;
+                                } else {
+                                    throw new IllegalPluginException(new IllegalStateException("Infinite dependency loop: " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
+                                }
                             } else if (!this.plugins.keySet().contains(depend.toLowerCase())) {
                                 throw new IllegalPluginException(new IllegalStateException("Unknown dependency: " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
                             }
                         }
                         for (String softdepend : plugin.getSoftDependancies()) {
                             if (plugins.keySet().contains(softdepend.toLowerCase())) {
-                                load = false;
+                                if (unstick != 3) {
+                                    load = false;
+                                } else {
+                                    engine.getAppInfo().getLogger().warn.println(new IllegalPluginException(new IllegalStateException("Infinite soft dependency loop: " + softdepend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString()));
+                                }
                             }
                         }
                         for (String loadafter : plugin.getExtra("galaxi.plugin.loadafter").asRawStringList()) {
                             if (plugins.keySet().contains(loadafter.toLowerCase())) {
-                                load = false;
+                                if (unstick != 1) {
+                                    load = false;
+                                } else {
+                                    engine.getAppInfo().getLogger().warn.println(new IllegalPluginException(new IllegalStateException("Infinite load before loop: " + loadafter), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString()));
+                                }
                             }
                         }
                         if (load) try {
@@ -248,8 +262,11 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                     plugins.remove(name);
                 }
                 if (progress == 0 && plugins.size() != 0) {
-                    engine.getAppInfo().getLogger().error.println(new IllegalStateException("Couldn't load more plugins yet " + plugins.size() + " remain unloaded"));
-                    break;
+                    unstick++;
+                    if (unstick > 3) {
+                        engine.getAppInfo().getLogger().error.println(new IllegalStateException("Couldn't load more plugins yet " + plugins.size() + " remain unloaded"));
+                        break;
+                    }
                 }
             }
             return i;

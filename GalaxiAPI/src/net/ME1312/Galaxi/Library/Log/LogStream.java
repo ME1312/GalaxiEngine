@@ -4,29 +4,31 @@ import net.ME1312.Galaxi.Library.Container;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 /**
  * Log Stream Class
  */
-public class LogStream {
+public final class LogStream {
     private static LogStream last = null;
-    private String prefix;
+    private Logger logger;
     private String name;
     private Container<PrintStream> stream;
     private boolean first = true;
     private Thread threadwriting = null;
     protected long writing = 0;
 
-    protected LogStream(String prefix, String name, Container<PrintStream> stream) {
-        this.prefix = prefix;
+    LogStream(Logger logger, String name, Container<PrintStream> stream) {
+        this.logger = logger;
         this.name = name;
         this.stream = stream;
     }
 
-    protected String prefix() {
-        return "[" + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + "] [" + prefix + File.separator + name + "] > ";
+    String prefix() {
+        return "[" + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + "] [" + logger.prefix + File.separator + name + "] > ";
     }
 
     /**
@@ -42,6 +44,21 @@ public class LogStream {
         } else {
             for (char c : obj.toString().toCharArray()) write(c);
         }
+        writing--;
+    }
+
+    /**
+     * Print an Exception
+     *
+     * @param err Exception
+     */
+    public void print(Throwable err) {
+        sync();
+        writing++;
+        StringWriter sw = new StringWriter();
+        err.printStackTrace(new PrintWriter(sw));
+        String s = sw.toString();
+        for (char c : s.substring(0, s.length() - 1).toCharArray()) write(c);
         writing--;
     }
 
@@ -146,6 +163,22 @@ public class LogStream {
                 for (char c : OBJ.toString().toCharArray()) write(c);
             }
             write('\n');
+        }
+        writing--;
+    }
+
+    /**
+     * Print multiple Exceptions (separated by a new line)
+     *
+     * @param err Exceptions
+     */
+    public void println(Throwable... err) {
+        sync();
+        writing++;
+        for (Throwable e : err) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            for (char c : sw.toString().toCharArray()) write(c);
         }
         writing--;
     }
