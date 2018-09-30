@@ -2,19 +2,12 @@ package net.ME1312.Galaxi.Engine.Library;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
-import net.ME1312.Galaxi.Library.Config.YAMLSection;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Util;
-import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.Command;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -32,21 +25,51 @@ public class DefaultCommands {
         Logger log = engine.getAppInfo().getLogger();
         
         new Command(engine.getEngineInfo()) {
+            private boolean checking = false;
+
             @Override
             public void command(String handle, String[] args) {
                 if (args.length == 0 || engine.getPluginManager().getPlugins().get(args[0].toLowerCase()) != null) {
-                    boolean patched = GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(engine.getAppInfo().get().getClass().getProtectionDomain().getCodeSource().getLocation());
+                    String osarch;
+                    if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+                        String arch = System.getenv("PROCESSOR_ARCHITECTURE");
+                        String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
+
+                        osarch = arch != null && arch.endsWith("64") || wow64Arch != null && wow64Arch.endsWith("64")?"x64":"x86";
+                    } else if (System.getProperty("os.arch").endsWith("86")) {
+                        osarch = "x86";
+                    } else if (System.getProperty("os.arch").endsWith("64")) {
+                        osarch = "x64";
+                    } else {
+                        osarch = System.getProperty("os.arch");
+                    }
+
+                    String javaarch = null;
+                    switch (System.getProperty("sun.arch.data.model")) {
+                        case "32":
+                            javaarch = "x86";
+                            break;
+                        case "64":
+                            javaarch = "x64";
+                            break;
+                        default:
+                            if (!System.getProperty("sun.arch.data.model").equalsIgnoreCase("unknown"))
+                                javaarch = System.getProperty("sun.arch.data.model");
+                    }
+
                     log.message.println(
-                            "These are the platforms and versions that are running " + ((args.length == 0)?engine.getAppInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":",
-                            "  " + System.getProperty("os.name") + ' ' + System.getProperty("os.version") + ',',
-                            "  Java " + System.getProperty("java.version") + ',',
-                            "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':"")
-                                    + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]"+((args.length == 0)?"":","):((patched)?" [Patched],":",")));
+                            "These are the platforms and versions that are used to run " + ((args.length == 0)?engine.getAppInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":",
+                            "  " + System.getProperty("os.name") + ((!System.getProperty("os.name").toLowerCase().startsWith("windows"))?' ' + System.getProperty("os.version"):"") + ((osarch != null)?" [" + osarch + ']':"") + ",",
+                            "  Java " + System.getProperty("java.version") + ((javaarch != null)?" [" + javaarch + ']':"") + ",",
+                            "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':"") + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]"+((args.length == 0)?"":","):","));
                     if (engine.getEngineInfo() != engine.getAppInfo())
                         log.message.println("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':"") + ((args.length == 0)?"":","));
 
                     if (args.length > 0) {
-                        PluginInfo plugin = engine.getPluginManager().getPlugin(args[0]);
+                        PluginInfo plugin = engine.getPluginManager().getPlugin(args[0].toLowerCase());
+                        for (PluginInfo info : searchDependencies(plugin)) {
+                            log.message.println("  " + info.getDisplayName() + " v" + info.getVersion().toExtendedString() + ((info.getSignature() != null)?" (" + info.getSignature() + ')':"") + ',');
+                        }
                         String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"");
                         String subtitle = "    by ";
                         int i = 0;
@@ -76,20 +99,57 @@ public class DefaultCommands {
                     }
 
                     log.message.println();
-                    try {
-                        if (engine.getEngineInfo().getUpdateChecker() != null) engine.getEngineInfo().getUpdateChecker().run();
-                        if (engine.getAppInfo().getUpdateChecker() != null) engine.getAppInfo().getUpdateChecker().run();
-                        if (args.length > 0 && engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run();
-                    } catch (Exception e) {}
+                    if (!checking) {
+                        checking = true;
+                        new Thread(() -> {
+                            if (engine.getEngineInfo().getUpdateChecker() != null) Util.isException(() -> engine.getEngineInfo().getUpdateChecker().run());
+                            if (engine.getAppInfo().getUpdateChecker() != null) Util.isException(() -> engine.getAppInfo().getUpdateChecker().run());
+                            if (args.length > 0) {
+                                for (PluginInfo info : searchDependencies(engine.getPluginManager().getPlugins().get(args[0].toLowerCase()))) if (info.getUpdateChecker() != null) Util.isException(() -> info.getUpdateChecker().run());
+                                if (engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) Util.isException(() -> engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run());
+                            }
+                            checking = false;
+                        }).start();
+                    }
                 } else {
                     log.message.println("There is no plugin with that name");
                 }
             }
-        }.usage("[plugin]").description("Gets the version of the System, Engine, and the specified Plugin").help(
+
+            private List<PluginInfo> searchDependencies(PluginInfo info) {
+                List<PluginInfo> used = new ArrayList<PluginInfo>();
+                used.add(info);
+                return searchDependencies(info, used);
+            }
+
+            private List<PluginInfo> searchDependencies(PluginInfo info, List<PluginInfo> used) {
+                LinkedList<PluginInfo> output = new LinkedList<PluginInfo>();
+
+                for (String depend : info.getDependancies()) {
+                    if (engine.getPluginManager().getPlugins().get(depend.toLowerCase()) != null) {
+                        output.addAll(searchDependencies(engine.getPluginManager().getPlugin(depend.toLowerCase()), used));
+                    }
+                }
+
+                for (String softdepend : info.getSoftDependancies()) {
+                    if (engine.getPluginManager().getPlugins().get(softdepend.toLowerCase()) != null) {
+                        output.addAll(searchDependencies(engine.getPluginManager().getPlugin(softdepend.toLowerCase()), used));
+                    }
+                }
+
+                if (!used.contains(info)) {
+                    output.add(info);
+                    used.add(info);
+                }
+
+                return output;
+            }
+        }.usage("[plugin]").description("Gets the version of the System, Engine, App, and the specified Plugin").help(
                 "This command will print what OS you're running, your OS version,",
-                "your Java version, and the GalaxiEngine version.",
+                "your Java version, the GalaxiEngine version, and the app version.",
                 "",
-                "If the [plugin] option is provided, it will print information about the specified plugin as well.",
+                "If the [plugin] option is provided, it will additionally print information about",
+                "the specified plugin and it's dependencies.",
                 "",
                 "Examples:",
                 "  /version",

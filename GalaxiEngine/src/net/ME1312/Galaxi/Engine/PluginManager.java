@@ -77,7 +77,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                 try {
                     JarFile jar = new JarFile(file);
                     Enumeration<JarEntry> entries = jar.entries();
-                    PluginClassLoader loader = new PluginClassLoader(this.getClass().getClassLoader(), file.toURI().toURL());
+                    PluginClassLoader loader = new PluginClassLoader(this.getClass().getClassLoader(), file);
                     List<String> contents = new ArrayList<String>();
 
                     loader.setDefaultClass(ClassNotFoundException.class);
@@ -105,13 +105,12 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                     loader.setDefaultClass(null);
 
                     if (!isplugin) {
-                        new PluginClassLoader(this.getClass().getClassLoader(), file.toURI().toURL());
                         engine.getAppInfo().getLogger().info.println("Loaded Library: " + file.getName());
                     }
                     knownClasses.addAll(contents);
                     jar.close();
                 } catch (Throwable e) {
-                    engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Problem searching plugin jar: " + file.getName()));
+                    engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Problem searching possible plugin jar: " + file.getName()));
                 }
             }
 
@@ -144,8 +143,14 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                 try {
                                     PluginInfo plugin = PluginInfo.getPluginInfo(obj);
                                     if (plugins.keySet().contains(plugin.getName().toLowerCase()))
-                                        engine.getAppInfo().getLogger().warn.println("Duplicate plugin: " + plugin.getName().toLowerCase());
+                                        engine.getAppInfo().getLogger().warn.println("Duplicate plugin: " + plugin.getName());
                                     plugin.addExtra("galaxi.plugin.loadafter", new ArrayList<String>());
+                                    if (loader.getFiles().length > 0 && loader.getFiles()[0] != null) {
+                                        Field f = PluginInfo.class.getDeclaredField("dir");
+                                        f.setAccessible(true);
+                                        f.set(plugin, new File(loader.getFiles()[0].getParentFile(), plugin.getName()));
+                                        f.setAccessible(false);
+                                    }
                                     plugins.put(plugin.getName().toLowerCase(), plugin);
                                 } catch (Throwable e) {
                                     engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main));
@@ -204,7 +209,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                 if (unstick != 2) {
                                     load = false;
                                 } else {
-                                    throw new IllegalPluginException(new IllegalStateException("Infinite dependency loop: " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
+                                    throw new IllegalPluginException(new IllegalStateException("Infinite dependency loop: " + plugin.getName() + " -> " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
                                 }
                             } else if (!this.plugins.keySet().contains(depend.toLowerCase())) {
                                 throw new IllegalPluginException(new IllegalStateException("Unknown dependency: " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
@@ -215,7 +220,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                 if (unstick != 3) {
                                     load = false;
                                 } else {
-                                    engine.getAppInfo().getLogger().warn.println(new IllegalPluginException(new IllegalStateException("Infinite soft dependency loop: " + softdepend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString()));
+                                    engine.getAppInfo().getLogger().warn.println(new IllegalStateException("Infinite soft dependency loop: " + plugin.getName() + " -> " + softdepend));
                                 }
                             }
                         }
@@ -224,7 +229,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                 if (unstick != 1) {
                                     load = false;
                                 } else {
-                                    engine.getAppInfo().getLogger().warn.println(new IllegalPluginException(new IllegalStateException("Infinite load before loop: " + loadafter), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString()));
+                                    engine.getAppInfo().getLogger().warn.println(new IllegalStateException("Infinite load before loop: " + loadafter + " -> " + plugin.getName()));
                                 }
                             }
                         }
@@ -267,7 +272,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                         engine.getAppInfo().getLogger().error.println(new IllegalStateException("Couldn't load more plugins yet " + plugins.size() + " remain unloaded"));
                         break;
                     }
-                }
+                } else unstick = 0;
             }
             return i;
         } else return 0;

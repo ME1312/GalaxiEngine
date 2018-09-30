@@ -1,5 +1,7 @@
 package net.ME1312.Galaxi.Engine.Library;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Iterator;
@@ -12,14 +14,16 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class PluginClassLoader extends URLClassLoader {
     private static Set<PluginClassLoader> loaders = new CopyOnWriteArraySet<PluginClassLoader>();
     private Class<?> defaultClass = null;
+    private File[] files;
 
     /**
      * Load Classes from URLs
      *
-     * @param urls URLs
+     * @param files Files
      */
-    public PluginClassLoader(URL[] urls) {
-        super(urls);
+    public PluginClassLoader(File[] files) {
+        super(toSuper(files));
+        this.files = files;
         loaders.add(this);
     }
 
@@ -27,11 +31,36 @@ public class PluginClassLoader extends URLClassLoader {
      * Load Classes from URLs with a parent loader
      *
      * @param parent Parent loader
-     * @param urls URLs
+     * @param files Files
      */
-    public PluginClassLoader(ClassLoader parent, URL... urls) {
-        super(urls, parent);
+    public PluginClassLoader(ClassLoader parent, File... files) {
+        super(toSuper(files), parent);
+        this.files = files;
         loaders.add(this);
+    }
+
+    /*
+     * Convert File[] to URL[] for Super
+     */
+    private static URL[] toSuper(File[] files) {
+        URL[] result = new URL[files.length];
+        for (int i = 0; i < files.length; i++) {
+            try {
+                result[i] = files[i].toURI().toURL();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Get the files used by this ClassLoader
+     *
+     * @return Loaded Files
+     */
+    public File[] getFiles() {
+        return files.clone();
     }
 
     /**

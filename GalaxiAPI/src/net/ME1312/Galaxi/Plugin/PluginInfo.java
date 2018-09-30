@@ -35,6 +35,7 @@ public class PluginInfo implements ExtraDataHandler {
     private List<String> depend;
     private List<String> softDepend;
 
+    private File dir = new File(System.getProperty("user.dir"));
     private Logger logger = null;
     private Runnable updateChecker = null;
     private boolean enabled = false;
@@ -280,7 +281,6 @@ public class PluginInfo implements ExtraDataHandler {
      * @return Data Folder
      */
     public File getDataFolder() {
-        File dir = new File(Galaxi.getInstance().getRuntimeDirectory(), "Plugins" + File.separator + name);
         if (!dir.exists()) dir.mkdirs();
         return dir;
     }
