@@ -7,14 +7,13 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.Calendar;
 
 /**
  * Galaxi Standalone App
  */
-public class App {
+public class StandaloneMode {
 
     /**
      * Galaxi Standalone Launch Method
@@ -40,7 +39,7 @@ public class App {
                 int loaded = engine.getPluginManager().loadPlugins(new File(engine.getRuntimeDirectory(), "Plugins"));
                 log.info.println(loaded + " Plugin"+((loaded == 1)?"":"s") + " loaded in " + new DecimalFormat("0.000").format((Calendar.getInstance().getTime().getTime() - begin) / 1000D) + "s");
                 
-                engine.start(App::stop);
+                engine.start(StandaloneMode::stop);
             }
         } catch (Exception e) {
             e.printStackTrace();
