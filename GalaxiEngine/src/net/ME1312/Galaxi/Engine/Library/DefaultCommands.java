@@ -125,15 +125,9 @@ public class DefaultCommands {
             private List<PluginInfo> searchDependencies(PluginInfo info, List<PluginInfo> used) {
                 LinkedList<PluginInfo> output = new LinkedList<PluginInfo>();
 
-                for (String depend : info.getDependancies()) {
-                    if (engine.getPluginManager().getPlugins().get(depend.toLowerCase()) != null) {
-                        output.addAll(searchDependencies(engine.getPluginManager().getPlugin(depend.toLowerCase()), used));
-                    }
-                }
-
-                for (String softdepend : info.getSoftDependancies()) {
-                    if (engine.getPluginManager().getPlugins().get(softdepend.toLowerCase()) != null) {
-                        output.addAll(searchDependencies(engine.getPluginManager().getPlugin(softdepend.toLowerCase()), used));
+                for (PluginInfo.Dependency depend : info.getDependancies()) {
+                    if (engine.getPluginManager().getPlugins().get(depend.getName().toLowerCase()) != null) {
+                        output.addAll(searchDependencies(engine.getPluginManager().getPlugin(depend.getName().toLowerCase()), used));
                     }
                 }
 

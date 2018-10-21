@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Plugin;
 
-import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Config.YAMLSection;
 import net.ME1312.Galaxi.Library.Config.YAMLValue;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
@@ -32,8 +31,7 @@ public class PluginInfo implements ExtraDataHandler {
     private String desc;
     private URL website;
     private List<String> loadBefore;
-    private List<String> depend;
-    private List<String> softDepend;
+    private List<Dependency> depend;
 
     private File dir = new File(System.getProperty("user.dir"));
     private Logger logger = null;
@@ -41,6 +39,63 @@ public class PluginInfo implements ExtraDataHandler {
     private boolean enabled = false;
     private YAMLSection extra = new YAMLSection();
 
+    public static class Dependency {
+        private String name;
+        private Version minversion, maxversion;
+        private boolean required;
+
+        private Dependency(String name, Version minversion, Version maxversion, boolean required) {
+            if (Util.isNull(name, required)) throw new NullPointerException();
+            this.name = name;
+            this.minversion = minversion;
+            this.maxversion = maxversion;
+            this.required = required;
+        }
+
+        /**
+         * Get the name of the Dependency
+         *
+         * @return Dependency name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Get the minimum required version of the Dependency
+         *
+         * @return Minimum required version (null for all)
+         */
+        public Version getMinVersion() {
+            return minversion;
+        }
+
+        /**
+         * Get the maximum allowed version of the Dependency
+         *
+         * @return Maximum allowed version (null for all)
+         */
+        public Version getMaxVersion() {
+            return maxversion;
+        }
+
+        /**
+         * Get if this Dependency is required
+         *
+         * @return Required Dependency Status
+         */
+        public boolean isRequired() {
+            return required;
+        }
+    }
+
+    /**
+     * Get or register PluginInfo for objects tagged with @Plugin
+     *
+     * @param main Class tagged with @Plugin
+     * @return PluginInfo
+     * @throws InvocationTargetException
+     */
     public static PluginInfo getPluginInfo(Object main) throws InvocationTargetException {
         Class<?> mainClass = main.getClass();
         if (!pluginMap.keySet().contains(mainClass)) {
@@ -54,23 +109,32 @@ public class PluginInfo implements ExtraDataHandler {
                 String description = (mainClass.getAnnotation(Plugin.class).description().length() > 0)?mainClass.getAnnotation(Plugin.class).description():null;
                 URL website = (mainClass.getAnnotation(Plugin.class).website().length() > 0)?new URL(mainClass.getAnnotation(Plugin.class).website()):null;
                 List<String> loadBefore = Arrays.asList(mainClass.getAnnotation(Plugin.class).loadBefore());
-                List<String> dependancies = Arrays.asList(mainClass.getAnnotation(Plugin.class).dependencies());
-                List<String> softDependancies = Arrays.asList(mainClass.getAnnotation(Plugin.class).softDependencies());
+                List<Dependency> dependencies = new LinkedList<Dependency>();
+                for (net.ME1312.Galaxi.Plugin.Dependency dependency : mainClass.getAnnotation(Plugin.class).dependencies()) {
+                    String dname = dependency.name().replaceAll("<|>|:|\\*|\\||\\?|\"|/|\\\\|\\n", "-");
+                    Version dminversion = (dependency.minVersion().length() > 0)?Version.fromString(dependency.minVersion()):null;
+                    Version dmaxversion = (dependency.maxVersion().length() > 0)?Version.fromString(dependency.maxVersion()):null;
+                    boolean drequired = dependency.required();
 
-                PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependancies, softDependancies);
+                    if (dname.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty dependency name");
+                    if (dminversion != null && dmaxversion != null && dminversion.equals(dmaxversion)) throw new IllegalArgumentException("Cannot use the same dependency version for min and max");
+                    dependencies.add(new Dependency(dname, dminversion, dmaxversion, drequired));
+                }
+
+                PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependencies);
                 plugin.setDisplayName(display);
                 plugin.setSignature(signature);
 
                 pluginMap.put(mainClass, plugin);
                 usedNames.add(name.toLowerCase());
             } catch (Throwable e) {
-                throw new IllegalPluginException(e, "Could not load plugin data from main class: " + mainClass.getCanonicalName());
+                throw new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main);
             }
         }
         return pluginMap.get(mainClass);
     }
 
-    private PluginInfo(Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<String> dependencies, List<String> softDependencies) {
+    private PluginInfo(Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<Dependency> dependencies) {
         if (Util.isNull(plugin, name, version, authors)) throw new NullPointerException();
         if (name.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty name");
         if (version.toString().length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty version");
@@ -84,7 +148,6 @@ public class PluginInfo implements ExtraDataHandler {
         this.website = website;
         this.loadBefore = (loadBefore == null)?Collections.emptyList():loadBefore;
         this.depend = (dependencies == null)?Collections.emptyList():dependencies;
-        this.softDepend = (softDependencies == null)?Collections.emptyList():softDependencies;
     }
 
     /**
@@ -206,17 +269,8 @@ public class PluginInfo implements ExtraDataHandler {
      *
      * @return Dependencies List
      */
-    public List<String> getDependancies() {
+    public List<Dependency> getDependancies() {
         return this.depend;
-    }
-
-    /**
-     * Gets the Soft Dependencies List
-     *
-     * @return Soft Dependencies List
-     */
-    public List<String> getSoftDependancies() {
-        return this.softDepend;
     }
 
     /**

@@ -7,7 +7,9 @@ import net.ME1312.Galaxi.Library.Event.EventHandler;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.Command;
+import net.ME1312.Galaxi.Plugin.Dependency;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
@@ -91,8 +93,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                 Class<?> clazz = loader.loadClass(cname);
                                 if (clazz.isAnnotationPresent(Plugin.class)) {
                                     NamedContainer<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.keySet().contains(loader))?classes.get(loader):new NamedContainer<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
-                                    for (String dependancy : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.name().add(dependancy);
-                                    for (String dependancy : clazz.getAnnotation(Plugin.class).softDependencies()) jarmap.name().add(dependancy);
+                                    for (Dependency dependancy : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.name().add(dependancy.name());
                                     jarmap.get().put(clazz.getAnnotation(Plugin.class).name(), cname);
                                     classes.put(loader, jarmap);
                                     isplugin = true;
@@ -142,8 +143,20 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                 Object obj = clazz.getConstructor().newInstance();
                                 try {
                                     PluginInfo plugin = PluginInfo.getPluginInfo(obj);
-                                    if (plugins.keySet().contains(plugin.getName().toLowerCase()))
-                                        engine.getAppInfo().getLogger().warn.println("Duplicate plugin: " + plugin.getName());
+                                    if (plugins.keySet().contains(plugin.getName().toLowerCase())) {
+                                        if (engine.getEngineInfo().getName().equalsIgnoreCase(plugin.getName())) {
+                                            throw new IllegalStateException("Plugin name cannot be the same as the Engine's name");
+                                        } else if (engine.getAppInfo().getName().equalsIgnoreCase(plugin.getName())) {
+                                            throw new IllegalStateException("Plugin name cannot be the same as the App's name");
+                                        } else {
+                                            IllegalStateException e = new IllegalStateException("Duplicate Plugin: " + plugin.getName());
+                                            if (plugins.get(plugin.getName().toLowerCase()).getVersion().compareTo(plugin.getVersion()) < 0) {
+                                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main));
+                                            } else {
+                                                throw e;
+                                            }
+                                        }
+                                    }
                                     plugin.addExtra("galaxi.plugin.loadafter", new ArrayList<String>());
                                     if (loader.getFiles().length > 0 && loader.getFiles()[0] != null) {
                                         Field f = PluginInfo.class.getDeclaredField("dir");
@@ -152,13 +165,15 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                         f.setAccessible(false);
                                     }
                                     plugins.put(plugin.getName().toLowerCase(), plugin);
+                                } catch (IllegalPluginException e) {
+                                    engine.getAppInfo().getLogger().error.println(e);
                                 } catch (Throwable e) {
                                     engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main));
                                 }
-                            } catch (ClassCastException e) {
-                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Main class isn't annotated as a SubPlugin: " + main));
                             } catch (InvocationTargetException e) {
                                 engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e.getTargetException(), "Uncaught exception occurred while loading main class: " + main));
+                            } catch (ClassCastException e) {
+                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Main class isn't annotated as a SubPlugin: " + main));
                             } catch (Throwable e) {
                                 engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load main class: " + main));
                             }
@@ -204,23 +219,42 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                 for (PluginInfo plugin : plugins.values()) {
                     try {
                         boolean load = true;
-                        for (String depend : plugin.getDependancies()) {
-                            if (plugins.keySet().contains(depend.toLowerCase())) {
-                                if (unstick != 2) {
+                        for (PluginInfo.Dependency depend : plugin.getDependancies()) {
+                            IllegalStateException e = null;
+                            if (plugins.keySet().contains(depend.getName().toLowerCase())) {
+                                if (unstick != ((depend.isRequired())?2:3)) {
                                     load = false;
+                                    break;
                                 } else {
-                                    throw new IllegalPluginException(new IllegalStateException("Infinite dependency loop: " + plugin.getName() + " -> " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
+                                    e = new IllegalStateException("Infinite" + ((depend.isRequired())?"":" soft") + " dependency loop: " + plugin.getName() + " -> " + depend.getName());
                                 }
-                            } else if (!this.plugins.keySet().contains(depend.toLowerCase())) {
-                                throw new IllegalPluginException(new IllegalStateException("Unknown dependency: " + depend), "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
-                            }
-                        }
-                        for (String softdepend : plugin.getSoftDependancies()) {
-                            if (plugins.keySet().contains(softdepend.toLowerCase())) {
-                                if (unstick != 3) {
-                                    load = false;
+                            } else if (engine.getEngineInfo().getName().equalsIgnoreCase(depend.getName()) || engine.getAppInfo().getName().equalsIgnoreCase(depend.getName()) || this.plugins.keySet().contains(depend.getName().toLowerCase())) {
+                                Version version = (engine.getEngineInfo().getName().equalsIgnoreCase(depend.getName()))?engine.getEngineInfo().getVersion():((engine.getAppInfo().getName().equalsIgnoreCase(depend.getName()))?engine.getAppInfo().getVersion():this.plugins.get(depend.getName().toLowerCase()).getVersion());
+                                if (depend.getMinVersion() == null || version.compareTo(depend.getMinVersion()) >= 0) {
+                                    if (!(depend.getMaxVersion() == null || version.compareTo(depend.getMaxVersion()) < 0)) {
+                                        e = new IllegalStateException("Dependency version is too new: " + depend.getName() + " v" + plugin.getVersion().toString() + " (should be below " + depend.getMaxVersion() + ")");
+                                    }
                                 } else {
-                                    engine.getAppInfo().getLogger().warn.println(new IllegalStateException("Infinite soft dependency loop: " + plugin.getName() + " -> " + softdepend));
+                                    e = new IllegalStateException("Dependency version is too old: " + depend.getName() + " v" + plugin.getVersion().toString() + " (should be at or above " + depend.getMinVersion() + ")");
+                                }
+                            } else if (depend.isRequired()) {
+                                String version = null;
+                                if (depend.getMinVersion() != null && depend.getMaxVersion() != null) {
+                                    version = depend.getMinVersion() + " - " + depend.getMaxVersion();
+                                } else if (depend.getMaxVersion() != null) {
+                                    version = "<" + depend.getMaxVersion();
+                                } else if (depend.getMinVersion() != null) {
+                                    version = depend.getMinVersion() + "+";
+                                }
+
+                                e = new IllegalStateException("Unknown dependency: " + depend.getName() + ((version == null)?"":" "+version));
+                            }
+
+                            if (e != null) {
+                                if (depend.isRequired()) {
+                                    throw new IllegalPluginException(e, "Cannot meet requirements for plugin: " + plugin.getName() + " v" + plugin.getVersion().toString());
+                                } else {
+                                    engine.getAppInfo().getLogger().warn.println(e);
                                 }
                             }
                         }
@@ -228,6 +262,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                             if (plugins.keySet().contains(loadafter.toLowerCase())) {
                                 if (unstick != 1) {
                                     load = false;
+                                    break;
                                 } else {
                                     engine.getAppInfo().getLogger().warn.println(new IllegalStateException("Infinite load before loop: " + loadafter + " -> " + plugin.getName()));
                                 }

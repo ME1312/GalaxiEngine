@@ -31,7 +31,7 @@ import java.util.jar.Manifest;
 /**
  * Galaxi Engine Main Class
  */
-@Plugin(name = "GalaxiEngine", version = "3.0.1a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@Plugin(name = "GalaxiEngine", version = "3.1.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
@@ -109,7 +109,19 @@ public class GalaxiEngine extends Galaxi {
         f.setAccessible(false);
 
         this.app.getLogger().info.println("Loading " + engine.getName() + " v" + engine.getVersion().toString() + " Libraries");
+        for (PluginInfo.Dependency depend : this.app.getDependancies()) {
+            if (engine.getName().equalsIgnoreCase(depend.getName())) {
+                if (depend.getMinVersion() == null || engine.getVersion().compareTo(depend.getMinVersion()) >= 0) {
+                    if (!(depend.getMaxVersion() == null || engine.getVersion().compareTo(depend.getMaxVersion()) < 0)) {
+                        throw new IllegalStateException("Engine version is too new for this app: " + depend.getName() + " v" + engine.getVersion().toString() + " (should be below " + depend.getMaxVersion() + ")");
+                    }
+                } else {
+                    throw new IllegalStateException("Engine version is too old for this app: " + depend.getName() + " v" + engine.getVersion().toString() + " (should be at or above " + depend.getMinVersion() + ")");
+                }
+            }
+        }
         if (app == null) this.app.getLogger().warn.println("GalaxiEngine is running in standalone mode");
+        else if (engine.getName().equalsIgnoreCase(this.app.getName())) throw new IllegalStateException("App name cannot be the same as the Engine's name");
 
         console = new ConsoleReader(this, jline, running);
         DefaultCommands.load(this);

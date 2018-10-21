@@ -66,12 +66,5 @@ public @interface Plugin {
      *
      * @return Dependencies List
      */
-    String[] dependencies() default {};
-
-    /**
-     * Soft Dependencies List
-     *
-     * @return Soft Dependencies List
-     */
-    String[] softDependencies() default {};
+    Dependency[] dependencies() default {};
 }
