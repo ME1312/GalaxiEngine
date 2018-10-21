@@ -1,5 +1,7 @@
 package net.ME1312.Galaxi.Engine.Library;
 
+import jline.console.completer.Completer;
+import jline.console.completer.StringsCompleter;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
@@ -7,12 +9,15 @@ import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
 import net.ME1312.Galaxi.Library.Callback;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
-import net.ME1312.Galaxi.Plugin.Command;
+import net.ME1312.Galaxi.Plugin.Command.Command;
+import net.ME1312.Galaxi.Plugin.Command.CommandSender;
+import net.ME1312.Galaxi.Plugin.Command.CompletionHandler;
+import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * Console Reader Class
  */
-public class ConsoleReader extends Thread {
+public class ConsoleReader extends Thread implements Completer {
     private Container<Boolean> running;
     private jline.console.ConsoleReader jline;
     private Callback<String> chat = null;
@@ -37,31 +42,8 @@ public class ConsoleReader extends Thread {
         this.engine = engine;
         this.jline = jline;
         this.running = status;
-    }
 
-    /**
-     * Start the ConsoleReader loop
-     */
-    public void run() {
-        try {
-            String line;
-            while (running.get() && (line = jline.readLine(">")) != null) {
-                if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
-                if (line.startsWith("/") && chat != null) {
-                    try {
-                        ConsoleChatEvent event = new ConsoleChatEvent(engine, Util.unescapeJavaString(line));
-                        engine.getPluginManager().executeEvent(event);
-                        if (!event.isCancelled()) chat.run(event.getMessage());
-                    } catch (Exception e) {
-                        engine.getAppInfo().getLogger().error.print(e);
-                    }
-                } else {
-                    runCommand(line);
-                }
-            }
-        } catch (Exception e) {
-            engine.getAppInfo().getLogger().error.println(e);
-        }
+        jline.addCompleter(this);
     }
 
     /**
@@ -73,13 +55,87 @@ public class ConsoleReader extends Thread {
         this.chat = listener;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public int complete(String full, int cursor, List<CharSequence> candidates) {
+        if (full != null && full.length() > 0 && (chat == null || full.startsWith("/"))) {
+            String before = "";
+            String last = null;
+            LinkedList<String> args = new LinkedList<String>();
+            Matcher parser = Pattern.compile("(?:^|\\s+)(\"(?:\\\\\"|[^\"])+\"?|(?:\\\\\\s|[^\\s])+)?").matcher(full);
+            while (parser.find()) {
+                if (last != null) before += last;
+                String arg = parser.group(1);
+                if (arg != null) {
+                    if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.endsWith("\"")) ? 1 : 0));
+                    arg = parseCommand(arg);
+                } else arg = "";
+                args.add(arg);
+                last = parser.group();
+            }
+            String cmd = args.get(0);
+            args.remove(0);
+            if (cmd.startsWith("/")) cmd = cmd.substring(1);
+
+            TreeMap<String, Command> commands;
+            try {
+                Field f = PluginManager.class.getDeclaredField("commands");
+                f.setAccessible(true);
+                commands = (TreeMap<String, Command>) f.get(engine.getPluginManager());
+                f.setAccessible(false);
+            } catch (Exception e) {
+                e.printStackTrace();
+                commands = new TreeMap<String, Command>();
+            }
+
+            if (args.size() == 0) {
+                for (String handle : commands.keySet())
+                    if (handle.startsWith(cmd.toLowerCase()))
+                        candidates.add(((full.startsWith("/"))?"/":"") + handle.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace(" ", "\\ "));
+            } else if (commands.keySet().contains(cmd.toLowerCase())) {
+                CompletionHandler autocompletor = commands.get(cmd.toLowerCase()).autocomplete();
+                if (autocompletor != null)
+                    for (String autocomplete : autocompletor.complete(ConsoleCommandSender.get(), cmd, args.toArray(new String[args.size()])))
+                        if (!Util.isNull(autocomplete) && autocomplete.length() > 0) candidates.add(before + ' ' + autocomplete.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace(" ", "\\ "));
+            }
+        }
+        return candidates.isEmpty()?-1:0;
+    }
+
+    /**
+     * Start the ConsoleReader loop
+     */
+    public void run() {
+        try {
+            String line;
+            while (running.get() && (line = jline.readLine(">")) != null) {
+                if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
+                if (chat != null && !line.startsWith("/")) {
+                    try {
+                        ConsoleChatEvent event = new ConsoleChatEvent(engine, Util.unescapeJavaString(line));
+                        engine.getPluginManager().executeEvent(event);
+                        if (!event.isCancelled()) chat.run(event.getMessage());
+                    } catch (Exception e) {
+                        engine.getAppInfo().getLogger().error.print(e);
+                    }
+                } else {
+                    runCommand(ConsoleCommandSender.get(), line);
+                }
+            }
+        } catch (Exception e) {
+            engine.getAppInfo().getLogger().error.println(e);
+        }
+    }
+
     /**
      * Run a command
      *
+     * @param sender Command Sender
      * @param command Command
      */
     @SuppressWarnings("unchecked")
-    public void runCommand(String command) {
+    public void runCommand(CommandSender sender, String command) {
+        if (Util.isNull(sender, command)) throw new NullPointerException();
         ConsoleCommandEvent event = new ConsoleCommandEvent(engine, command);
         engine.getPluginManager().executeEvent(event);
         if (!event.isCancelled()) {
@@ -88,7 +144,7 @@ public class ConsoleReader extends Thread {
             Matcher parser = Pattern.compile("(?:^|\\s+)(\"(?:\\\\\"|[^\"])+\"?|(?:\\\\\\s|[^\\s])+)").matcher(line);
             while (parser.find()) {
                 String arg = parser.group(1);
-                if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.endsWith("\"")) ? 1 : 0));
+                if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.endsWith("\""))?1:0));
                 arg = parseCommand(arg);
                 args.add(arg);
             }
@@ -109,7 +165,7 @@ public class ConsoleReader extends Thread {
 
             if (commands.keySet().contains(cmd.toLowerCase())) {
                 try {
-                    commands.get(cmd.toLowerCase()).command(cmd, args.toArray(new String[args.size()]));
+                    commands.get(cmd.toLowerCase()).command(sender, cmd, args.toArray(new String[args.size()]));
                 } catch (Exception e) {
                     engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Uncaught exception while running command"));
                 }

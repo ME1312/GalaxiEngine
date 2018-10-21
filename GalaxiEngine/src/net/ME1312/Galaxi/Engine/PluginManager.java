@@ -8,7 +8,7 @@ import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
-import net.ME1312.Galaxi.Plugin.Command;
+import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Dependency;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;

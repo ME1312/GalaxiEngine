@@ -1,8 +1,9 @@
-package net.ME1312.Galaxi.Plugin;
+package net.ME1312.Galaxi.Plugin.Command;
 
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Exception.IllegalStringValueException;
 import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 /**
  * Command Layout Class
@@ -11,6 +12,7 @@ public abstract class Command {
     private String desc = null;
     private String[] exDesc = new String[0];
     private String[] usage = new String[0];
+    private CompletionHandler autocomplete = (this instanceof CompletionHandler)?(CompletionHandler)this:null;
     private PluginInfo plugin;
 
     /**
@@ -26,10 +28,31 @@ public abstract class Command {
     /**
      * Run Command
      *
+     * @param sender Command Sender
      * @param handle Command Name
      * @param args Arguments
      */
-    public abstract void command(String handle, String[] args);
+    public abstract void command(CommandSender sender, String handle, String[] args);
+
+    /**
+     * Gets the AutoComplete handler for this Command
+     *
+     * @return AutoComplete Handler
+     */
+    public CompletionHandler autocomplete() {
+        return this.autocomplete;
+    }
+
+    /**
+     * Sets an AutoComplete handler for this Command
+     *
+     * @param value AutoComplete Handler
+     * @return The Command
+     */
+    public Command autocomplete(CompletionHandler value) {
+        this.autocomplete = value;
+        return this;
+    }
 
     /**
      * Gets the Plugin that registering this Command

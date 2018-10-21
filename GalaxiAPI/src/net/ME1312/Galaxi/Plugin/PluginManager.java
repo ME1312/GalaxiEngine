@@ -1,7 +1,7 @@
 package net.ME1312.Galaxi.Plugin;
 
 import net.ME1312.Galaxi.Library.Event.Event;
-import net.ME1312.Galaxi.Library.Event.Listener;
+import net.ME1312.Galaxi.Plugin.Command.Command;
 
 import java.util.Map;
 

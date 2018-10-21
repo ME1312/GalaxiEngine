@@ -103,8 +103,6 @@ public class GalaxiEngine extends Galaxi {
         Field f = PluginManager.class.getDeclaredField("plugins");
         f.setAccessible(true);
         HashMap<String, PluginInfo> plugins = (HashMap<String, PluginInfo>) f.get(pluginManager);
-        plugins.put(engine.getName().toLowerCase(), engine);
-        plugins.put(this.app.getName().toLowerCase(), this.app);
         f.set(pluginManager, plugins);
         f.setAccessible(false);
 
