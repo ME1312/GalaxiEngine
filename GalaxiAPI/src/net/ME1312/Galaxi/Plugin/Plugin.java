@@ -20,6 +20,13 @@ public @interface Plugin {
     String name();
 
     /**
+     * The Display Name of this Plugin
+     *
+     * @return Plugin Display Name
+     */
+    String display() default "";
+
+    /**
      * The Version of this Plugin
      *
      * @return Plugin Version

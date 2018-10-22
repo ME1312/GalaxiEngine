@@ -67,7 +67,7 @@ public class ConsoleReader extends Thread implements Completer {
                 if (last != null) before += last;
                 String arg = parser.group(1);
                 if (arg != null) {
-                    if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.endsWith("\"")) ? 1 : 0));
+                    if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.length() > 1 && arg.endsWith("\""))?1:0));
                     arg = parseCommand(arg);
                 } else arg = "";
                 args.add(arg);
@@ -89,14 +89,16 @@ public class ConsoleReader extends Thread implements Completer {
             }
 
             if (args.size() == 0) {
-                for (String handle : commands.keySet())
-                    if (handle.startsWith(cmd.toLowerCase()))
-                        candidates.add(((full.startsWith("/"))?"/":"") + handle.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace(" ", "\\ "));
+                if (cmd.length() > 0)
+                    for (String handle : commands.keySet())
+                        if (handle.startsWith(cmd.toLowerCase()))
+                            candidates.add(((full.startsWith("/"))?"/":"") + handle.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace(" ", "\\ "));
             } else if (commands.keySet().contains(cmd.toLowerCase())) {
                 CompletionHandler autocompletor = commands.get(cmd.toLowerCase()).autocomplete();
                 if (autocompletor != null)
                     for (String autocomplete : autocompletor.complete(ConsoleCommandSender.get(), cmd, args.toArray(new String[args.size()])))
-                        if (!Util.isNull(autocomplete) && autocomplete.length() > 0) candidates.add(before + ' ' + autocomplete.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace(" ", "\\ "));
+                        if (!Util.isNull(autocomplete) && autocomplete.length() > 0)
+                            candidates.add(before + ' ' + autocomplete.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace(" ", "\\ "));
             }
         }
         return candidates.isEmpty()?-1:0;
@@ -144,7 +146,7 @@ public class ConsoleReader extends Thread implements Completer {
             Matcher parser = Pattern.compile("(?:^|\\s+)(\"(?:\\\\\"|[^\"])+\"?|(?:\\\\\\s|[^\\s])+)").matcher(line);
             while (parser.find()) {
                 String arg = parser.group(1);
-                if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.endsWith("\""))?1:0));
+                if (arg.startsWith("\"")) arg = arg.substring(1, arg.length() - ((arg.length() > 1 && arg.endsWith("\""))?1:0));
                 arg = parseCommand(arg);
                 args.add(arg);
             }

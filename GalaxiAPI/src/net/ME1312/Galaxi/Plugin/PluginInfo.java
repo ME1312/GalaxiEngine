@@ -19,6 +19,7 @@ import java.util.*;
  * @see Plugin
  */
 public class PluginInfo implements ExtraDataHandler {
+    private static final String ID_PATTERN = ".*?([A-Za-z0-9!#$&+\\-_. ]*).*?";
     private static ArrayList<String> usedNames = new ArrayList<String>();
     private static HashMap<Class<?>, PluginInfo> pluginMap = new HashMap<Class<?>, PluginInfo>();
 
@@ -101,8 +102,8 @@ public class PluginInfo implements ExtraDataHandler {
         if (!pluginMap.keySet().contains(mainClass)) {
 
             try {
-                String name = mainClass.getAnnotation(Plugin.class).name().replaceAll("<|>|:|\\*|\\||\\?|\"|/|\\\\|\\n", "-");
-                String display = mainClass.getAnnotation(Plugin.class).name();
+                String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
+                String display = (mainClass.getAnnotation(Plugin.class).display().length() > 0)?mainClass.getAnnotation(Plugin.class).display():mainClass.getAnnotation(Plugin.class).name();
                 Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
                 Version signature = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).signature()):null;
                 List<String> authors = Arrays.asList(mainClass.getAnnotation(Plugin.class).authors());
@@ -111,7 +112,7 @@ public class PluginInfo implements ExtraDataHandler {
                 List<String> loadBefore = Arrays.asList(mainClass.getAnnotation(Plugin.class).loadBefore());
                 List<Dependency> dependencies = new LinkedList<Dependency>();
                 for (net.ME1312.Galaxi.Plugin.Dependency dependency : mainClass.getAnnotation(Plugin.class).dependencies()) {
-                    String dname = dependency.name().replaceAll("<|>|:|\\*|\\||\\?|\"|/|\\\\|\\n", "-");
+                    String dname = dependency.name().replaceAll(ID_PATTERN, "$1");
                     Version dminversion = (dependency.minVersion().length() > 0)?Version.fromString(dependency.minVersion()):null;
                     Version dmaxversion = (dependency.maxVersion().length() > 0)?Version.fromString(dependency.maxVersion()):null;
                     boolean drequired = dependency.required();
