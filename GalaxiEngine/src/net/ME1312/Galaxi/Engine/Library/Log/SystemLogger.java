@@ -13,6 +13,7 @@ import org.fusesource.jansi.AnsiConsole;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -73,8 +74,16 @@ public final class SystemLogger extends OutputStream {
         }
     }
 
-    private static void stop() {
-        FileLogger.end();
+    private static void stop() throws Exception {
+        Method m = FileLogger.class.getDeclaredMethod("end");
+        m.setAccessible(true);
+        m.invoke(null);
+        m.setAccessible(false);
+
+        Field f = Logger.class.getDeclaredField("running");
+        f.setAccessible(true);
+        f.set(null, false);
+        f.setAccessible(false);
     }
 }
 

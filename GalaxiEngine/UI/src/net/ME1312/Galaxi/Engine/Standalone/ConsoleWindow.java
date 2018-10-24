@@ -58,7 +58,12 @@ public final class ConsoleWindow extends OutputStream {
                     HTMLEditorKit kit = (HTMLEditorKit) log.getEditorKit();
                     HTMLDocument doc = (HTMLDocument) log.getDocument();
                     kit.insertHTML(doc, doc.getLength() - 2, new String(stream.toByteArray(), "UTF-8"), 0, 0, null);
-                    hScroll();
+                    EventQueue.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            hScroll();
+                        }
+                    });
                 } catch (BadLocationException e) {
                     e.printStackTrace();
                 }
@@ -761,6 +766,7 @@ public final class ConsoleWindow extends OutputStream {
     private class AnsiUIOutputStream extends AnsiOutputStream {
         private boolean concealOn = false;
         private final String[] ANSI_COLOR_MAP = new String[]{"000000", "cd0000", "25bc24", "e1e100", "0000ee", "cd00cd", "00e1e1", "ffffff"};
+        private final byte[] BYTES_NBSP = "&nbsp;".getBytes();
         private final byte[] BYTES_QUOT = "&quot;".getBytes();
         private final byte[] BYTES_AMP = "&amp;".getBytes();
         private final byte[] BYTES_LT = "&lt;".getBytes();
@@ -798,6 +804,9 @@ public final class ConsoleWindow extends OutputStream {
 
         public void write(int data) throws IOException {
             switch(data) {
+                case 32:
+                    this.out.write(BYTES_NBSP);
+                    break;
                 case 34:
                     this.out.write(BYTES_QUOT);
                     break;

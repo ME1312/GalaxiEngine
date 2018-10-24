@@ -36,11 +36,13 @@ public final class FileLogger extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        origin.write(b);
-        if (writer != null) {
-            if ((char) b == '\n') writer.write('\r');
-            writer.write(b);
-            writer.flush();
+        if ((char) b != '\u0000') {
+            origin.write(b);
+            if (writer != null) {
+                if ((char) b == '\n') writer.write('\r');
+                writer.write(b);
+                writer.flush();
+            }
         }
     }
 
@@ -53,11 +55,11 @@ public final class FileLogger extends OutputStream {
         return file;
     }
 
-    static void end() {
-        File compressed = new File(file.getParentFile(), file.getName() + ".zip");
+    private static void end() {
+        File compressed = (file != null)?new File(file.getParentFile(), file.getName() + ".zip"):null;
         try {
             if (writer != null) writer.close();
-            if (file != null) {
+            if (file != null && compressed != null) {
                 FileOutputStream fos = new FileOutputStream(compressed);
                 Util.zip(file, fos);
                 fos.flush();
@@ -65,7 +67,7 @@ public final class FileLogger extends OutputStream {
                 file.delete();
             }
         } catch (Exception e) {
-            if (!compressed.exists()) compressed.delete();
+            if (compressed != null && !compressed.exists()) compressed.delete();
         }
         file = null;
         writer = null;
