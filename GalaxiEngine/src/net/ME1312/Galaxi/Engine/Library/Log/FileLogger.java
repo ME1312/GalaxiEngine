@@ -38,9 +38,19 @@ public final class FileLogger extends OutputStream {
     public void write(int b) throws IOException {
         origin.write((char)b);
         if (writer != null) {
+            if ((char) b == '\n') writer.write('\r');
             writer.write((char) b);
             writer.flush();
         }
+    }
+
+    /**
+     * Get the file that is currently being written to
+     *
+     * @return Log File
+     */
+    public static File getFile() {
+        return file;
     }
 
     static void end() {

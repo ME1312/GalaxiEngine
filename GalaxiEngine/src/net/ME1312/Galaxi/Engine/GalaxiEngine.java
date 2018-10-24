@@ -16,6 +16,7 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
 import org.fusesource.jansi.AnsiConsole;
 import org.json.JSONObject;
 
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -25,13 +26,14 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;
 
 /**
  * Galaxi Engine Main Class
  */
-@Plugin(name = "GalaxiEngine", version = "3.1.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@Plugin(name = "GalaxiEngine", version = "3.1.0b", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
@@ -83,6 +85,8 @@ public class GalaxiEngine extends Galaxi {
 
     @SuppressWarnings("unchecked")
     private GalaxiEngine(PluginInfo app) throws Exception {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);
         this.app = (app == null)?engine:app;
@@ -90,7 +94,9 @@ public class GalaxiEngine extends Galaxi {
         Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
             engine.setSignature(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
+        engine.setIcon(GalaxiEngine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Standalone/GalaxiIcon.png"));
 
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
 
@@ -182,26 +188,32 @@ public class GalaxiEngine extends Galaxi {
     /**
      * Stop the Galaxi Engine
      */
+    private boolean stopping = false;
     public void stop() {
-        GalaxiStopEvent event = new GalaxiStopEvent(this);
-        pluginManager.executeEvent(event);
-        if (!event.isCancelled() && running.get()) {
-            running.set(false);
+        if (!stopping && running.get()) {
+            stopping = true;
+            GalaxiStopEvent event = new GalaxiStopEvent(this);
+            pluginManager.executeEvent(event);
+            if (!event.isCancelled()) {
+                running.set(false);
 
-            if (onStop != null) try {
-                onStop.run();
-            } catch (Throwable e) {
-                app.getLogger().error.println(e);
+                if (onStop != null) try {
+                    onStop.run();
+                } catch (Throwable e) {
+                    app.getLogger().error.println(e);
+                }
+
+                try {
+                    Method m = SystemLogger.class.getDeclaredMethod("stop");
+                    m.setAccessible(true);
+                    m.invoke(null);
+                    m.setAccessible(false);
+                } catch (Exception e) {
+                }
+
+                System.exit(0);
             }
-
-            try {
-                Method m = SystemLogger.class.getDeclaredMethod("stop");
-                m.setAccessible(true);
-                m.invoke(null);
-                m.setAccessible(false);
-            } catch (Exception e) {}
-
-            System.exit(0);
+            stopping = false;
         }
     }
 

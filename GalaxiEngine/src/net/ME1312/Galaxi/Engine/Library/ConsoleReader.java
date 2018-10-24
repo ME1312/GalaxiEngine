@@ -6,6 +6,7 @@ import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
 import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
@@ -14,6 +15,8 @@ import net.ME1312.Galaxi.Plugin.Command.CommandSender;
 import net.ME1312.Galaxi.Plugin.Command.CompletionHandler;
 import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
 
+import java.awt.*;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
@@ -28,6 +31,7 @@ import java.util.regex.Pattern;
 public class ConsoleReader extends Thread implements Completer {
     private Container<Boolean> running;
     private jline.console.ConsoleReader jline;
+    private OutputStream window;
     private Callback<String> chat = null;
     private GalaxiEngine engine;
 
@@ -42,6 +46,13 @@ public class ConsoleReader extends Thread implements Completer {
         this.engine = engine;
         this.jline = jline;
         this.running = status;
+        try {
+            if (System.getProperty("galaxi.ui.console", "null").equalsIgnoreCase("true") || (System.getProperty("galaxi.ui.console", "null").equalsIgnoreCase("null") && System.console() == null && !GraphicsEnvironment.isHeadless())) {
+                window = (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(Object.class).newInstance(this);
+            }
+        } catch (Exception e) {
+            engine.getAppInfo().getLogger().error.println(e);
+        }
 
         jline.addCompleter(this);
     }

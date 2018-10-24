@@ -9,6 +9,7 @@
 
     <modules>
         <module>GalaxiAPI</module>
+        <module>GalaxiEngine/UI</module>
         <module>GalaxiEngine</module>
     </modules>
 </project>

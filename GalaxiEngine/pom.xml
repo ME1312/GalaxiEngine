@@ -28,6 +28,12 @@
             <version>-PLACEHOLDER</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>7.0.3</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -64,6 +70,9 @@
                             <tasks>
                                 <mkdir dir="${project.build.directory}" />
                                 <copy file="${basedir}/../LICENSE" todir="${project.build.directory}/classes" />
+                                <copy todir="${project.build.directory}/classes">
+                                        <fileset dir="${project.build.directory}/../GalaxiEngine UI/classes" includes="**" />
+                                </copy>
                             </tasks>
                         </configuration>
                     </execution>

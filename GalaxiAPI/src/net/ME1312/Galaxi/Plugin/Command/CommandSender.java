@@ -39,10 +39,8 @@ public interface CommandSender extends ExtraDataHandler {
      */
     default void command(String command) {
         try {
-            Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getMethod("runCommand", CommandSender.class, String.class).invoke(Util.getDespiteException(() -> {
-                Class<?> engine = Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine");
-                return engine.getMethod("getConsoleReader").invoke(engine.getMethod("getInstance").invoke(null));
-            }, null), this, command);
+            Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getMethod("runCommand", CommandSender.class, String.class).invoke(
+                    Util.getDespiteException(() -> Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null), this, command);
         } catch (InvocationTargetException e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e.getTargetException());
         } catch (Exception e) {

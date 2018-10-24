@@ -8,10 +8,15 @@ import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 
 /**
  * Plugin Info Class
@@ -24,6 +29,7 @@ public class PluginInfo implements ExtraDataHandler {
     private static HashMap<Class<?>, PluginInfo> pluginMap = new HashMap<Class<?>, PluginInfo>();
 
     private Object plugin;
+    private Image icon;
     private String name;
     private String display;
     private Version version;
@@ -170,7 +176,25 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Get Plugin's Name
+     * Get the Plugin's Icon
+     *
+     * @return Plugin Icon
+     */
+    public Image getIcon() {
+        return icon;
+    }
+
+    /**
+     * Set the Plugin's Icon
+     *
+     * @param stream Icon Stream
+     */
+    public void setIcon(InputStream stream) throws IOException {
+        icon = ImageIO.read(stream);
+    }
+
+    /**
+     * Get the Plugin's Name
      *
      * @return Plugin Name
      */
@@ -179,7 +203,7 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Get Plugin's Display Name
+     * Get the Plugin's Display Name
      *
      * @return Display Name
      */
@@ -188,7 +212,7 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Set Plugin's Display Name
+     * Set the Plugin's Display Name
      *
      * @param value Value (or null to reset)
      */
@@ -201,7 +225,7 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Get Plugin's Version
+     * Get the Plugin's Version
      *
      * @return Plugin Version
      */
@@ -210,7 +234,7 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Get Plugin's Build Signature
+     * Get the Plugin's Build Signature
      *
      * @return Plugin Build Signature
      */
@@ -219,7 +243,7 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Set Plugin's Build Signature (may only be done once)
+     * Set the Plugin's Build Signature (may only be done once)
      *
      * @param value Plugin Build Signature
      */

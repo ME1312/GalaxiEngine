@@ -105,7 +105,7 @@ public class DefaultCommands {
                             checking = true;
                             new Thread(() -> {
                                 if (engine.getEngineInfo().getUpdateChecker() != null) Util.isException(() -> engine.getEngineInfo().getUpdateChecker().run());
-                                if (engine.getAppInfo().getUpdateChecker() != null) Util.isException(() -> engine.getAppInfo().getUpdateChecker().run());
+                                if (engine.getEngineInfo() != engine.getAppInfo() && engine.getAppInfo().getUpdateChecker() != null) Util.isException(() -> engine.getAppInfo().getUpdateChecker().run());
                                 if (args.length > 0) {
                                     for (PluginInfo info : searchDependencies(engine.getPluginManager().getPlugins().get(args[0].toLowerCase()))) if (info.getUpdateChecker() != null) Util.isException(() -> info.getUpdateChecker().run());
                                     if (engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) Util.isException(() -> engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run());
