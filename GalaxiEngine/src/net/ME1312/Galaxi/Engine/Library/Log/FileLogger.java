@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Log File Writer Class
  */
 public final class FileLogger extends OutputStream {
-    private static FileWriter writer = null;
+    private static FileOutputStream writer = null;
     private static File file = null;
     private PrintStream origin;
 
@@ -30,16 +30,16 @@ public final class FileLogger extends OutputStream {
             } catch (Exception e) {}
 
             file = new File(dir,  Galaxi.getInstance().getAppInfo().getName() + " #" + i + " (" + new SimpleDateFormat("MM-dd-yyyy").format(Calendar.getInstance().getTime()) + ").log");
-            writer = new FileWriter(file);
+            writer = new FileOutputStream(file);
         }
     }
 
     @Override
     public void write(int b) throws IOException {
-        origin.write((char)b);
+        origin.write(b);
         if (writer != null) {
             if ((char) b == '\n') writer.write('\r');
-            writer.write((char) b);
+            writer.write(b);
             writer.flush();
         }
     }

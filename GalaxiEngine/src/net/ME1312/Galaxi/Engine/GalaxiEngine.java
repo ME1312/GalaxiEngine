@@ -100,7 +100,7 @@ public class GalaxiEngine extends Galaxi {
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
 
-        jline.console.ConsoleReader jline = new jline.console.ConsoleReader(System.in, AnsiConsole.out());
+        jline.console.ConsoleReader jline = new jline.console.ConsoleReader(System.in, AnsiConsole.out);
         Method m = SystemLogger.class.getDeclaredMethod("start", PrintStream.class, PrintStream.class, jline.console.ConsoleReader.class);
         m.setAccessible(true);
         m.invoke(null, AnsiConsole.out(), AnsiConsole.err(), jline);
