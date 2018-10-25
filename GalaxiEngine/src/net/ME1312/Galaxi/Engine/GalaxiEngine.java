@@ -190,7 +190,7 @@ public class GalaxiEngine extends Galaxi {
      */
     private boolean stopping = false;
     public void stop() {
-        if (!stopping && running.get()) {
+        if (!stopping) {
             stopping = true;
             GalaxiStopEvent event = new GalaxiStopEvent(this);
             pluginManager.executeEvent(event);
