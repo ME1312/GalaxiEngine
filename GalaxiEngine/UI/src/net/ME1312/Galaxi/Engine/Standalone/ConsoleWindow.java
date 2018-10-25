@@ -802,25 +802,30 @@ public final class ConsoleWindow extends OutputStream {
             this.closingAttributes.clear();
         }
 
+        private boolean nbsp = true;
         public void write(int data) throws IOException {
-            switch(data) {
-                case 32:
-                    this.out.write(BYTES_NBSP);
-                    break;
-                case 34:
-                    this.out.write(BYTES_QUOT);
-                    break;
-                case 38:
-                    this.out.write(BYTES_AMP);
-                    break;
-                case 60:
-                    this.out.write(BYTES_LT);
-                    break;
-                case 62:
-                    this.out.write(BYTES_GT);
-                    break;
-                default:
-                    super.write(data);
+            if (data == 32) {
+                if (nbsp) this.out.write(BYTES_NBSP);
+                else super.write(data);
+                nbsp = !nbsp;
+            } else {
+                nbsp = false;
+                switch(data) {
+                    case 34:
+                        this.out.write(BYTES_QUOT);
+                        break;
+                    case 38:
+                        this.out.write(BYTES_AMP);
+                        break;
+                    case 60:
+                        this.out.write(BYTES_LT);
+                        break;
+                    case 62:
+                        this.out.write(BYTES_GT);
+                        break;
+                    default:
+                        super.write(data);
+                }
             }
 
         }
