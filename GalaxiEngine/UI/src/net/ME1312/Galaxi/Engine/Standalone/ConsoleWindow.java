@@ -827,7 +827,6 @@ public final class ConsoleWindow extends OutputStream {
                         super.write(data);
                 }
             }
-
         }
 
         public void writeLine(byte[] buf, int offset, int len) throws IOException {

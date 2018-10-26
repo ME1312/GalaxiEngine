@@ -7,8 +7,6 @@ import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiConsole;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -75,15 +73,26 @@ public final class SystemLogger extends OutputStream {
     }
 
     private static void stop() throws Exception {
-        Method m = FileLogger.class.getDeclaredMethod("end");
-        m.setAccessible(true);
-        m.invoke(null);
-        m.setAccessible(false);
+        Thread.sleep(125);
 
         Field f = Logger.class.getDeclaredField("running");
         f.setAccessible(true);
         f.set(null, false);
         f.setAccessible(false);
+
+        f = Logger.class.getDeclaredField("thread");
+        f.setAccessible(true);
+        Thread thread = (Thread) f.get(null);
+        f.setAccessible(false);
+
+        if (thread != null) while (thread.isAlive()) {
+            Thread.sleep(125);
+        }
+
+        Method m = FileLogger.class.getDeclaredMethod("end");
+        m.setAccessible(true);
+        m.invoke(null);
+        m.setAccessible(false);
     }
 }
 

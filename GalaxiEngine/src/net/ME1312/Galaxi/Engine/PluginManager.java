@@ -14,9 +14,11 @@ import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -37,8 +39,10 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
 
     /**
      * Search for classes
+     *
+     * @param clazz A class from the library to search
      */
-    void findClasses(Class<?> clazz) {
+    public void findClasses(Class<?> clazz) throws IOException {
         try {
             JarFile jarFile = new JarFile(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
             Enumeration<JarEntry> entries = jarFile.entries();
@@ -46,10 +50,11 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    knownClasses.add(entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.'));
+                    String e = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
+                    if (!knownClasses.contains(e)) knownClasses.add(e);
                 }
             }
-        } catch (Exception e) {
+        } catch (URISyntaxException e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
     }

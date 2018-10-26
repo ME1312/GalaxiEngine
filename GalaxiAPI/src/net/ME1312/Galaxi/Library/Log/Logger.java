@@ -19,7 +19,7 @@ import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
 public final class Logger {
     private static final Container<PrintStream> pso = new Container<PrintStream>(null);
     private static final Container<PrintStream> pse = new Container<PrintStream>(null);
-    private static final boolean running = true;
+    private static boolean running = true;
     static final LinkedList<NamedContainer<LogStream, String>> messages = new LinkedList<NamedContainer<LogStream, String>>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
     private static Thread thread;
@@ -127,14 +127,12 @@ public final class Logger {
                                         terminate_with_prefix = true;
                                         break;
                                     default:
-                                        if (!terminate && terminate_with_prefix) message += '\r';
                                         message += c;
                                         terminate = false;
                                         terminate_with_prefix = false;
                                         break;
                                 }
                             }
-                            if (!terminate && terminate_with_prefix) message += '\r';
                             if (message.length() > 0) messages.add(message);
                             if (terminate && (terminate_with_prefix || terminated)) messages.add("");
                         }
