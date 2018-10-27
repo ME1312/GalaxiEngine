@@ -134,7 +134,7 @@ public final class Logger {
                                 }
                             }
                             if (message.length() > 0) messages.add(message);
-                            if (terminate && (terminate_with_prefix || terminated)) messages.add("");
+                            if (terminate && (terminate_with_prefix || messages.size() <= 0)) messages.add("");
                         }
 
                         int i = 0;
@@ -175,7 +175,7 @@ public final class Logger {
                         Logger.messages.remove(0);
                     }
                 }
-                Util.isException(() -> Thread.sleep(32));
+                Util.isException(() -> Thread.sleep(50));
             }
         })).start();
     }

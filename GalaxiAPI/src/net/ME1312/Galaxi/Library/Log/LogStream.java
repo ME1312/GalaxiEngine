@@ -134,8 +134,11 @@ public final class LogStream {
      */
     public void println(Object... obj) {
         for (Object OBJ : obj) {
-            print(OBJ);
-            print('\n');
+            if (OBJ == null) {
+                print("null\n");
+            } else {
+                print(OBJ.toString() + '\n');
+            }
         }
     }
 
@@ -146,8 +149,13 @@ public final class LogStream {
      */
     public void println(Throwable... err) {
         for (Throwable ERR : err) {
-            print(ERR);
-            print('\n');
+            if (ERR == null) {
+                print("null\n");
+            } else {
+                StringWriter sw = new StringWriter();
+                ERR.printStackTrace(new PrintWriter(sw));
+                print(sw.toString() + '\n');
+            }
         }
     }
 
@@ -158,8 +166,7 @@ public final class LogStream {
      */
     public void println(String... str) {
         for (String STR : str) {
-            print(STR);
-            print('\n');
+            print(STR + '\n');
         }
     }
 
@@ -170,8 +177,7 @@ public final class LogStream {
      */
     public void println(char[]... str) {
         for (char[] STR : str) {
-            print(STR);
-            print('\n');
+            print(new String(STR) + '\n');
         }
     }
 
@@ -182,8 +188,7 @@ public final class LogStream {
      */
     public void println(char... c) {
         for (char C : c) {
-            print(C);
-            print('\n');
+            print(new char[]{C, '\n'});
         }
     }
 }
