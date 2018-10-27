@@ -1,14 +1,19 @@
 package net.ME1312.Galaxi.Library.Log;
 
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.NamedContainer;
+import net.ME1312.Galaxi.TextElement;
+import org.fusesource.jansi.Ansi;
 
 import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.logging.Filter;
 
 /**
@@ -60,6 +65,51 @@ public final class LogStream {
     private void write(String str) {
         Logger.messages.add(new NamedContainer<LogStream, String>(this, str));
     }
+    
+    @SuppressWarnings("unchecked")
+    private String convert(TextElement original) {
+        StringBuilder message = new StringBuilder();
+        TextElement element = new TextElement(original.toRaw());
+        try {
+            Field f = TextElement.class.getDeclaredField("before");
+            f.setAccessible(true);
+            for (TextElement e : (LinkedList<TextElement>) f.get(element)) message.append(convert(e));
+            f.setAccessible(false);
+        } catch (Throwable e) {
+            getLogger().error.println(e);
+        }
+
+        if (element.bold()) message.append("\u001B[1m");
+        if (element.italic()) message.append("\u001B[3m");
+        if (element.underline()) message.append("\u001B[4m");
+        if (element.strikethrough()) message.append("\u001B[9m");
+        if (element.color() != null) {
+            int red = element.color().getRed();
+            int green = element.color().getGreen();
+            int blue = element.color().getBlue();
+            int alpha = element.color().getAlpha();
+
+            red = Math.round((alpha * (red / 255f)) * 255);
+            green = Math.round((alpha * (green / 255f)) * 255);
+            blue = Math.round((alpha * (blue / 255f)) * 255);
+
+            //noinspection StringConcatenationInsideStringBufferAppend
+            message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
+        }
+        message.append(element.message());
+        message.append("\u001B[m");
+
+        try {
+            Field f = TextElement.class.getDeclaredField("after");
+            f.setAccessible(true);
+            for (TextElement e : (LinkedList<TextElement>) f.get(element)) message.append(convert(e));
+            f.setAccessible(false);
+        } catch (Throwable e) {
+            getLogger().error.println(e);
+        }
+
+        return message.toString();
+    }
 
     /**
      * Print an Object
@@ -86,6 +136,19 @@ public final class LogStream {
             StringWriter sw = new StringWriter();
             err.printStackTrace(new PrintWriter(sw));
             print(sw.toString());
+        }
+    }
+
+    /**
+     * Print a Text Element
+     *
+     * @param element Text Element
+     */
+    public void print(TextElement element) {
+        if (element == null) {
+            write("null");
+        } else {
+            write(convert(element));
         }
     }
 
@@ -156,6 +219,17 @@ public final class LogStream {
                 ERR.printStackTrace(new PrintWriter(sw));
                 print(sw.toString() + '\n');
             }
+        }
+    }
+
+    /**
+     * Print a Text Element
+     *
+     * @param element Text Element
+     */
+    public void println(TextElement... element) {
+        for (TextElement ELEMENT : element) {
+            write(convert(ELEMENT) + '\n');
         }
     }
 

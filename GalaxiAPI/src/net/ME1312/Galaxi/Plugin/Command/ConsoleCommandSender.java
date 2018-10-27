@@ -45,51 +45,9 @@ public final class ConsoleCommandSender implements CommandSender {
         Galaxi.getInstance().getAppInfo().getLogger().message.println(messages);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void sendMessage(TextElement... messages) {
-        for (TextElement original : messages) {
-            TextElement element = new TextElement(original.toRaw());
-            try {
-                Field f = TextElement.class.getDeclaredField("before");
-                f.setAccessible(true);
-                for (TextElement e : (LinkedList<TextElement>) f.get(element)) sendMessage(e);
-                f.setAccessible(false);
-            } catch (Throwable e) {
-                Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
-            }
-
-            StringBuilder message = new StringBuilder();
-            if (element.bold()) message.append("\u001B[1m");
-            if (element.italic()) message.append("\u001B[3m");
-            if (element.underline()) message.append("\u001B[4m");
-            if (element.strikethrough()) message.append("\u001B[9m");
-            if (element.color() != null) {
-                int red = element.color().getRed();
-                int green = element.color().getGreen();
-                int blue = element.color().getBlue();
-                int alpha = element.color().getAlpha();
-
-                red = Math.round((alpha * (red / 255f)) * 255);
-                green = Math.round((alpha * (green / 255f)) * 255);
-                blue = Math.round((alpha * (blue / 255f)) * 255);
-
-                //noinspection StringConcatenationInsideStringBufferAppend
-                message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
-            }
-            message.append(element.message());
-            message.append(Ansi.ansi().reset().toString());
-            Galaxi.getInstance().getAppInfo().getLogger().message.println(message.toString());
-
-            try {
-                Field f = TextElement.class.getDeclaredField("after");
-                f.setAccessible(true);
-                for (TextElement e : (LinkedList<TextElement>) f.get(element)) sendMessage(e);
-                f.setAccessible(false);
-            } catch (Throwable e) {
-                Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
-            }
-        }
+        Galaxi.getInstance().getAppInfo().getLogger().message.println(messages);
     }
 
     @Override

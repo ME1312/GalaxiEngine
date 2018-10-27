@@ -103,7 +103,7 @@ public final class Logger {
             LogStream last = null;
             boolean terminated = true;
             while (running) {
-                while (messages.size() > 0) {
+                while (messages.size() > 0) try {
                     NamedContainer<LogStream, String> container = Util.getDespiteException(() -> messages.get(0), null);
                     if (container != null) {
                         LogStream stream = container.name();
@@ -174,6 +174,9 @@ public final class Logger {
 
                         Logger.messages.remove(0);
                     }
+                } catch (Throwable e) {
+                    Logger.messages.remove(0);
+                    if (pse.get() != null) e.printStackTrace(pse.get());
                 }
                 Util.isException(() -> Thread.sleep(50));
             }

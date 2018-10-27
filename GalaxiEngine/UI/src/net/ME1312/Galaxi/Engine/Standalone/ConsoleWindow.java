@@ -887,7 +887,7 @@ public final class ConsoleWindow extends OutputStream {
 
         @Override
         protected void processSetForegroundColor(int color) throws IOException {
-            processSetForegroundColor(color);
+            processSetForegroundColor(color, false);
         }
 
         @Override
