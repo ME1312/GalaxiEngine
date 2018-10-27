@@ -100,7 +100,7 @@ public class DefaultCommands {
                             if (plugin.getDescription() != null) sender.sendMessage("", plugin.getDescription());
                         }
 
-                        sender.sendMessage();
+                        sender.sendMessage("");
                         if (!checking) {
                             checking = true;
                             new Thread(() -> {

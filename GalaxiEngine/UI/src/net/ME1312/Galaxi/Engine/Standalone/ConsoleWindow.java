@@ -544,7 +544,7 @@ public final class ConsoleWindow extends OutputStream {
     }
 
     private void loadContent() {
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream((File) Class.forName("net.ME1312.Galaxi.Engine.Library.Log.FileLogger").getMethod("getFile").invoke(null)))) {
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream((File) Class.forName("net.ME1312.Galaxi.Engine.Library.Log.FileLogger").getMethod("getFile").invoke(null)), "UTF-8")) {
             boolean r = false;
             int b;
             while ((b = reader.read()) != -1) {
@@ -764,15 +764,17 @@ public final class ConsoleWindow extends OutputStream {
     }
 
     private class AnsiUIOutputStream extends AnsiOutputStream {
-        private boolean concealOn = false;
-        private final String[] ANSI_COLOR_MAP = new String[]{"000000", "cd0000", "25bc24", "e1e100", "0000ee", "cd00cd", "00e1e1", "ffffff"};
+        private final String[] ANSI_COLOR_MAP = new String[]{"000000", "cd0000", "25bc24", "d7d700", "0000c3", "be00be", "00a5dc", "cccccc"};
+        private final String[] ANSI_BRIGHT_COLOR_MAP = new String[]{"808080", "ff0000", "31e722", "ffff00", "0000ff", "ff00ff", "00c8ff", "ffffff"};
         private final byte[] BYTES_NBSP = "&nbsp;".getBytes();
         private final byte[] BYTES_QUOT = "&quot;".getBytes();
         private final byte[] BYTES_AMP = "&amp;".getBytes();
         private final byte[] BYTES_LT = "&lt;".getBytes();
         private final byte[] BYTES_GT = "&gt;".getBytes();
-        private List<String> closingAttributes = new ArrayList();
+        private List<String> closingAttributes = new ArrayList<String>();
+        private boolean nbsp = true;
 
+        @Override
         public void close() throws IOException {
             this.closeAttributes();
             super.close();
@@ -802,7 +804,7 @@ public final class ConsoleWindow extends OutputStream {
             this.closingAttributes.clear();
         }
 
-        private boolean nbsp = true;
+        @Override
         public void write(int data) throws IOException {
             if (data == 32) {
                 if (nbsp) this.out.write(BYTES_NBSP);
@@ -834,20 +836,23 @@ public final class ConsoleWindow extends OutputStream {
             this.closeAttributes();
         }
 
+        @Override
         protected void processSetAttribute(int attribute) throws IOException {
             if (ansi) switch(attribute) {
                 case 1:
                     this.writeAttribute("b");
                     break;
+                case 3:
+                    this.writeAttribute("i");
+                    break;
                 case 4:
                     this.writeAttribute("u");
+                    break;
+                case 9:
+                    this.writeAttribute("s");
                 case 7:
                 case 27:
                 default:
-                    break;
-                case 8:
-                    this.write("\u001b[8m");
-                    this.concealOn = true;
                     break;
                 case 22:
                     this.closeAttributes();
@@ -855,24 +860,69 @@ public final class ConsoleWindow extends OutputStream {
                 case 24:
                     this.closeAttributes();
             }
-
         }
 
+        @Override
         protected void processAttributeRest() throws IOException {
-            if (this.concealOn) {
-                this.write("\u001b[0m");
-                this.concealOn = false;
-            }
-
             this.closeAttributes();
         }
 
-        protected void processSetForegroundColor(int color) throws IOException {
-            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + ANSI_COLOR_MAP[color] + ";\"");
+        private String parse8BitColor(int color) throws IOException {
+            if (color < 8) {
+                return ANSI_COLOR_MAP[color];
+            } else if (color < 16) {
+                return ANSI_BRIGHT_COLOR_MAP[color - 8];
+            } else if (color < 232) {
+                int r = (int) (Math.floor((color - 16) / 36d) * (255 / 5));
+                int g = (int) (Math.floor(((color - 16) % 36d) / 6d) * (255 / 5));
+                int b = (int) (Math.floor(((color - 16) % 36d) % 6d) * (255 / 5));
+                return ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16);
+            } else if (color < 256) {
+                int gray = (int) ((255 / 25d) * (color - 232 + 1));
+                return ((gray >= 16)?"":"0") + Integer.toString(gray, 16) + ((gray >= 16)?"":"0") + Integer.toString(gray, 16) + ((gray >= 16)?"":"0") + Integer.toString(gray, 16);
+            } else {
+                throw new IOException("Invalid 8 Bit Color: " + color);
+            }
         }
 
+        @Override
+        protected void processSetForegroundColor(int color) throws IOException {
+            processSetForegroundColor(color);
+        }
+
+        @Override
+        protected void processSetForegroundColor(int color, boolean bright) throws IOException {
+            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+        }
+
+        @Override
+        protected void processSetForegroundColorExt(int index) throws IOException {
+            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + parse8BitColor(index) + ";\"");
+        }
+
+        @Override
+        protected void processSetForegroundColorExt(int r, int g, int b) throws IOException {
+            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+        }
+
+        @Override
         protected void processSetBackgroundColor(int color) throws IOException {
-            if (ansi) this.writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + ANSI_COLOR_MAP[color] + ";\"");
+            processSetBackgroundColor(color, false);
+        }
+
+        @Override
+        protected void processSetBackgroundColor(int color, boolean bright) throws IOException {
+            if (ansi) this.writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+        }
+
+        @Override
+        protected void processSetBackgroundColorExt(int index) throws IOException {
+            if (ansi) this.writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + parse8BitColor(index) + ";\"");
+        }
+
+        @Override
+        protected void processSetBackgroundColorExt(int r, int g, int b) throws IOException {
+            if (ansi) this.writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
         }
     }
     private class SmartScroller implements AdjustmentListener {

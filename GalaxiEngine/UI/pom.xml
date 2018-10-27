@@ -11,6 +11,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+            <version>1.17.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>net.ME1312.Galaxi</groupId>
             <artifactId>GalaxiAPI</artifactId>
             <version>-PLACEHOLDER</version>

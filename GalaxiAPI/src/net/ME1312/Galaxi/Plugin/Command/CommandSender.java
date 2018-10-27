@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Plugin.Command;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
 import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.TextElement;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -31,6 +32,13 @@ public interface CommandSender extends ExtraDataHandler {
      * @param messages Messages to send
      */
     void sendMessage(String... messages);
+
+    /**
+     * Send the Sender a message
+     *
+     * @param messages Messages to send
+     */
+    void sendMessage(TextElement... messages);
 
     /**
      * Send a command as the Sender

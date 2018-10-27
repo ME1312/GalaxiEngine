@@ -55,7 +55,7 @@ public final class FileLogger extends OutputStream {
         return file;
     }
 
-    private static void end() {
+    private static void stop() {
         File compressed = (file != null)?new File(file.getParentFile(), file.getName() + ".zip"):null;
         try {
             if (writer != null) writer.close();

@@ -89,7 +89,7 @@ public final class SystemLogger extends OutputStream {
             Thread.sleep(125);
         }
 
-        Method m = FileLogger.class.getDeclaredMethod("end");
+        Method m = FileLogger.class.getDeclaredMethod("stop");
         m.setAccessible(true);
         m.invoke(null);
         m.setAccessible(false);
