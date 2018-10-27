@@ -4,21 +4,25 @@ import jline.console.ConsoleReader;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Log.LogStream;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * System.out and System.err Override Class
  */
 public final class SystemLogger extends OutputStream {
-    private NamedContainer<String, Logger> last = new NamedContainer<String, Logger>("", null);
+    private HashMap<String, NamedContainer<LogStream, ByteArrayOutputStream>> last = new HashMap<String, NamedContainer<LogStream, ByteArrayOutputStream>>();
     private boolean error;
 
     protected SystemLogger(boolean level) {
@@ -37,8 +41,8 @@ public final class SystemLogger extends OutputStream {
         ((Container<PrintStream>) f.get(null)).set(new PrintStream(new FileLogger(new ConsoleStream(in, err)), false, "UTF-8"));
         f.setAccessible(false);
 
-        System.setOut(new PrintStream(new SystemLogger(false)));
-        System.setErr(new PrintStream(new SystemLogger(true)));
+        System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
+        System.setErr(new PrintStream(new SystemLogger(true), false, "UTF-8"));
     }
 
     @SuppressWarnings("unchecked")
@@ -54,7 +58,7 @@ public final class SystemLogger extends OutputStream {
     }
 
     @Override
-    public void write(int c) {
+    public void write(int c) throws IOException {
         int i = 0;
         String origin = java.lang.System.class.getCanonicalName();
         for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
@@ -64,11 +68,15 @@ public final class SystemLogger extends OutputStream {
             }
             i++;
         }
-        if (!last.name().equals(origin)) last = new NamedContainer<String, Logger>(origin, new Logger(origin));
-        if (error) {
-            last.get().error.print((char) c);
-        } else {
-            last.get().info.print((char) c);
+        if (!last.keySet().contains(origin)) {
+            Logger log = new Logger(origin);
+            last.put(origin, new NamedContainer<LogStream, ByteArrayOutputStream>((error)?log.error:log.info, new ByteArrayOutputStream()));
+        }
+        NamedContainer<LogStream, ByteArrayOutputStream> log = last.get(origin);
+        log.get().write(c);
+        if (c == '\n') {
+            log.name().print(log.get().toString("UTF-8").replace("\r\n", "\n"));
+            last.remove(origin);
         }
     }
 

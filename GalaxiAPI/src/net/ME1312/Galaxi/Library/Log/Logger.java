@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
+import java.util.PrimitiveIterator;
 
 import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
 
@@ -111,12 +112,13 @@ public final class Logger {
                         LinkedList<String> messages = new LinkedList<String>();
                         boolean terminate = false;
                         if (container.get().length() > 0) {
-                            String message = "";
+                            StringBuilder message = new StringBuilder();
                             boolean terminate_with_prefix = false;
-                            for (char c : container.get().toCharArray()) {
+                            for (PrimitiveIterator.OfInt $i = container.get().codePoints().iterator(); $i.hasNext();) {
+                                int c = $i.nextInt();
                                 if (terminate) {
-                                    messages.add(message);
-                                    message = "";
+                                    messages.add(message.toString());
+                                    message = new StringBuilder();
                                 }
 
                                 switch (c) {
@@ -127,13 +129,13 @@ public final class Logger {
                                         terminate_with_prefix = true;
                                         break;
                                     default:
-                                        message += c;
+                                        message.appendCodePoint(c);
                                         terminate = false;
                                         terminate_with_prefix = false;
                                         break;
                                 }
                             }
-                            if (message.length() > 0) messages.add(message);
+                            if (message.length() > 0) messages.add(message.toString());
                             if (terminate && (terminate_with_prefix || messages.size() <= 0)) messages.add("");
                         }
 
@@ -178,7 +180,7 @@ public final class Logger {
                     Logger.messages.remove(0);
                     if (pse.get() != null) e.printStackTrace(pse.get());
                 }
-                Util.isException(() -> Thread.sleep(50));
+                Util.isException(() -> Thread.sleep(32));
             }
         })).start();
     }

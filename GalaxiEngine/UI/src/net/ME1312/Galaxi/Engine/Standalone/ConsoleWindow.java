@@ -10,6 +10,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.text.*;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
@@ -21,7 +23,8 @@ import java.util.*;
 import java.util.List;
 
 public final class ConsoleWindow extends OutputStream {
-    private static String RESET_VALUE = "\n\u00A0\n\u00A0";
+    private static final String RESET_VALUE = "\n\u00A0\n\u00A0";
+    private static final String URL_PATTERN = "((?:(?:https?|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?!10(?:\\.\\d{1,3}){3})(?!127(?:\\.\\d{1,3}){3})(?!169\\.254(?:\\.\\d{1,3}){2})(?!192\\.168(?:\\.\\d{1,3}){2})(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\x{00a1}-\\x{ffff}0-9]+-?)*[a-z\\x{00a1}-\\x{ffff}0-9]+)(?:\\.(?:[a-z\\x{00a1}-\\x{ffff}0-9]+-?)*[a-z\\x{00a1}-\\x{ffff}0-9]+)*(?:\\.(?:[a-z\\x{00a1}-\\x{ffff}]{2,})))(?::\\d{2,5})?(?:/[^\\s]*)?)";
     private Class<?> READER;
     private Object reader;
     private JFrame window;
@@ -53,11 +56,11 @@ public final class ConsoleWindow extends OutputStream {
         @Override
         public void write(int b) throws IOException {
             stream.write(b);
-            if (((char) b) == '\n') {
+            if (b == '\n') {
                 try {
                     HTMLEditorKit kit = (HTMLEditorKit) log.getEditorKit();
                     HTMLDocument doc = (HTMLDocument) log.getDocument();
-                    kit.insertHTML(doc, doc.getLength() - 2, new String(stream.toByteArray(), "UTF-8"), 0, 0, null);
+                    kit.insertHTML(doc, doc.getLength() - 2, new String(stream.toByteArray(), "UTF-8").replace("\r", "").replaceAll(URL_PATTERN, "<a href=\"$1\">$1</a>"), 0, 0, null);
                     EventQueue.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -354,6 +357,17 @@ public final class ConsoleWindow extends OutputStream {
                 hScroll();
             }
         });
+        log.addHyperlinkListener(new HyperlinkListener() {
+            @Override
+            public void hyperlinkUpdate(HyperlinkEvent e) {
+                if (HyperlinkEvent.EventType.ACTIVATED.equals(e.getEventType())) {
+                    try {
+                        Desktop desktop = Desktop.getDesktop();
+                        desktop.browse(e.getURL().toURI());
+                    } catch (Exception ex) {}
+                }
+            }
+        });
 
 
         popup = new TextFieldPopup(input, true);
@@ -544,15 +558,10 @@ public final class ConsoleWindow extends OutputStream {
     }
 
     private void loadContent() {
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream((File) Class.forName("net.ME1312.Galaxi.Engine.Library.Log.FileLogger").getMethod("getFile").invoke(null)), "UTF-8")) {
-            boolean r = false;
+        try (FileInputStream reader = new FileInputStream((File) Class.forName("net.ME1312.Galaxi.Engine.Library.Log.FileLogger").getMethod("getFile").invoke(null))) {
             int b;
             while ((b = reader.read()) != -1) {
-                if (r || (char) b != '\r') {
-                    if (r && (char) b != '\n') write('\r');
-                    if (r) r = false;
-                    write(b);
-                } else r = true;
+                write(b);
             }
         } catch (Exception e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
@@ -568,9 +577,9 @@ public final class ConsoleWindow extends OutputStream {
                 stream.write("\u00A0".getBytes("UTF-8"));
             }
 
-            if ((char) b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
+            if (b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
             stream.write(b);
-            if ((char) b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
+            if (b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
         } catch (IOException e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
         }
@@ -771,14 +780,9 @@ public final class ConsoleWindow extends OutputStream {
         private final byte[] BYTES_AMP = "&amp;".getBytes();
         private final byte[] BYTES_LT = "&lt;".getBytes();
         private final byte[] BYTES_GT = "&gt;".getBytes();
-        private List<String> closingAttributes = new ArrayList<String>();
-        private boolean nbsp = true;
-
-        @Override
-        public void close() throws IOException {
-            this.closeAttributes();
-            super.close();
-        }
+        private LinkedList<String> closingAttributes = new LinkedList<String>();
+        private boolean underline = false;
+        private boolean strikethrough = false;
 
         public AnsiUIOutputStream(OutputStream os) {
             super(os);
@@ -790,22 +794,45 @@ public final class ConsoleWindow extends OutputStream {
 
         private void writeAttribute(String s) throws IOException {
             this.write("<" + s + ">");
-            this.closingAttributes.add(0, s.split(" ", 2)[0]);
+            this.closingAttributes.add(0, s);
+        }
+
+        private void closeAttribute(String s) throws IOException {
+            LinkedList<String> closedAttributes = new LinkedList<String>();
+            LinkedList<String> closingAttributes = new LinkedList<String>();
+            LinkedList<String> unclosedAttributes = new LinkedList<String>();
+
+            closingAttributes.addAll(this.closingAttributes);
+            for (String attr : closingAttributes) {
+                if (attr.toLowerCase().startsWith(s.toLowerCase())) {
+                    for (String a : unclosedAttributes) {
+                        closedAttributes.add(0, a);
+                        this.write("</" + a.split(" ", 2)[0] + ">");
+                    }
+                    this.closingAttributes.removeFirstOccurrence(attr);
+                    unclosedAttributes.clear();
+                    this.write("</" + attr.split(" ", 2)[0] + ">");
+                } else {
+                    unclosedAttributes.add(attr);
+                }
+            }
+            for (String attr : closedAttributes) {
+                this.write("<" + attr + ">");
+            }
         }
 
         private void closeAttributes() throws IOException {
-            Iterator i$ = this.closingAttributes.iterator();
-
-            while(i$.hasNext()) {
-                String attr = (String)i$.next();
-                this.write("</" + attr + ">");
+            for (String attr : closingAttributes) {
+                this.write("</" + attr.split(" ", 2)[0] + ">");
             }
 
+            this.underline = false;
+            this.strikethrough = false;
             this.closingAttributes.clear();
         }
 
-        @Override
-        public void write(int data) throws IOException {
+        private boolean nbsp = true;
+        @Override public void write(int data) throws IOException {
             if (data == 32) {
                 if (nbsp) this.out.write(BYTES_NBSP);
                 else super.write(data);
@@ -836,6 +863,15 @@ public final class ConsoleWindow extends OutputStream {
             this.closeAttributes();
         }
 
+        private String parseTextDecoration() {
+            String dec = "";
+            if (underline) dec += " underline";
+            if (strikethrough) dec += " line-through";
+            if (dec.length() <= 0) dec += " none";
+
+            return dec.substring(1);
+        }
+
         @Override
         protected void processSetAttribute(int attribute) throws IOException {
             if (ansi) switch(attribute) {
@@ -846,19 +882,33 @@ public final class ConsoleWindow extends OutputStream {
                     this.writeAttribute("i");
                     break;
                 case 4:
-                    this.writeAttribute("u");
+                    this.closeAttribute("span class=\"ansi-decoration");
+                    this.underline = true;
+                    this.writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
                     break;
                 case 9:
-                    this.writeAttribute("s");
-                case 7:
-                case 27:
-                default:
+                    this.closeAttribute("span class=\"ansi-decoration");
+                    this.strikethrough = true;
+                    this.writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
                     break;
                 case 22:
-                    this.closeAttributes();
+                    this.closeAttribute("b");
+                    break;
+                case 23:
+                    this.closeAttribute("i");
                     break;
                 case 24:
-                    this.closeAttributes();
+                    this.closeAttribute("span class=\"ansi-decoration");
+                    this.underline = false;
+                    this.writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
+                    break;
+                case 29:
+                    this.closeAttribute("span class=\"ansi-decoration");
+                    this.strikethrough = false;
+                    this.writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -886,23 +936,33 @@ public final class ConsoleWindow extends OutputStream {
         }
 
         @Override
+        protected void processDefaultTextColor() throws IOException {
+            this.closeAttribute("span class=\"ansi-foreground");
+        }
+
+        @Override
         protected void processSetForegroundColor(int color) throws IOException {
             processSetForegroundColor(color, false);
         }
 
         @Override
         protected void processSetForegroundColor(int color, boolean bright) throws IOException {
-            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+            if (ansi) this.writeAttribute("span class=\"ansi-foreground\" style=\"color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
         }
 
         @Override
         protected void processSetForegroundColorExt(int index) throws IOException {
-            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + parse8BitColor(index) + ";\"");
+            if (ansi) this.writeAttribute("span class=\"ansi-foreground\" style=\"color: #" + parse8BitColor(index) + ";\"");
         }
 
         @Override
         protected void processSetForegroundColorExt(int r, int g, int b) throws IOException {
-            if (ansi) this.writeAttribute("span class=\"ansi\" style=\"color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+            if (ansi) this.writeAttribute("span class=\"ansi-foreground\" style=\"color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+        }
+
+        @Override
+        protected void processDefaultBackgroundColor() throws IOException {
+            this.closeAttribute("span class=\"ansi-background");
         }
 
         @Override
@@ -923,6 +983,13 @@ public final class ConsoleWindow extends OutputStream {
         @Override
         protected void processSetBackgroundColorExt(int r, int g, int b) throws IOException {
             if (ansi) this.writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+        }
+
+        @Override
+        public void close() throws IOException {
+            open = false;
+            this.closeAttributes();
+            super.close();
         }
     }
     private class SmartScroller implements AdjustmentListener {

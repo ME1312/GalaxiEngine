@@ -14,9 +14,9 @@ import java.util.regex.Pattern;
 public final class FileLogger extends OutputStream {
     private static FileOutputStream writer = null;
     private static File file = null;
-    private PrintStream origin;
+    private OutputStream origin;
 
-    protected FileLogger(PrintStream origin) throws IOException {
+    protected FileLogger(OutputStream origin) throws IOException {
         this.origin = origin;
         if (writer == null) {
             File dir = new File(Galaxi.getInstance().getRuntimeDirectory(), "Logs");
@@ -36,10 +36,10 @@ public final class FileLogger extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        if ((char) b != '\u0000') {
+        if (b != '\u0000') {
             origin.write(b);
             if (writer != null) {
-                if ((char) b == '\n') writer.write('\r');
+                if (b == '\n') writer.write('\r');
                 writer.write(b);
                 writer.flush();
             }

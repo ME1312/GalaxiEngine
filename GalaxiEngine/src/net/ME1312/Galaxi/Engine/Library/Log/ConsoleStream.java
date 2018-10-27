@@ -14,14 +14,13 @@ import java.util.LinkedList;
 /**
  * Console Log Stream Class
  */
-public class ConsoleStream extends PrintStream {
+public class ConsoleStream extends OutputStream {
     private jline.console.ConsoleReader jline;
     private PrintStream original;
     private LinkedList<Integer> buffer;
     private CursorBuffer hidden;
 
     protected ConsoleStream(jline.console.ConsoleReader jline, PrintStream original) {
-        super(original);
         this.jline = jline;
         this.buffer = new LinkedList<Integer>();
         this.original = original;
@@ -30,7 +29,7 @@ public class ConsoleStream extends PrintStream {
     @Override
     public void write(int i) {
         try {
-            if (((char) i) == '\n') {
+            if (i == '\n') {
                 LinkedList<Integer> buffer = this.buffer;
                 this.buffer = new LinkedList<Integer>();
                 hide();

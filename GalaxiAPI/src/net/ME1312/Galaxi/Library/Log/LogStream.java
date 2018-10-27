@@ -65,7 +65,7 @@ public final class LogStream {
     private void write(String str) {
         Logger.messages.add(new NamedContainer<LogStream, String>(this, str));
     }
-    
+
     @SuppressWarnings("unchecked")
     private String convert(TextElement original) {
         StringBuilder message = new StringBuilder();
