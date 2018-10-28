@@ -1,20 +1,14 @@
 package net.ME1312.Galaxi.Library.Log;
 
-import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.TextElement;
-import org.fusesource.jansi.Ansi;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.LinkedList;
-import java.util.logging.Filter;
 
 /**
  * Log Stream Class

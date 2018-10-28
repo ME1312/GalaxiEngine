@@ -5,6 +5,7 @@ import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
 import org.fusesource.jansi.Ansi;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -17,12 +18,12 @@ import java.util.LinkedList;
 public class ConsoleStream extends OutputStream {
     private jline.console.ConsoleReader jline;
     private PrintStream original;
-    private LinkedList<Integer> buffer;
+    private ByteArrayOutputStream buffer;
     private CursorBuffer hidden;
 
     protected ConsoleStream(jline.console.ConsoleReader jline, PrintStream original) {
         this.jline = jline;
-        this.buffer = new LinkedList<Integer>();
+        this.buffer = new ByteArrayOutputStream();
         this.original = original;
     }
 
@@ -30,34 +31,36 @@ public class ConsoleStream extends OutputStream {
     public void write(int i) {
         try {
             if (i == '\n') {
-                LinkedList<Integer> buffer = this.buffer;
-                this.buffer = new LinkedList<Integer>();
+                byte[] buffer = this.buffer.toByteArray();
+                this.buffer = new ByteArrayOutputStream();
+                OutputStream window = getWindow();
                 hide();
-                for (Integer b : buffer) {
-                    original.write(b);
-                    writeToWindow(b);
+                if (window != null) {
+                    window.write(buffer);
+                    window.write(i);
                 }
+                original.write(buffer);
                 original.print(Ansi.ansi().a(Ansi.Attribute.RESET).toString());
                 original.write(i);
-                writeToWindow(i);
                 show();
             } else {
-                buffer.add(i);
+                buffer.write(i);
             }
         } catch (Exception e) {}
     }
 
-    private void writeToWindow(int i) {
+    private OutputStream getWindow() {
         ConsoleReader reader = GalaxiEngine.getInstance().getConsoleReader();
+        OutputStream window = null;
         if (reader != null) try {
             Field f = ConsoleReader.class.getDeclaredField("window");
             f.setAccessible(true);
             if (f.get(reader) != null) {
-                OutputStream window = (OutputStream) f.get(reader);
-                window.write(i);
+                window = (OutputStream) f.get(reader);
             }
             f.setAccessible(false);
         } catch (Exception e) {}
+        return window;
     }
 
     private void hide() {
