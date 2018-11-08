@@ -51,17 +51,17 @@ public final class ConsoleWindow extends OutputStream {
     private boolean first = true;
     private int fontSize = 12;
     private boolean ansi = true;
+    ByteArrayOutputStream scache = new ByteArrayOutputStream();
     private AnsiOutputStream stream = new AnsiUIOutputStream(new OutputStream() {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         @Override
         public void write(int b) throws IOException {
-            stream.write(b);
+            scache.write(b);
             if (b == '\n') {
                 try {
                     HTMLEditorKit kit = (HTMLEditorKit) log.getEditorKit();
                     HTMLDocument doc = (HTMLDocument) log.getDocument();
-                    kit.insertHTML(doc, doc.getLength() - 2, new String(stream.toByteArray(), "UTF-8").replace("\r", "").replaceAll(URL_PATTERN, "<a href=\"$1\">$1</a>"), 0, 0, null);
+                    kit.insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), "UTF-8").replaceAll(URL_PATTERN, "<a href=\"$1\">$1</a>"), 0, 0, null);
                     EventQueue.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -71,7 +71,7 @@ public final class ConsoleWindow extends OutputStream {
                 } catch (BadLocationException e) {
                     e.printStackTrace();
                 }
-                stream = new ByteArrayOutputStream();
+                scache = new ByteArrayOutputStream();
             }
         }
     });
@@ -245,7 +245,7 @@ public final class ConsoleWindow extends OutputStream {
         });
         menu.add(item);
         menu.addSeparator();
-        item = new JCheckBoxMenuItem("Show Text Colors");
+        item = new JCheckBoxMenuItem("Use ANSI Formatting");
         item.setSelected(true);
         item.addActionListener(new ActionListener() {
             @Override
@@ -544,7 +544,6 @@ public final class ConsoleWindow extends OutputStream {
         });
 
         log.setText(RESET_VALUE);
-        log.setText(RESET_VALUE);
         loadContent();
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keys);
         open();
@@ -841,6 +840,8 @@ public final class ConsoleWindow extends OutputStream {
             } else {
                 nbsp = false;
                 switch(data) {
+                    case 13:
+                        break;
                     case 34:
                         this.out.write(BYTES_QUOT);
                         break;
@@ -862,6 +863,36 @@ public final class ConsoleWindow extends OutputStream {
         public void writeLine(byte[] buf, int offset, int len) throws IOException {
             this.write(buf, offset, len);
             this.closeAttributes();
+        }
+
+        @Override
+        protected void processChangeWindowTitle(String label) {
+            window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName() + ((label.length() <= 0)?"":" \u2014 " + label));
+        }
+
+        @Override
+        protected void processEraseLine(int mode) throws IOException {
+            processDeleteLine(1);
+        }
+
+        @Override
+        protected void processEraseScreen(int mode) throws IOException {
+            if (ansi) log.setText(RESET_VALUE);
+        }
+
+        @Override
+        protected void processDeleteLine(int amount) throws IOException {
+            if (ansi) try {
+                String content = log.getDocument().getText(0, log.getDocument().getLength());
+                while (amount > 0) {
+                    int lastLineBreak = content.lastIndexOf('\n');
+                    int length = log.getDocument().getLength() - lastLineBreak - 2;
+                    if (lastLineBreak >= 0 && length > 0) {
+                        log.getDocument().remove(lastLineBreak, length);
+                    }
+                    amount--;
+                }
+            } catch (Exception e) {}
         }
 
         private String parseTextDecoration() {
