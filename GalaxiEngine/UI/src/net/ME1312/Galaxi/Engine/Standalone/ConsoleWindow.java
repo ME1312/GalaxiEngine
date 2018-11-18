@@ -296,10 +296,10 @@ public final class ConsoleWindow extends OutputStream {
         window.setJMenuBar(jMenu);
         window.setContentPane(panel);
         window.pack();
-        if (Galaxi.getInstance().getAppInfo().getIcon() != null) Util.isException(new Util.ExceptionRunnable() {
+        Util.isException(new Util.ExceptionRunnable() {
             @Override
             public void run() throws Throwable {
-                window.setIconImage(Galaxi.getInstance().getAppInfo().getIcon());
+                window.setIconImage(((Galaxi.getInstance().getAppInfo().getIcon() == null)?Galaxi.getInstance().getEngineInfo():Galaxi.getInstance().getAppInfo()).getIcon());
             }
         });
         window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName());
