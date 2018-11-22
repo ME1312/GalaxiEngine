@@ -6,12 +6,17 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
 import net.ME1312.Galaxi.Plugin.PluginManager;
 import net.ME1312.Galaxi.Plugin.TaskBuilder;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public abstract class Galaxi {
     private HashMap<UUID, Timer> schedule = new HashMap<UUID, Timer>();
+    private HashMap<String, URLStreamHandler> protocols = new HashMap<String, URLStreamHandler>();
 
     /**
      * Gets the GalaxiEngine API Methods
@@ -133,6 +138,29 @@ public abstract class Galaxi {
         if (schedule.keySet().contains(sid)) {
             schedule.get(sid).cancel();
             schedule.remove(sid);
+        }
+    }
+
+    /**
+     * Registers a Protocol
+     *
+     * @param generator Stream Generator
+     * @param handles Protocol Handles
+     */
+    public void addProtocol(URLStreamHandler generator, String... handles) {
+        for (String handle : handles) {
+            protocols.put(handle.toLowerCase(), generator);
+        }
+    }
+
+    /**
+     * Unregisters a Protocol
+     *
+     * @param handles Protocol Handles
+     */
+    public void removeProtocol(String... handles) {
+        for (String handle : handles) {
+            protocols.remove(handle.toLowerCase());
         }
     }
 

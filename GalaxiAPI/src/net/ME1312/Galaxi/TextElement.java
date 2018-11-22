@@ -12,7 +12,7 @@ import java.util.*;
 public class TextElement {
     private LinkedList<TextElement> before = new LinkedList<TextElement>();
     private LinkedList<TextElement> after = new LinkedList<TextElement>();
-    private YAMLSection element;
+    protected YAMLSection element;
 
     /**
      * Create a new Text Element

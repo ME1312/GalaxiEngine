@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Engine.Library;
 import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
+import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
 import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
@@ -47,8 +48,8 @@ public class ConsoleReader extends Thread implements Completer {
         this.jline = jline;
         this.running = status;
         try {
-            if (System.getProperty("galaxi.ui.console", "null").equalsIgnoreCase("true") || (System.getProperty("galaxi.ui.console", "null").equalsIgnoreCase("null") && System.console() == null && !GraphicsEnvironment.isHeadless())) {
-                window = (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(Object.class).newInstance(this);
+            if (System.getProperty("galaxi.ui.console", "null").equalsIgnoreCase("true") || GalaxiOption.AUTO_SHOW_CONSOLE_WINDOW.get() && System.console() == null) {
+                openConsoleWindow(true);
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
@@ -64,6 +65,24 @@ public class ConsoleReader extends Thread implements Completer {
      */
     public void setChatListener(Callback<String> listener) {
         this.chat = listener;
+    }
+
+    /**
+     * Open the Console Window
+     *
+     * @param exit Whether to exit when the user closes the window
+     */
+    public void openConsoleWindow(boolean exit) {
+        if (!GraphicsEnvironment.isHeadless())
+            window = Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(Object.class, boolean.class).newInstance(this, exit), null);
+    }
+
+    /**
+     * Close the Console Window
+     */
+    public void closeConsoleWindow() {
+        if (window != null) Util.isException(() -> window.close());
+        window = null;
     }
 
     @SuppressWarnings("unchecked")

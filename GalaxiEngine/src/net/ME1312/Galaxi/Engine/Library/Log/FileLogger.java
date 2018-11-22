@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Engine.Library.Log;
 
+import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -19,7 +20,7 @@ public final class FileLogger extends OutputStream {
     protected FileLogger(OutputStream origin) throws IOException {
         this.origin = origin;
         if (writer == null) {
-            File dir = new File(Galaxi.getInstance().getRuntimeDirectory(), "Logs");
+            File dir = GalaxiOption.LOG_DIRECTORY.get();
             dir.mkdirs();
 
             int i = 1;

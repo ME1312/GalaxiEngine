@@ -60,10 +60,10 @@ public final class LogStream {
         Logger.messages.add(new NamedContainer<LogStream, String>(this, str));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "StringConcatenationInsideStringBufferAppend"})
     private String convert(TextElement original) {
         StringBuilder message = new StringBuilder();
-        TextElement element = new TextElement(original.toRaw());
+        ConsoleTextElement element = new ConsoleTextElement(original.toRaw());
         try {
             Field f = TextElement.class.getDeclaredField("before");
             f.setAccessible(true);
@@ -81,15 +81,15 @@ public final class LogStream {
             int red = element.color().getRed();
             int green = element.color().getGreen();
             int blue = element.color().getBlue();
-            int alpha = element.color().getAlpha();
+            float alpha = element.color().getAlpha() / 255f;
 
-            red = Math.round((alpha * (red / 255f)) * 255);
-            green = Math.round((alpha * (green / 255f)) * 255);
-            blue = Math.round((alpha * (blue / 255f)) * 255);
+            red = Math.round(alpha * red);
+            green = Math.round(alpha * green);
+            blue = Math.round(alpha * blue);
 
-            //noinspection StringConcatenationInsideStringBufferAppend
             message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
         }
+        if (element.onClick() != null) message.append("\033]99900;" + element.onClick() + "\007");
         message.append(element.message());
         message.append("\u001B[m");
 

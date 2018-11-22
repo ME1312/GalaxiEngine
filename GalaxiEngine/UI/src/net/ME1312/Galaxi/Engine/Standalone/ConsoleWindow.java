@@ -19,13 +19,12 @@ import javax.swing.text.html.StyleSheet;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.net.URL;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
 
 public final class ConsoleWindow extends OutputStream {
     private static final String RESET_VALUE = "\n\u00A0\n\u00A0";
-    private static final String URL_PATTERN = "((?:(?:https?|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?!10(?:\\.\\d{1,3}){3})(?!127(?:\\.\\d{1,3}){3})(?!169\\.254(?:\\.\\d{1,3}){2})(?!192\\.168(?:\\.\\d{1,3}){2})(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\x{00a1}-\\x{ffff}0-9]+-?)*[a-z\\x{00a1}-\\x{ffff}0-9]+)(?:\\.(?:[a-z\\x{00a1}-\\x{ffff}0-9]+-?)*[a-z\\x{00a1}-\\x{ffff}0-9]+)*(?:\\.(?:[a-z\\x{00a1}-\\x{ffff}]{2,})))(?::\\d{2,5})?(?:/[^\\s\\x{00a0}<>]*)?)";
     private Class<?> READER;
     private Object reader;
     private JFrame window;
@@ -61,7 +60,7 @@ public final class ConsoleWindow extends OutputStream {
                 try {
                     HTMLEditorKit kit = (HTMLEditorKit) log.getEditorKit();
                     HTMLDocument doc = (HTMLDocument) log.getDocument();
-                    kit.insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), "UTF-8").replaceAll(URL_PATTERN, "<a href=\"$1\">$1</a>"), 0, 0, null);
+                    kit.insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), "UTF-8"), 0, 0, null);
                     EventQueue.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -144,7 +143,7 @@ public final class ConsoleWindow extends OutputStream {
         }
     };
 
-    public ConsoleWindow(final Object reader) {
+    public ConsoleWindow(final Object reader, final boolean exit) {
         if (Util.getDespiteException(new Util.ExceptionReturnRunnable<Boolean>() {
             @Override
             public Boolean run() throws Throwable {
@@ -316,7 +315,15 @@ public final class ConsoleWindow extends OutputStream {
                     @Override
                     public void run() {
                         try {
-                            Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("stop").invoke(Galaxi.getInstance());
+                            if (exit) {
+                                Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("stop").invoke(Galaxi.getInstance());
+                            } else {
+                                Field f = Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getDeclaredField("window");
+                                f.setAccessible(true);
+                                f.set(Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null);
+                                f.setAccessible(false);
+                                close();
+                            }
                         } catch (Exception ex) {
                             Galaxi.getInstance().getAppInfo().getLogger().error.println(ex);
                         }
@@ -363,9 +370,23 @@ public final class ConsoleWindow extends OutputStream {
             public void hyperlinkUpdate(HyperlinkEvent e) {
                 if (HyperlinkEvent.EventType.ACTIVATED.equals(e.getEventType())) {
                     try {
-                        Desktop desktop = Desktop.getDesktop();
-                        desktop.browse(new URL(e.getURL().toString().replace("&quot;", "%22").replace("&lt;", "%3C").replace("&gt;", "%3E").replace("&amp;", "&")).toURI());
-                    } catch (Exception ex) {}
+                        switch (e.getURL().getProtocol().toLowerCase()) {
+                            case "galaxi.execute":
+                                e.getURL().openConnection().connect();
+                                break;
+                            case "file":
+                                Desktop.getDesktop().open(new File(e.getURL().toURI()));
+                                break;
+                            case "mailto":
+                                Desktop.getDesktop().mail(e.getURL().toURI());
+                                break;
+                            default:
+                                Desktop.getDesktop().browse(e.getURL().toURI());
+                                break;
+                        }
+                    } catch (Exception ex) {
+                        Galaxi.getInstance().getAppInfo().getLogger().error.println(ex);
+                    }
                 }
             }
         });
@@ -939,9 +960,22 @@ public final class ConsoleWindow extends OutputStream {
                     this.strikethrough = false;
                     this.writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
                     break;
-                default:
-                    break;
             }
+        }
+
+        @Override
+        protected void processUnknownOperatingSystemCommand(int label, String arg) {
+            try {
+                if (ansi) switch (label) {
+                    case 99900: // Galaxi Console Exclusives 99900-99999
+                        this.closeAttribute("a");
+                        this.writeAttribute("a href=\"" + arg + "\"");
+                        break;
+                    case 99901:
+                        this.closeAttribute("a");
+                        break;
+                }
+            } catch (IOException e) {}
         }
 
         @Override

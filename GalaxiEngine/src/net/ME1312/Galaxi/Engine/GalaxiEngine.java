@@ -11,6 +11,7 @@ import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
+import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import org.fusesource.jansi.AnsiConsole;
@@ -24,6 +25,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLStreamHandler;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.Timer;
@@ -37,7 +39,7 @@ import java.util.jar.Manifest;
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
-    private final UniversalFile dir = new UniversalFile(new File(System.getProperty("user.dir")));
+    private final UniversalFile dir = new UniversalFile(GalaxiOption.APPLICATION_DIRECTORY.get());
     private final ConsoleReader console;
 
     private final PluginInfo app;
@@ -129,6 +131,25 @@ public class GalaxiEngine extends Galaxi {
 
         console = new ConsoleReader(this, jline, running);
         DefaultCommands.load(this);
+
+        URL.setURLStreamHandlerFactory(protocol -> {
+            HashMap<String, URLStreamHandler> protocols;
+            try {
+                Field fx = Galaxi.class.getDeclaredField("protocols");
+                fx.setAccessible(true);
+                protocols = (HashMap<String, URLStreamHandler>) fx.get(this);
+                fx.setAccessible(false);
+            } catch (Exception e) {
+                e.printStackTrace();
+                protocols = new HashMap<String, URLStreamHandler>();
+            }
+
+            if (protocols.keySet().contains(protocol.toLowerCase())) {
+                return protocols.get(protocol.toLowerCase());
+            } else {
+                return null;
+            }
+        });
 
         engine.setUpdateChecker(() -> {
             if (engine == this.app || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(this.app.get().getClass().getProtectionDomain().getCodeSource().getLocation())) try {
