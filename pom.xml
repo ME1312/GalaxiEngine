@@ -11,6 +11,5 @@
         <module>GalaxiAPI</module>
         <module>GalaxiEngine/UI</module>
         <module>GalaxiEngine</module>
-        <module>GalaxiTest</module>
     </modules>
 </project>
