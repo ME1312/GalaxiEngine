@@ -11,7 +11,6 @@ import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
-import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import org.fusesource.jansi.AnsiConsole;
@@ -19,7 +18,6 @@ import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
@@ -96,7 +94,7 @@ public class GalaxiEngine extends Galaxi {
         Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
             engine.setSignature(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
-        engine.setIcon(GalaxiEngine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Standalone/GalaxiIcon.png"));
+        engine.setIcon(GalaxiEngine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Library/Files/GalaxiIcon.png"));
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         pluginManager.findClasses(engine.get().getClass());

@@ -21,7 +21,7 @@ public class ConsoleStream extends OutputStream {
     private ByteArrayOutputStream buffer;
     private CursorBuffer hidden;
 
-    protected ConsoleStream(jline.console.ConsoleReader jline, PrintStream original) {
+    ConsoleStream(jline.console.ConsoleReader jline, PrintStream original) {
         this.jline = jline;
         this.buffer = new ByteArrayOutputStream();
         this.original = original;

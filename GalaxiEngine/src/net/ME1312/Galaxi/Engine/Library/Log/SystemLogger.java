@@ -25,7 +25,7 @@ public final class SystemLogger extends OutputStream {
     private HashMap<String, NamedContainer<LogStream, ByteArrayOutputStream>> last = new HashMap<String, NamedContainer<LogStream, ByteArrayOutputStream>>();
     private boolean error;
 
-    protected SystemLogger(boolean level) {
+    SystemLogger(boolean level) {
         this.error = level;
     }
 

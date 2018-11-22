@@ -5,6 +5,11 @@ import net.ME1312.Galaxi.Library.Util;
 
 import java.io.File;
 
+/**
+ * Galaxi Option Enum
+ *
+ * @param <T> Option Type
+ */
 public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<File> APPLICATION_DIRECTORY = new GalaxiOption<>(new File(System.getProperty("user.dir")));
     public static final GalaxiOption<Boolean> AUTO_SHOW_CONSOLE_WINDOW = new GalaxiOption<>(System.getProperty("galaxi.ui.console", "true").equalsIgnoreCase("true"));

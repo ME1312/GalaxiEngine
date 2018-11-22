@@ -99,7 +99,7 @@ public class YAMLConfig {
         return yaml.dump(config.map);
     }
 
-    protected static DumperOptions getDumperOptions() {
+    static DumperOptions getDumperOptions() {
         DumperOptions options = new DumperOptions();
         options.setAllowUnicode(false);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);

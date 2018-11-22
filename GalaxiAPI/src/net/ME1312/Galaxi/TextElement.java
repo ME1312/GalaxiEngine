@@ -20,9 +20,9 @@ public class TextElement {
      * @param text Text
      */
     public TextElement(String text) {
-        this(create(text));
+        this(generate(text));
     }
-    private static YAMLSection create(String text) {
+    private static YAMLSection generate(String text) {
         if (Util.isNull(text)) throw new NullPointerException();
         YAMLSection element = new YAMLSection();
         element.set("msg", text);

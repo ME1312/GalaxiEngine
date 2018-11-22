@@ -14,9 +14,9 @@ import java.util.*;
  */
 @SuppressWarnings({"unchecked", "unused"})
 public class YAMLSection {
-    protected LinkedHashMap<String, Object> map;
-    protected String handle = null;
-    protected YAMLSection up = null;
+    LinkedHashMap<String, Object> map;
+    String handle = null;
+    YAMLSection up = null;
     private Yaml yaml;
 
     /**
@@ -83,7 +83,7 @@ public class YAMLSection {
         this.map = (LinkedHashMap<String, Object>) (this.yaml = new Yaml(YAMLConfig.getDumperOptions())).loadAs(json.toString(4), LinkedHashMap.class);
     }
 
-    protected YAMLSection(Map<String, ?> map, YAMLSection up, String handle, Yaml yaml) {
+    YAMLSection(Map<String, ?> map, YAMLSection up, String handle, Yaml yaml) {
         this.map = new LinkedHashMap<String, Object>();
         this.yaml = yaml;
         this.handle = handle;

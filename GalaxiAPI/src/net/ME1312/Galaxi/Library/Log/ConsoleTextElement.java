@@ -18,12 +18,82 @@ public class ConsoleTextElement extends TextElement {
     private static HashMap<String, Runnable> callbacks = new HashMap<String, Runnable>();
     private static boolean protocol = false;
 
+    /**
+     * Create a new Text Element
+     *
+     * @param text Text
+     */
     public ConsoleTextElement(String text) {
         super(text);
     }
 
+
+    /**
+     * Load a Text Element (Override this constructor to add properties)
+     *
+     * @param element Raw Element
+     */
     public ConsoleTextElement(YAMLSection element) {
         super(element);
+    }
+
+    @Override
+    public ConsoleTextElement bold(boolean value) {
+        return (ConsoleTextElement) super.bold(value);
+    }
+
+    @Override
+    public ConsoleTextElement italic(boolean value) {
+        return (ConsoleTextElement) super.italic(value);
+    }
+
+    @Override
+    public ConsoleTextElement underline(boolean value) {
+        return (ConsoleTextElement) super.underline(value);
+    }
+
+    @Override
+    public ConsoleTextElement strikethrough(boolean value) {
+        return (ConsoleTextElement) super.strikethrough(value);
+    }
+
+    @Override
+    public ConsoleTextElement color(Color color) {
+        return (ConsoleTextElement) super.color(color);
+    }
+
+    /**
+     * Set the background color of the text
+     *
+     * @param color Text Background Color (or null for default)
+     * @return Text Element
+     */
+    public ConsoleTextElement backgroundColor(Color color) {
+        if (color == null) {
+            element.set("bc", null);
+        } else {
+            YAMLSection bc = new YAMLSection();
+            bc.set("r", color.getRed());
+            bc.set("g", color.getGreen());
+            bc.set("b", color.getBlue());
+            bc.set("a", color.getAlpha());
+            element.set("bc", bc);
+        }
+        return this;
+    }
+
+    /**
+     * Get the background color of the text
+     *
+     * @return Text Background Color (or null for default)
+     */
+    public Color backgroundColor() {
+        if (element.getObject("bc", null) == null) {
+            return null;
+        } else {
+            YAMLSection bc = element.getSection("bc");
+            return new Color(bc.getInt("r"), bc.getInt("g"), bc.getInt("b"), bc.getInt("a"));
+        }
     }
 
     /**
@@ -39,7 +109,7 @@ public class ConsoleTextElement extends TextElement {
         } else {
             id = Util.getNew(callbacks.keySet(), UUID::randomUUID).toString();
             callbacks.put(id, value);
-            Galaxi.getInstance().addProtocol(new URLStreamHandler() {
+            if (!protocol) Galaxi.getInstance().addProtocol(new URLStreamHandler() {
                 @Override
                 protected URLConnection openConnection(URL url) throws IOException {
                     return new URLConnection(url) {
@@ -79,31 +149,6 @@ public class ConsoleTextElement extends TextElement {
             e.printStackTrace();
             return null;
         }
-    }
-
-    @Override
-    public ConsoleTextElement bold(boolean value) {
-        return (ConsoleTextElement) super.bold(value);
-    }
-
-    @Override
-    public ConsoleTextElement italic(boolean value) {
-        return (ConsoleTextElement) super.italic(value);
-    }
-
-    @Override
-    public ConsoleTextElement underline(boolean value) {
-        return (ConsoleTextElement) super.underline(value);
-    }
-
-    @Override
-    public ConsoleTextElement strikethrough(boolean value) {
-        return (ConsoleTextElement) super.strikethrough(value);
-    }
-
-    @Override
-    public ConsoleTextElement color(Color color) {
-        return (ConsoleTextElement) super.color(color);
     }
 
     @Override

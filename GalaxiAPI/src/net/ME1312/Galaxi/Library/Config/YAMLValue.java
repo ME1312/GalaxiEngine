@@ -13,12 +13,12 @@ import java.util.UUID;
  */
 @SuppressWarnings({"unchecked", "unused"})
 public class YAMLValue {
-    protected Object obj;
-    protected String label;
-    protected YAMLSection up;
+    Object obj;
+    String label;
+    YAMLSection up;
     private Yaml yaml;
 
-    protected YAMLValue(Object obj, YAMLSection up, String label, Yaml yaml) {
+    YAMLValue(Object obj, YAMLSection up, String label, Yaml yaml) {
         this.obj = obj;
         this.label = label;
         this.yaml = yaml;

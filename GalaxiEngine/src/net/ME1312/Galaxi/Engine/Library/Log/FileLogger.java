@@ -14,10 +14,13 @@ import java.util.regex.Pattern;
  */
 public final class FileLogger extends OutputStream {
     private static FileOutputStream writer = null;
+    private static FileOutputStream tmpwriter = null;
+    private static HTMLogger htmwriter = null;
     private static File file = null;
+    private static File tmp = null;
     private OutputStream origin;
 
-    protected FileLogger(OutputStream origin) throws IOException {
+    FileLogger(OutputStream origin) throws IOException {
         this.origin = origin;
         if (writer == null) {
             File dir = GalaxiOption.LOG_DIRECTORY.get();
@@ -26,12 +29,20 @@ public final class FileLogger extends OutputStream {
             int i = 1;
             try {
                 for (File file : dir.listFiles()) {
-                    if (Pattern.compile("^" + Pattern.quote(Galaxi.getInstance().getAppInfo().getName()) + " #\\d+ \\((?:\\d{1,2}-){2}\\d+\\)\\.log(?:\\.zip)?$").matcher(file.getName()).find()) i++;
+                    if (Pattern.compile("^" + Pattern.quote(Galaxi.getInstance().getAppInfo().getName()) + " #\\d+ \\((?:\\d{1,2}-){2}\\d+\\)\\.html(?:\\.zip)?$").matcher(file.getName()).find()) i++;
                 }
             } catch (Exception e) {}
 
-            file = new File(dir,  Galaxi.getInstance().getAppInfo().getName() + " #" + i + " (" + new SimpleDateFormat("MM-dd-yyyy").format(Calendar.getInstance().getTime()) + ").log");
-            writer = new FileOutputStream(file);
+            String name = Galaxi.getInstance().getAppInfo().getName() + " #" + i + " (" + new SimpleDateFormat("MM-dd-yyyy").format(Calendar.getInstance().getTime()) + ')';
+            tmp = File.createTempFile(Galaxi.getInstance().getAppInfo().getName() + '.', ".log");
+            file = new File(dir, name + ".html");
+            Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Library/Files/GalaxiLog.html", file.getAbsolutePath());
+
+            tmpwriter = new FileOutputStream(tmp);
+            writer = new FileOutputStream(file, true);
+            writer.write(("<h1>" + name + "</h1>\n").getBytes("UTF-8"));
+            writer.flush();
+            htmwriter = new HTMLogger(writer);
         }
     }
 
@@ -39,10 +50,14 @@ public final class FileLogger extends OutputStream {
     public void write(int b) throws IOException {
         if (b != '\u0000') {
             origin.write(b);
-            if (writer != null) {
-                if (b == '\n') writer.write('\r');
-                writer.write(b);
-                writer.flush();
+            if (htmwriter != null) {
+                if (b == '\n') htmwriter.write('\r');
+                htmwriter.write(b);
+                htmwriter.flush();
+            }
+            if (tmpwriter != null) {
+                tmpwriter.write(b);
+                tmpwriter.flush();
             }
         }
     }
@@ -53,13 +68,18 @@ public final class FileLogger extends OutputStream {
      * @return Log File
      */
     public static File getFile() {
-        return file;
+        return tmp;
     }
 
     private static void stop() {
         File compressed = (file != null)?new File(file.getParentFile(), file.getName() + ".zip"):null;
         try {
-            if (writer != null) writer.close();
+            if (htmwriter != null) {
+                htmwriter.close();
+                writer = new FileOutputStream(file, true);
+                writer.write(("\n</body>\n</html>").getBytes("UTF-8"));
+                writer.close();
+            }
             if (file != null && compressed != null) {
                 FileOutputStream fos = new FileOutputStream(compressed);
                 Util.zip(file, fos);
@@ -67,10 +87,17 @@ public final class FileLogger extends OutputStream {
                 fos.close();
                 file.delete();
             }
+            if (tmpwriter != null) {
+                tmpwriter.close();
+            }
         } catch (Exception e) {
             if (compressed != null && !compressed.exists()) compressed.delete();
         }
+
+        if (tmp != null) tmp.delete();
+        tmp = null;
         file = null;
         writer = null;
+        htmwriter = null;
     }
 }

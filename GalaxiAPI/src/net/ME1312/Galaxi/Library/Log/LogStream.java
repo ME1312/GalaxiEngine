@@ -91,6 +91,18 @@ public final class LogStream {
 
             message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
         }
+        if (element.backgroundColor() != null) {
+            int red = element.backgroundColor().getRed();
+            int green = element.backgroundColor().getGreen();
+            int blue = element.backgroundColor().getBlue();
+            float alpha = element.backgroundColor().getAlpha() / 255f;
+
+            red = Math.round(alpha * red);
+            green = Math.round(alpha * green);
+            blue = Math.round(alpha * blue);
+
+            message.append("\u001B[48;2;" + red + ";" + green + ";" + blue + "m");
+        }
         if (element.onClick() != null) message.append("\033]99900;" + Util.getDespiteException(() -> URLEncoder.encode(element.onClick().toString(), "UTF-8"), "") + "\007");
         message.append(element.message());
         message.append("\u001B[m");

@@ -78,9 +78,6 @@
                             <tasks>
                                 <mkdir dir="${project.build.directory}" />
                                 <copy file="${basedir}/../LICENSE" todir="${project.build.directory}/classes" />
-                                <copy todir="${project.build.directory}/classes">
-                                        <fileset dir="${project.build.directory}/../GalaxiEngine UI/classes" includes="**" />
-                                </copy>
                             </tasks>
                         </configuration>
                     </execution>
@@ -94,6 +91,7 @@
                             <tasks>
                                 <jar destfile="${basedir}/../Artifacts/GalaxiEngine.jar" update="true">
                                     <zipfileset src="${basedir}/UI/jansi.jar" prefix="org" />
+                                    <fileset dir="${project.build.directory}/../GalaxiEngine UI/classes" includes="**" />
                                 </jar>
                             </tasks>
                         </configuration>
