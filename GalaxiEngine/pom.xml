@@ -69,7 +69,6 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>ant-before</id>
                         <phase>process-resources</phase>
                         <goals>
                             <goal>run</goal>
@@ -78,21 +77,6 @@
                             <tasks>
                                 <mkdir dir="${project.build.directory}" />
                                 <copy file="${basedir}/../LICENSE" todir="${project.build.directory}/classes" />
-                            </tasks>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>ant-after</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <tasks>
-                                <jar destfile="${basedir}/../Artifacts/GalaxiEngine.jar" update="true">
-                                    <zipfileset src="${basedir}/UI/jansi.jar" prefix="org" />
-                                    <fileset dir="${project.build.directory}/../GalaxiEngine UI/classes" includes="**" />
-                                </jar>
                             </tasks>
                         </configuration>
                     </execution>
