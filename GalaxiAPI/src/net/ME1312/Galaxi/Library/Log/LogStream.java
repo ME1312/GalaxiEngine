@@ -2,12 +2,14 @@ package net.ME1312.Galaxi.Library.Log;
 
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.NamedContainer;
+import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.TextElement;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.net.URLEncoder;
 import java.util.LinkedList;
 
 /**
@@ -89,7 +91,7 @@ public final class LogStream {
 
             message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
         }
-        if (element.onClick() != null) message.append("\033]99900;" + element.onClick() + "\007");
+        if (element.onClick() != null) message.append("\033]99900;" + Util.getDespiteException(() -> URLEncoder.encode(element.onClick().toString(), "UTF-8"), "") + "\007");
         message.append(element.message());
         message.append("\u001B[m");
 

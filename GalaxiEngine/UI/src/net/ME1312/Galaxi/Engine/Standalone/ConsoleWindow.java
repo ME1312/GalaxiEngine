@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.URLDecoder;
 import java.util.*;
 import java.util.List;
 
@@ -342,7 +343,15 @@ public final class ConsoleWindow extends OutputStream {
         log.setContentType("text/html");
         log.setEditorKit(new HTMLEditorKit());
         StyleSheet style = new StyleSheet();
-        style.addRule("body {color: #dcdcdc; font-family: courier; font-size: 12;}\n");
+        String font;
+        try {
+            Font f = Font.createFont(Font.TRUETYPE_FONT, ConsoleWindow.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Standalone/GalaxiFont.ttf"));
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(f);
+            font = f.getFontName();
+        } catch (Exception e) {
+            font = "Courier";
+        }
+        style.addRule("body {color: #dcdcdc; font-family: " + font + "; font-size: 12;}\n");
         log.setDocument(new HTMLDocument(style));
         log.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45)));
         new TextFieldPopup(log, false);
@@ -969,7 +978,7 @@ public final class ConsoleWindow extends OutputStream {
                 if (ansi) switch (label) {
                     case 99900: // Galaxi Console Exclusives 99900-99999
                         this.closeAttribute("a");
-                        this.writeAttribute("a href=\"" + arg + "\"");
+                        this.writeAttribute("a href=\"" + URLDecoder.decode(arg, "UTF-8") + "\"");
                         break;
                     case 99901:
                         this.closeAttribute("a");
