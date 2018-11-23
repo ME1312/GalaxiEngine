@@ -7,6 +7,9 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.LinkedList;
 
+/**
+ * HTML Log Stream Class
+ */
 public class HTMLogger extends AnsiOutputStream {
     private final String[] ANSI_COLOR_MAP = new String[]{"000000", "cd0000", "25bc24", "d7d700", "0000c3", "be00be", "00a5dc", "cccccc"};
     private final String[] ANSI_BRIGHT_COLOR_MAP = new String[]{"808080", "ff0000", "31e722", "ffff00", "0000ff", "ff00ff", "00c8ff", "ffffff"};
@@ -20,6 +23,11 @@ public class HTMLogger extends AnsiOutputStream {
     private boolean underline = false;
     private boolean strikethrough = false;
 
+    /**
+     * Parse data from an OutputStream
+     *
+     * @param os OutputStream
+     */
     public HTMLogger(OutputStream os) {
         super(os);
     }
@@ -99,11 +107,6 @@ public class HTMLogger extends AnsiOutputStream {
                     super.write(data);
             }
         }
-    }
-
-    public void writeLine(byte[] buf, int offset, int len) throws IOException {
-        this.write(buf, offset, len);
-        this.closeAttributes();
     }
 
     private String parseTextDecoration() {

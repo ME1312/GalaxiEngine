@@ -29,13 +29,14 @@ public final class FileLogger extends OutputStream {
             int i = 1;
             try {
                 for (File file : dir.listFiles()) {
-                    if (Pattern.compile("^" + Pattern.quote(Galaxi.getInstance().getAppInfo().getName()) + " #\\d+ \\((?:\\d{1,2}-){2}\\d+\\)\\.html(?:\\.zip)?$").matcher(file.getName()).find()) i++;
+                    if (Pattern.compile("^" + Pattern.quote(Galaxi.getInstance().getAppInfo().getName()) + " #\\d+ \\((?:\\d{1,2}-){2}\\d+\\)\\.log(?:\\.(?:htm|zip))?$").matcher(file.getName()).find()) i++;
                 }
             } catch (Exception e) {}
 
             String name = Galaxi.getInstance().getAppInfo().getName() + " #" + i + " (" + new SimpleDateFormat("MM-dd-yyyy").format(Calendar.getInstance().getTime()) + ')';
             tmp = File.createTempFile(Galaxi.getInstance().getAppInfo().getName() + '.', ".log");
-            file = new File(dir, name + ".html");
+            tmp.deleteOnExit();
+            file = new File(dir, name + ".log.htm");
             Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Library/Files/GalaxiLog.html", file.getAbsolutePath());
 
             tmpwriter = new FileOutputStream(tmp);
@@ -51,7 +52,6 @@ public final class FileLogger extends OutputStream {
         if (b != '\u0000') {
             origin.write(b);
             if (htmwriter != null) {
-                if (b == '\n') htmwriter.write('\r');
                 htmwriter.write(b);
                 htmwriter.flush();
             }
@@ -72,13 +72,11 @@ public final class FileLogger extends OutputStream {
     }
 
     private static void stop() {
-        File compressed = (file != null)?new File(file.getParentFile(), file.getName() + ".zip"):null;
+        File compressed = (file != null)?new File(file.getParentFile(), file.getName().substring(0, file.getName().length() - 4) + ".zip"):null;
         try {
             if (htmwriter != null) {
-                htmwriter.close();
-                writer = new FileOutputStream(file, true);
                 writer.write(("\n</body>\n</html>").getBytes("UTF-8"));
-                writer.close();
+                htmwriter.close();
             }
             if (file != null && compressed != null) {
                 FileOutputStream fos = new FileOutputStream(compressed);
