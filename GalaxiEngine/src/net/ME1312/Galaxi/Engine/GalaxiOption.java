@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Engine;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
 
+import java.awt.*;
 import java.io.File;
 
 /**
@@ -14,6 +15,7 @@ public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<File> APPLICATION_DIRECTORY = new GalaxiOption<>(new File(System.getProperty("user.dir")));
     public static final GalaxiOption<Boolean> AUTO_SHOW_CONSOLE_WINDOW = new GalaxiOption<>(System.getProperty("galaxi.ui.console", "true").equalsIgnoreCase("true"));
     public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(new File(APPLICATION_DIRECTORY.get(), "Logs"));
+    public static final GalaxiOption<Boolean> USE_RAW_LOG = new GalaxiOption<>(System.getProperty("galaxi.log.raw", "null").equalsIgnoreCase("true") || GraphicsEnvironment.isHeadless());
 
     private GalaxiOption(T def) {
         super(def);
