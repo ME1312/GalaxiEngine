@@ -56,16 +56,14 @@ public final class FileLogger extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        if (b != '\u0000') {
-            origin.write(b);
-            if (writer != null) {
-                writer.write(b);
-                writer.flush();
-            }
-            if (tmpwriter != null) {
-                tmpwriter.write(b);
-                tmpwriter.flush();
-            }
+        origin.write(b);
+        if (writer != null) {
+            writer.write(b);
+            writer.flush();
+        }
+        if (tmpwriter != null) {
+            tmpwriter.write(b);
+            tmpwriter.flush();
         }
     }
 

@@ -103,7 +103,7 @@ public final class LogStream {
 
             message.append("\u001B[48;2;" + red + ";" + green + ";" + blue + "m");
         }
-        if (element.onClick() != null) message.append("\033]99900;" + Util.getDespiteException(() -> URLEncoder.encode(element.onClick().toString(), "UTF-8"), "") + "\007");
+        if (element.onClick() != null) message.append("\033]99900;" + element.onClick().toString() + "\007");
         message.append(element.message());
         message.append("\u001B[m");
 

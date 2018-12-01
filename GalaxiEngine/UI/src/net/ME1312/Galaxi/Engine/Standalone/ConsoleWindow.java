@@ -50,9 +50,8 @@ public final class ConsoleWindow extends OutputStream {
     private boolean open = false;
     private boolean first = true;
     private int fontSize = 12;
-    private boolean ansi = true;
     ByteArrayOutputStream scache = new ByteArrayOutputStream();
-    private AnsiOutputStream stream = new AnsiUIOutputStream(new OutputStream() {
+    private AnsiUIOutputStream stream = new AnsiUIOutputStream(new OutputStream() {
 
         @Override
         public void write(int b) throws IOException {
@@ -250,7 +249,7 @@ public final class ConsoleWindow extends OutputStream {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                ansi = ((AbstractButton) event.getSource()).getModel().isSelected();
+                stream.ansi(((AbstractButton) event.getSource()).getModel().isSelected());
                 log.setText(RESET_VALUE);
                 ConsoleWindow.this.loadContent();
             }
@@ -805,6 +804,10 @@ public final class ConsoleWindow extends OutputStream {
     private class AnsiUIOutputStream extends HTMLogger {
         public AnsiUIOutputStream(OutputStream os) {
             super(os);
+        }
+
+        public void ansi(boolean value) {
+            ansi = value;
         }
 
         @Override

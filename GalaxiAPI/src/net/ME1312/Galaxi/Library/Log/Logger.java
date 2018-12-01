@@ -161,7 +161,7 @@ public final class Logger {
                                 last = stream;
                                 logged = true;
                                 terminated = false;
-                                stream.stream.get().print('\u0000' + message + '\u0000');
+                                stream.stream.get().write(message.getBytes("UTF-8"));
 
                                 if (i < messages.size()) {
                                     terminated = true;
