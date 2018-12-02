@@ -10,16 +10,27 @@ import net.ME1312.Galaxi.Library.Util;
  */
 public class GalaxiStopEvent extends Event implements Cancellable {
     private boolean cancelled;
+    private int code;
 
     /**
      * Galaxi Engine Stop Event
      *
      * @param engine GalaxiEngine
+     * @param code Exit Code
      */
-    public GalaxiStopEvent(Galaxi engine) {
+    public GalaxiStopEvent(Galaxi engine, int code) {
         if (Util.isNull(engine)) throw new NullPointerException();
+        this.code = code;
     }
 
+    /**
+     * Exit Code from the app
+     *
+     * @return Exit Code
+     */
+    public int getStopCode() {
+        return code;
+    }
 
     @Override
     public boolean isCancelled() {

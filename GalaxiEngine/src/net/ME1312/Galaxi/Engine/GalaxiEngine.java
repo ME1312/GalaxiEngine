@@ -172,14 +172,14 @@ public class GalaxiEngine extends Galaxi {
     }
 
     /**
-     * Start the Galaxi Engine
+     * Start the GalaxiEngine
      */
     public void start() {
         start(null);
     }
 
     /**
-     * Start the Galaxi Engine
+     * Start the GalaxiEngine
      *
      * @param callback Callback for when Galaxi is stopped
      */
@@ -205,13 +205,21 @@ public class GalaxiEngine extends Galaxi {
     }
 
     /**
-     * Stop the Galaxi Engine
+     * Stop the GalaxiEngine
      */
-    private boolean stopping = false;
     public void stop() {
+        stop(0);
+    }
+
+    /**
+     * Stop the GalaxiEngine
+     *
+     * @param code Exit Code
+     */
+    public void stop(int code) {
         if (!stopping) {
             stopping = true;
-            GalaxiStopEvent event = new GalaxiStopEvent(this);
+            GalaxiStopEvent event = new GalaxiStopEvent(this, code);
             pluginManager.executeEvent(event);
             if (!event.isCancelled()) {
                 running.set(false);
@@ -227,14 +235,13 @@ public class GalaxiEngine extends Galaxi {
                     m.setAccessible(true);
                     m.invoke(null);
                     m.setAccessible(false);
-                } catch (Exception e) {
-                }
+                } catch (Exception e) {}
 
-                System.exit(0);
-            }
-            stopping = false;
+                System.exit(code);
+            } else stopping = false;
         }
     }
+    private boolean stopping = false;
 
     /**
      * Get the ConsoleReader

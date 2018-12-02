@@ -42,8 +42,6 @@ public class HTMLogger extends AnsiOutputStream {
                 } else {
                     nbsp = false;
                     switch(data) {
-                        case 13:
-                            break;
                         case 34:
                             raw.write(BYTES_QUOT);
                             break;
@@ -272,5 +270,6 @@ public class HTMLogger extends AnsiOutputStream {
     public void close() throws IOException {
         closeAttributes();
         super.close();
+        raw.close();
     }
 }
