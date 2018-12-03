@@ -318,10 +318,8 @@ public final class ConsoleWindow extends OutputStream {
                             if (exit) {
                                 Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("stop").invoke(Galaxi.getInstance());
                             } else {
-                                Field f = Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getDeclaredField("window");
-                                f.setAccessible(true);
-                                f.set(Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null);
-                                f.setAccessible(false);
+                                Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getDeclaredField("window"),
+                                        Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null);
                                 close();
                             }
                         } catch (Exception ex) {

@@ -11,6 +11,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Log Stream Class
@@ -67,10 +68,7 @@ public final class LogStream {
         StringBuilder message = new StringBuilder();
         ConsoleTextElement element = new ConsoleTextElement(original.toRaw());
         try {
-            Field f = TextElement.class.getDeclaredField("before");
-            f.setAccessible(true);
-            for (TextElement e : (LinkedList<TextElement>) f.get(element)) message.append(convert(e));
-            f.setAccessible(false);
+            for (TextElement e : Util.<List<TextElement>>reflect(TextElement.class.getDeclaredField("before"), element)) message.append(convert(e));
         } catch (Throwable e) {
             getLogger().error.println(e);
         }
@@ -108,10 +106,7 @@ public final class LogStream {
         message.append("\u001B[m");
 
         try {
-            Field f = TextElement.class.getDeclaredField("after");
-            f.setAccessible(true);
-            for (TextElement e : (LinkedList<TextElement>) f.get(element)) message.append(convert(e));
-            f.setAccessible(false);
+            for (TextElement e : Util.<List<TextElement>>reflect(TextElement.class.getDeclaredField("after"), element)) message.append(convert(e));
         } catch (Throwable e) {
             getLogger().error.println(e);
         }

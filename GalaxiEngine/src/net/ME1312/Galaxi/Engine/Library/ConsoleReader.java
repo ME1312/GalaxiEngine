@@ -111,10 +111,7 @@ public class ConsoleReader extends Thread implements Completer {
 
             TreeMap<String, Command> commands;
             try {
-                Field f = PluginManager.class.getDeclaredField("commands");
-                f.setAccessible(true);
-                commands = (TreeMap<String, Command>) f.get(engine.getPluginManager());
-                f.setAccessible(false);
+                commands = Util.reflect(PluginManager.class.getDeclaredField("commands"), engine.getPluginManager());
             } catch (Exception e) {
                 e.printStackTrace();
                 commands = new TreeMap<String, Command>();
@@ -188,10 +185,7 @@ public class ConsoleReader extends Thread implements Completer {
 
             TreeMap<String, Command> commands;
             try {
-                Field f = PluginManager.class.getDeclaredField("commands");
-                f.setAccessible(true);
-                commands = (TreeMap<String, Command>) f.get(engine.getPluginManager());
-                f.setAccessible(false);
+                commands = Util.reflect(PluginManager.class.getDeclaredField("commands"), engine.getPluginManager());
             } catch (Exception e) {
                 e.printStackTrace();
                 commands = new TreeMap<String, Command>();

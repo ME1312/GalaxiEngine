@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Engine.Standalone;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Log.Logger;
+import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.io.File;
@@ -27,11 +28,7 @@ public class StandaloneMode {
     private static void start() {
         try {
             if (GalaxiEngine.getInstance() == null) {
-                Constructor m = GalaxiEngine.class.getDeclaredConstructor(PluginInfo.class);
-                m.setAccessible(true);
-                GalaxiEngine engine = (GalaxiEngine) m.newInstance(new Object[]{null});
-                m.setAccessible(false);
-
+                GalaxiEngine engine = Util.reflect(GalaxiEngine.class.getDeclaredConstructor(PluginInfo.class), (Object) null);
                 Logger log = engine.getAppInfo().getLogger();
 
                 long begin = Calendar.getInstance().getTime().getTime();

@@ -86,7 +86,7 @@ public class GalaxiEngine extends Galaxi {
     @SuppressWarnings("unchecked")
     private GalaxiEngine(PluginInfo app) throws Exception {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
-        GalaxiOption.lock = true;
+        Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
 
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);
@@ -102,16 +102,7 @@ public class GalaxiEngine extends Galaxi {
         pluginManager.findClasses(this.app.get().getClass());
 
         jline.console.ConsoleReader jline = new jline.console.ConsoleReader(System.in, AnsiConsole.out);
-        Method m = SystemLogger.class.getDeclaredMethod("start", PrintStream.class, PrintStream.class, jline.console.ConsoleReader.class);
-        m.setAccessible(true);
-        m.invoke(null, AnsiConsole.out(), AnsiConsole.err(), jline);
-        m.setAccessible(false);
-
-        Field f = PluginManager.class.getDeclaredField("plugins");
-        f.setAccessible(true);
-        HashMap<String, PluginInfo> plugins = (HashMap<String, PluginInfo>) f.get(pluginManager);
-        f.set(pluginManager, plugins);
-        f.setAccessible(false);
+        Util.reflect(SystemLogger.class.getDeclaredMethod("start", PrintStream.class, PrintStream.class, jline.console.ConsoleReader.class), null, AnsiConsole.out(), AnsiConsole.err(), jline);
 
         this.app.getLogger().info.println("Loading " + engine.getName() + " v" + engine.getVersion().toString() + " Libraries");
         for (PluginInfo.Dependency depend : this.app.getDependancies()) {
@@ -134,10 +125,7 @@ public class GalaxiEngine extends Galaxi {
         URL.setURLStreamHandlerFactory(protocol -> {
             HashMap<String, URLStreamHandler> protocols;
             try {
-                Field fx = Galaxi.class.getDeclaredField("protocols");
-                fx.setAccessible(true);
-                protocols = (HashMap<String, URLStreamHandler>) fx.get(this);
-                fx.setAccessible(false);
+                protocols = Util.reflect(Galaxi.class.getDeclaredField("protocols"), this);
             } catch (Exception e) {
                 e.printStackTrace();
                 protocols = new HashMap<String, URLStreamHandler>();
@@ -231,12 +219,7 @@ public class GalaxiEngine extends Galaxi {
                     app.getLogger().error.println(e);
                 }
 
-                try {
-                    Method m = SystemLogger.class.getDeclaredMethod("stop");
-                    m.setAccessible(true);
-                    m.invoke(null);
-                    m.setAccessible(false);
-                } catch (Exception e) {}
+                Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
 
                 System.exit(code);
             } else stopping = false;

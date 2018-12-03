@@ -1,6 +1,7 @@
 package net.ME1312.Galaxi.Library.Event;
 
 import net.ME1312.Galaxi.Galaxi;
+import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.lang.reflect.Field;
@@ -40,11 +41,8 @@ public abstract class Event {
     @SuppressWarnings({"deprecation", "unchecked"})
     public Map<PluginInfo, List<Method>> getHandlers() throws IllegalAccessException {
         try {
-            Field f = Class.forName("net.ME1312.Galaxi.Engine.PluginManager").getDeclaredField("listeners");
-            f.setAccessible(true);
-            TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> listeners = (TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>>) f.get(getEngine());
+            TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> listeners = Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.PluginManager").getDeclaredField("listeners"), getEngine());
             HashMap<PluginInfo, List<Method>> map = new LinkedHashMap<PluginInfo, List<Method>>();
-            f.setAccessible(false);
             for (Short order : listeners.keySet()) {
                 if (!listeners.get(order).keySet().contains(getClass())) continue;
                 for (PluginInfo plugin : listeners.get(order).get(getClass()).keySet()) {

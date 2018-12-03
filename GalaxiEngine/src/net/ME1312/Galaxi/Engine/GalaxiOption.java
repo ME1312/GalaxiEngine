@@ -17,7 +17,7 @@ public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(null, usr -> new File(APPLICATION_DIRECTORY.get(), "Logs"));
     public static final GalaxiOption<Boolean> USE_RAW_LOG = new GalaxiOption<>("galaxi.log.raw", usr -> usr.equalsIgnoreCase("true") || (usr.length() == 0 && GraphicsEnvironment.isHeadless()));
 
-    static boolean lock = false;
+    private static boolean lock = false;
     private final T def;
     private final String usr;
     private GalaxiOption(String usr, OptionConstructor<T> def) {

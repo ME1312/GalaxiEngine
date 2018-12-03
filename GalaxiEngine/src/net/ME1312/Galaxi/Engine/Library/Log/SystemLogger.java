@@ -31,15 +31,9 @@ public final class SystemLogger extends OutputStream {
 
     private static void start(PrintStream out, PrintStream err, ConsoleReader in) throws Exception {
         if (Util.isNull(out, err)) throw new NullPointerException();
-        Field f = Logger.class.getDeclaredField("pso");
-        f.setAccessible(true);
-        ((Container<PrintStream>) f.get(null)).set(new PrintStream(new FileLogger(new ConsoleStream(in, out)), false, "UTF-8"));
-        f.setAccessible(false);
 
-        f = Logger.class.getDeclaredField("pse");
-        f.setAccessible(true);
-        ((Container<PrintStream>) f.get(null)).set(new PrintStream(new FileLogger(new ConsoleStream(in, err)), false, "UTF-8"));
-        f.setAccessible(false);
+        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, out)), false, "UTF-8"));
+        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pse"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, err)), false, "UTF-8"));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
         System.setErr(new PrintStream(new SystemLogger(true), false, "UTF-8"));
@@ -47,14 +41,7 @@ public final class SystemLogger extends OutputStream {
 
     @SuppressWarnings("unchecked")
     private List<String> getKnownClasses() {
-        List<String> value = null;
-        try {
-            Field f = PluginManager.class.getDeclaredField("knownClasses");
-            f.setAccessible(true);
-            value = (List<String>) f.get(GalaxiEngine.getInstance().getPluginManager());
-            f.setAccessible(false);
-        } catch (Exception e) {}
-        return value;
+        return Util.getDespiteException(() -> Util.reflect(PluginManager.class.getDeclaredField("knownClasses"), GalaxiEngine.getInstance().getPluginManager()), null);
     }
 
     @Override
@@ -83,24 +70,14 @@ public final class SystemLogger extends OutputStream {
     private static void stop() throws Exception {
         Thread.sleep(125);
 
-        Field f = Logger.class.getDeclaredField("running");
-        f.setAccessible(true);
-        f.set(null, false);
-        f.setAccessible(false);
+        Util.reflect(Logger.class.getDeclaredField("running"), null, false);
 
-        f = Logger.class.getDeclaredField("thread");
-        f.setAccessible(true);
-        Thread thread = (Thread) f.get(null);
-        f.setAccessible(false);
-
+        Thread thread = Util.reflect(Logger.class.getDeclaredField("thread"), null);
         if (thread != null) while (thread.isAlive()) {
             Thread.sleep(125);
         }
 
-        Method m = FileLogger.class.getDeclaredMethod("stop");
-        m.setAccessible(true);
-        m.invoke(null);
-        m.setAccessible(false);
+        Util.reflect(FileLogger.class.getDeclaredMethod("stop"), null);
     }
 }
 

@@ -164,10 +164,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
                                     }
                                     plugin.addExtra("galaxi.plugin.loadafter", new ArrayList<String>());
                                     if (loader.getFiles().length > 0 && loader.getFiles()[0] != null) {
-                                        Field f = PluginInfo.class.getDeclaredField("dir");
-                                        f.setAccessible(true);
-                                        f.set(plugin, new File(loader.getFiles()[0].getParentFile(), plugin.getName()));
-                                        f.setAccessible(false);
+                                        Util.reflect(PluginInfo.class.getDeclaredField("dir"), plugin, new File(loader.getFiles()[0].getParentFile(), plugin.getName()));
                                     }
                                     plugins.put(plugin.getName().toLowerCase(), plugin);
                                 } catch (IllegalPluginException e) {
@@ -333,13 +330,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
     @SuppressWarnings("unchecked")
     public PluginInfo getPlugin(Class<?> main) {
         if (Util.isNull(main)) throw new NullPointerException();
-        return Util.getDespiteException(() -> {
-            Field f = PluginInfo.class.getDeclaredField("pluginMap");
-            f.setAccessible(true);
-            HashMap<Class<?>, PluginInfo> map = (HashMap<Class<?>, PluginInfo>) f.get(null);
-            f.setAccessible(false);
-            return map.get(main);
-        }, null);
+        return Util.getDespiteException(() -> Util.reflect(PluginInfo.class.getDeclaredField("pluginMap"), null), null);
     }
 
     @Override
@@ -425,10 +416,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
             if (listeners.get(order).keySet().contains(event.getClass())) {
                 for (PluginInfo plugin : listeners.get(order).get(event.getClass()).keySet()) {
                     try {
-                        Field pf = Event.class.getDeclaredField("plugin");
-                        pf.setAccessible(true);
-                        pf.set(event, plugin);
-                        pf.setAccessible(false);
+                        Util.reflect(Event.class.getDeclaredField("plugin"), event, plugin);
                     } catch (Exception e) {
                         engine.getAppInfo().getLogger().error.println(e);
                     }
@@ -451,10 +439,7 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
             }
         }
         try {
-            Field pf = Event.class.getDeclaredField("plugin");
-            pf.setAccessible(true);
-            pf.set(event, null);
-            pf.setAccessible(false);
+            Util.reflect(Event.class.getDeclaredField("plugin"), event, null);
         } catch (Exception e) {
            engine.getAppInfo().getLogger().error.println(e);
         }

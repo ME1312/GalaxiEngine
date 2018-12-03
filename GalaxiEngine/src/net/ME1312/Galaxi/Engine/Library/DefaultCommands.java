@@ -178,10 +178,7 @@ public class DefaultCommands {
                     HashMap<Command, String> reverse = new LinkedHashMap<Command, String>();
                     TreeMap<String, Command> commands;
                     try {
-                        Field f = PluginManager.class.getDeclaredField("commands");
-                        f.setAccessible(true);
-                        commands = (TreeMap<String, Command>) f.get(engine.getPluginManager());
-                        f.setAccessible(false);
+                        commands = Util.reflect(PluginManager.class.getDeclaredField("commands"), engine.getPluginManager());
                     } catch (Exception e) {
                         e.printStackTrace();
                         commands = new TreeMap<String, Command>();
@@ -245,10 +242,7 @@ public class DefaultCommands {
                 String last = (args.length > 0)?args[args.length - 1].toLowerCase():"";
                 TreeMap<String, Command> commands;
                 try {
-                    Field f = PluginManager.class.getDeclaredField("commands");
-                    f.setAccessible(true);
-                    commands = (TreeMap<String, Command>) f.get(engine.getPluginManager());
-                    f.setAccessible(false);
+                    commands = Util.reflect(PluginManager.class.getDeclaredField("commands"), engine.getPluginManager());
                 } catch (Exception e) {
                     e.printStackTrace();
                     commands = new TreeMap<String, Command>();
