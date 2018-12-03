@@ -86,6 +86,7 @@ public class GalaxiEngine extends Galaxi {
     @SuppressWarnings("unchecked")
     private GalaxiEngine(PluginInfo app) throws Exception {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
+        GalaxiOption.lock = true;
 
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);

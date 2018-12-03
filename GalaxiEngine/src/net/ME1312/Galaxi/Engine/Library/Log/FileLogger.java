@@ -9,6 +9,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 
+import static net.ME1312.Galaxi.Engine.GalaxiOption.LOG_DIRECTORY;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_RAW_LOG;
+
 /**
  * Log File Writer Class
  */
@@ -23,7 +26,7 @@ public final class FileLogger extends OutputStream {
     FileLogger(OutputStream origin) throws IOException {
         this.origin = origin;
         if (iwriter == null) {
-            File dir = GalaxiOption.LOG_DIRECTORY.get();
+            File dir = LOG_DIRECTORY.get();
             dir.mkdirs();
 
             int i = 1;
@@ -38,7 +41,7 @@ public final class FileLogger extends OutputStream {
             tmp.deleteOnExit();
             tmpwriter = new FileOutputStream(tmp);
 
-            if (System.getProperty("galaxi.log.raw", "null").equalsIgnoreCase("true") || GalaxiOption.USE_RAW_LOG.get()) {
+            if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || USE_RAW_LOG.get()) {
                 file = new File(dir, name + ".log.txt");
 
                 writer = iwriter = new FileOutputStream(file);

@@ -26,6 +26,8 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static net.ME1312.Galaxi.Engine.GalaxiOption.AUTO_SHOW_CONSOLE_WINDOW;
+
 /**
  * Console Reader Class
  */
@@ -48,7 +50,7 @@ public class ConsoleReader extends Thread implements Completer {
         this.jline = jline;
         this.running = status;
         try {
-            if (System.getProperty("galaxi.ui.console", "null").equalsIgnoreCase("true") || GalaxiOption.AUTO_SHOW_CONSOLE_WINDOW.get() && System.console() == null) {
+            if (AUTO_SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || AUTO_SHOW_CONSOLE_WINDOW.get() && System.console() == null) {
                 openConsoleWindow(true);
             }
         } catch (Exception e) {
