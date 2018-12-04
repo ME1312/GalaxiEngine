@@ -131,23 +131,22 @@ public abstract class PluginManager {
      * @see ListenerOrder
      * @param plugin PluginInfo
      * @param event Event Type
-     * @param order Event Order
+     * @param order Event Order (will convert to short)
      * @param listeners Listeners
      * @param <T> Event Type
      */
     @SafeVarargs
-    public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, short order, Listener<T>... listeners) {
+    public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<T>... listeners) {
         for (Listener listener : listeners) {
             if (Util.isNull(plugin, event, order, listener)) throw new NullPointerException();
             try {
-                registerListener(plugin, event, order, listener, Listener.class.getMethod("run", Event.class));
+                registerListener(plugin, event, order.shortValue(), listener, Listener.class.getMethod("run", Event.class));
             } catch (Exception e) {
                 Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
             }
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void registerListener(PluginInfo plugin, Class<? extends Event> event, short order, Object listener, Method method) {
         HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>> events = (this.listeners.keySet().contains(order))?this.listeners.get(order):new LinkedHashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>();
         HashMap<PluginInfo, HashMap<Object, List<Method>>> plugins = (events.keySet().contains(event))?events.get(event):new LinkedHashMap<PluginInfo, HashMap<Object, List<Method>>>();

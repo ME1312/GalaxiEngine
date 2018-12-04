@@ -1,12 +1,9 @@
 package net.ME1312.Galaxi.Engine.Library;
 
 import jline.console.completer.Completer;
-import jline.console.completer.StringsCompleter;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
-import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
 import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
-import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
@@ -18,7 +15,6 @@ import net.ME1312.Galaxi.Plugin.PluginManager;
 
 import java.awt.*;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +22,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static net.ME1312.Galaxi.Engine.GalaxiOption.AUTO_SHOW_CONSOLE_WINDOW;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_CONSOLE_WINDOW;
 
 /**
  * Console Reader Class
@@ -50,7 +46,7 @@ public class ConsoleReader extends Thread implements Completer {
         this.jline = jline;
         this.running = status;
         try {
-            if (AUTO_SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || AUTO_SHOW_CONSOLE_WINDOW.get() && System.console() == null) {
+            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || SHOW_CONSOLE_WINDOW.get() && System.console() == null) {
                 openConsoleWindow(true);
             }
         } catch (Exception e) {
