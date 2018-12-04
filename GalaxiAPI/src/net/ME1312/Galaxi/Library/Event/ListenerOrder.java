@@ -1,11 +1,11 @@
 package net.ME1312.Galaxi.Library.Event;
 
 /**
- * Event Order Defaults Class<br>
- * Events will be run from Short.MIN_VALUE to Short.MAX_VALUE
+ * Listener Order Defaults Class<br>
+ * Listeners will be called from Short.MIN_VALUE to Short.MAX_VALUE
  */
-public final class EventOrder {
-    private EventOrder() {}
+public final class ListenerOrder {
+    private ListenerOrder() {}
     public static final short FIRST = Short.MIN_VALUE;
     public static final short VERY_EARLY = (Short.MIN_VALUE / 3) * 2;
     public static final short EARLY = Short.MIN_VALUE / 3;

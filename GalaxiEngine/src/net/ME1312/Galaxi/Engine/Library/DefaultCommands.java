@@ -1,13 +1,13 @@
 package net.ME1312.Galaxi.Engine.Library;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
-import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
 import net.ME1312.Galaxi.Plugin.Command.CompletionHandler;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
+import net.ME1312.Galaxi.Plugin.PluginManager;
 
 import java.lang.reflect.Field;
 import java.util.*;

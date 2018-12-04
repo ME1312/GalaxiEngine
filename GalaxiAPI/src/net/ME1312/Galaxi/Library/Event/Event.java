@@ -39,9 +39,9 @@ public abstract class Event {
      * @return Handler Map
      */
     @SuppressWarnings({"deprecation", "unchecked"})
-    public Map<PluginInfo, List<Method>> getHandlers() throws IllegalAccessException {
+    public Map<PluginInfo, List<Method>> getHandlers() {
         try {
-            TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> listeners = Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.PluginManager").getDeclaredField("listeners"), getEngine());
+            TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> listeners = Util.reflect(Class.forName("net.ME1312.Galaxi.Plugin.PluginManager").getDeclaredField("listeners"), getEngine());
             HashMap<PluginInfo, List<Method>> map = new LinkedHashMap<PluginInfo, List<Method>>();
             for (Short order : listeners.keySet()) {
                 if (!listeners.get(order).keySet().contains(getClass())) continue;

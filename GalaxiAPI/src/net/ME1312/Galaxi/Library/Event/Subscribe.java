@@ -8,24 +8,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * EventHandler Method Annotation<br>
- * Methods annotated by this and registered will be run when the event is called
+ * Event Listener Method Annotation<br>
+ * Methods annotated by this and registered will be called when the event is run
  *
  * @see net.ME1312.Galaxi.Plugin.PluginManager#registerListener(PluginInfo, Object...)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface EventHandler {
+public @interface Subscribe {
     /**
-     * Defines when this event should run
+     * Defines when this method should run in the stack
      *
-     * @see EventOrder
-     * @return Event Order
+     * @see ListenerOrder
+     * @return Listener Order
      */
-    short order() default EventOrder.NORMAL;
+    short order() default ListenerOrder.NORMAL;
 
     /**
-     * If this Event should be run even if it's been cancelled
+     * If this method should be called even after the event has been cancelled
      *
      * @return Override Status
      */

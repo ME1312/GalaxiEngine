@@ -1,15 +1,14 @@
 package net.ME1312.Galaxi.Event;
 
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Event.Cancellable;
+import net.ME1312.Galaxi.Library.Event.CancellableEvent;
 import net.ME1312.Galaxi.Library.Event.Event;
 import net.ME1312.Galaxi.Library.Util;
 
 /**
  * Console Command Event Class
  */
-public class ConsoleCommandEvent extends Event implements Cancellable {
-    private boolean cancelled;
+public class ConsoleCommandEvent extends CancellableEvent {
     private String command;
 
     /**
@@ -39,16 +38,5 @@ public class ConsoleCommandEvent extends Event implements Cancellable {
      */
     public void setCommand(String value) {
         this.command = value;
-    }
-
-
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
-    @Override
-    public void setCancelled(boolean value) {
-        this.cancelled = value;
     }
 }

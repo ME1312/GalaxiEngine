@@ -4,7 +4,6 @@ import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.GalaxiOption;
-import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
 import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
 import net.ME1312.Galaxi.Galaxi;
@@ -15,6 +14,7 @@ import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
 import net.ME1312.Galaxi.Plugin.Command.CompletionHandler;
 import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
+import net.ME1312.Galaxi.Plugin.PluginManager;
 
 import java.awt.*;
 import java.io.OutputStream;

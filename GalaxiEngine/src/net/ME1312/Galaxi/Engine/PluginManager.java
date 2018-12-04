@@ -1,9 +1,7 @@
 package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Engine.Library.PluginClassLoader;
-import net.ME1312.Galaxi.Library.Event.Cancellable;
-import net.ME1312.Galaxi.Library.Event.Event;
-import net.ME1312.Galaxi.Library.Event.EventHandler;
+import net.ME1312.Galaxi.Library.Event.*;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
@@ -26,9 +24,7 @@ import java.util.jar.JarFile;
 /**
  * Plugin Manager Class
  */
-public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
-    private TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> listeners = new TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>>();
-    private TreeMap<String, Command> commands = new TreeMap<String, Command>();
+public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
     private HashMap<String, PluginInfo> plugins = new LinkedHashMap<String, PluginInfo>();
     private List<String> knownClasses = new ArrayList<String>();
     private GalaxiEngine engine;
@@ -318,130 +314,5 @@ public class PluginManager implements net.ME1312.Galaxi.Plugin.PluginManager {
     @Override
     public Map<String, PluginInfo> getPlugins() {
         return new LinkedHashMap<String, PluginInfo>(plugins);
-    }
-
-    @Override
-    public PluginInfo getPlugin(String name) {
-        if (Util.isNull(name)) throw new NullPointerException();
-        return getPlugins().get(name.toLowerCase());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public PluginInfo getPlugin(Class<?> main) {
-        if (Util.isNull(main)) throw new NullPointerException();
-        return Util.getDespiteException(() -> Util.reflect(PluginInfo.class.getDeclaredField("pluginMap"), null), null);
-    }
-
-    @Override
-    public PluginInfo getPlugin(Object main) {
-        if (Util.isNull(main)) throw new NullPointerException();
-        return Util.getDespiteException(() -> PluginInfo.getPluginInfo(main), null);
-    }
-
-    @Override
-    public void addCommand(Command command, String... handles) {
-        for (String handle : handles) {
-            commands.put(handle.toLowerCase(), command);
-        }
-    }
-
-    @Override
-    public void removeCommand(String... handles) {
-        for (String handle : handles) {
-            commands.remove(handle.toLowerCase());
-        }
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void registerListener(PluginInfo plugin, Object... listeners) {
-        for (Object listener : listeners) {
-            if (Util.isNull(plugin, listener)) throw new NullPointerException();
-            for (Method method : Arrays.asList(listener.getClass().getMethods())) {
-                if (method.isAnnotationPresent(EventHandler.class)) {
-                    if (method.getParameterTypes().length == 1) {
-                        if (Event.class.isAssignableFrom(method.getParameterTypes()[0])) {
-                            HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>> events = (this.listeners.keySet().contains(method.getAnnotation(EventHandler.class).order()))?this.listeners.get(method.getAnnotation(EventHandler.class).order()):new LinkedHashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>();
-                            HashMap<PluginInfo, HashMap<Object, List<Method>>> plugins = (events.keySet().contains((Class<Event>) method.getParameterTypes()[0]))?events.get((Class<Event>) method.getParameterTypes()[0]):new LinkedHashMap<PluginInfo, HashMap<Object, List<Method>>>();
-                            HashMap<Object, List<Method>> objects = (plugins.keySet().contains(plugin))?plugins.get(plugin):new LinkedHashMap<Object, List<Method>>();
-                            List<Method> methods = (objects.keySet().contains(listener))?objects.get(listener):new LinkedList<Method>();
-                            methods.add(method);
-                            objects.put(listener, methods);
-                            plugins.put(plugin, objects);
-                            events.put((Class<Event>) method.getParameterTypes()[0], plugins);
-                            this.listeners.put(method.getAnnotation(EventHandler.class).order(), events);
-                        } else {
-                            plugin.getLogger().error.println(
-                                    "Cannot register listener \"" + listener.getClass().getCanonicalName() + '.' + method.getName() + "(" + method.getParameterTypes()[0].getCanonicalName() + ")\":",
-                                    "\"" + method.getParameterTypes()[0].getCanonicalName() + "\" is not an Event");
-                        }
-                    } else {
-                        LinkedList<String> args = new LinkedList<String>();
-                        for (Class<?> clazz : method.getParameterTypes()) args.add(clazz.getCanonicalName());
-                        plugin.getLogger().error.println(
-                                "Cannot register listener \"" + listener.getClass().getCanonicalName() + '.' + method.getName() + "(" + args.toString().substring(1, args.toString().length() - 1) + ")\":",
-                                ((method.getParameterTypes().length > 0) ? "Too many" : "No") + " parameters for method to be executed");
-                    }
-                }
-            }
-        }
-    }
-
-    @Override
-    public void unregisterListener(PluginInfo plugin, Object... listeners) {
-        for (Object listener : listeners) {
-            if (Util.isNull(plugin, listener)) throw new NullPointerException();
-            TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> map = new TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>>(this.listeners);
-            for (Short order : map.keySet()) {
-                for (Class<? extends Event> event : map.get(order).keySet()) {
-                    if (map.get(order).get(event).keySet().contains(plugin) && map.get(order).get(event).get(plugin).keySet().contains(listener)) {
-                        HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>> events = this.listeners.get(order);
-                        HashMap<PluginInfo, HashMap<Object, List<Method>>> plugins = this.listeners.get(order).get(event);
-                        HashMap<Object, List<Method>> objects = this.listeners.get(order).get(event).get(plugin);
-                        objects.remove(listener);
-                        plugins.put(plugin, objects);
-                        events.put(event, plugins);
-                        this.listeners.put(order, events);
-                    }
-                }
-            }
-        }
-    }
-
-    @Override
-    public void executeEvent(Event event) {
-        if (Util.isNull(event)) throw new NullPointerException();
-        for (Short order : listeners.keySet()) {
-            if (listeners.get(order).keySet().contains(event.getClass())) {
-                for (PluginInfo plugin : listeners.get(order).get(event.getClass()).keySet()) {
-                    try {
-                        Util.reflect(Event.class.getDeclaredField("plugin"), event, plugin);
-                    } catch (Exception e) {
-                        engine.getAppInfo().getLogger().error.println(e);
-                    }
-                    for (Object listener : listeners.get(order).get(event.getClass()).get(plugin).keySet()) {
-                        for (Method method : listeners.get(order).get(event.getClass()).get(plugin).get(listener)) {
-                            if (!(event instanceof Cancellable) || !((Cancellable) event).isCancelled() || method.getAnnotation(EventHandler.class).override()) {
-                                try {
-                                    method.invoke(listener, event);
-                                } catch (InvocationTargetException e) {
-                                    plugin.getLogger().error.println("Event listener \"" + listener.getClass().getCanonicalName() + '.' + method.getName() + "(" + event.getClass().getTypeName() + ")\" had an unhandled exception:");
-                                    plugin.getLogger().error.println(e.getTargetException());
-                                } catch (IllegalAccessException e) {
-                                    plugin.getLogger().error.println("Cannot access method \"" + listener.getClass().getCanonicalName() + '.' + method.getName() + "(" + event.getClass().getTypeName() + ")\"");
-                                    plugin.getLogger().error.println(e);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        try {
-            Util.reflect(Event.class.getDeclaredField("plugin"), event, null);
-        } catch (Exception e) {
-           engine.getAppInfo().getLogger().error.println(e);
-        }
     }
 }

@@ -33,7 +33,7 @@ import java.util.jar.Manifest;
 /**
  * Galaxi Engine Main Class
  */
-@Plugin(name = "GalaxiEngine", version = "3.1.0b", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@Plugin(name = "GalaxiEngine", version = "3.2.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
@@ -211,21 +211,37 @@ public class GalaxiEngine extends Galaxi {
             GalaxiStopEvent event = new GalaxiStopEvent(this, code);
             pluginManager.executeEvent(event);
             if (!event.isCancelled()) {
-                running.set(false);
-
-                if (onStop != null) try {
-                    onStop.run();
-                } catch (Throwable e) {
-                    app.getLogger().error.println(e);
-                }
-
-                Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
-
-                System.exit(code);
+                exit(code);
             } else stopping = false;
         }
     }
+
+    /**
+     * Force stop the GalaxiEngine
+     *
+     * @param code Exit Code
+     */
+    public void terminate(int code) {
+        stopping = true;
+        GalaxiStopEvent event = new GalaxiStopEvent(this, code);
+        pluginManager.executeEvent(event);
+        exit(code);
+    }
+
     private boolean stopping = false;
+    private void exit(int code) {
+        running.set(false);
+
+        if (onStop != null) try {
+            onStop.run();
+        } catch (Throwable e) {
+            app.getLogger().error.println(e);
+        }
+
+        Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
+
+        System.exit(code);
+    }
 
     /**
      * Get the ConsoleReader
