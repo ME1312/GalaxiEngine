@@ -8,7 +8,7 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
 /**
  * Command Layout Class
  */
-public abstract class Command {
+public abstract class Command implements CommandExecutor {
     private String desc = null;
     private String[] exDesc = new String[0];
     private String[] usage = new String[0];
@@ -26,13 +26,20 @@ public abstract class Command {
     }
 
     /**
-     * Run Command
+     * Creates a new Command (by wrapping an existing executor)
      *
-     * @param sender Command Sender
-     * @param handle Command Name
-     * @param args Arguments
+     * @param plugin Plugin
+     * @param executor Executor
      */
-    public abstract void command(CommandSender sender, String handle, String[] args);
+    public static Command create(PluginInfo plugin, CommandExecutor executor) {
+        if (Util.isNull(plugin, executor)) throw new NullPointerException();
+        return new Command(plugin) {
+            @Override
+            public void command(CommandSender sender, String handle, String[] args) {
+                executor.command(sender, handle, args);
+            }
+        };
+    }
 
     /**
      * Gets the AutoComplete handler for this Command
