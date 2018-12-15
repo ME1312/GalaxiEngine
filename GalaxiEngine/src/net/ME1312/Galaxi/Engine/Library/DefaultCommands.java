@@ -1,6 +1,9 @@
 package net.ME1312.Galaxi.Engine.Library;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
+import net.ME1312.Galaxi.Engine.GalaxiOption;
+import net.ME1312.Galaxi.Event.GalaxiReloadEvent;
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
@@ -10,6 +13,7 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
 import net.ME1312.Galaxi.Plugin.PluginManager;
 
 import java.lang.reflect.Field;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -170,6 +174,27 @@ public class DefaultCommands {
                 "  /version",
                 "  /version ExamplePlugin"
         ).register("ver", "version");
+        if (GalaxiOption.ENABLE_RELOAD.get()) new Command(engine.getEngineInfo()) {
+            @Override
+            public void command(CommandSender sender, String handle, String[] args) {
+                if (sender.hasPermission("galaxi.command.reload")) {
+                    sender.sendMessage("Starting reload process...");
+                    long begin = Calendar.getInstance().getTime().getTime();
+                    Galaxi.getInstance().getPluginManager().executeEvent(new GalaxiReloadEvent(Galaxi.getInstance()));
+                    sender.sendMessage("Reload finished in " + new DecimalFormat("0.000").format((Calendar.getInstance().getTime().getTime() - begin) / 1000D) + "s");
+                } else {
+                    sender.sendMessage("You do not have permission to access this command");
+                }
+            }
+        }.description("Reload the app settings").help(
+                "This command will reload the configuration for the app",
+                "and any plugins that opt-in via the reload event.",
+                "",
+                "",
+                "Permission: galaxi.command.reload",
+                "Examples:",
+                "  /reload"
+        ).register("reload");
         new Command(engine.getEngineInfo()) {
             @SuppressWarnings("unchecked")
             public void command(CommandSender sender, String handle, String[] args) {

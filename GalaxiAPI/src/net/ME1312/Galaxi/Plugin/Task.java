@@ -8,7 +8,7 @@ import java.util.UUID;
 /**
  * Task Builder Class
  */
-public abstract class TaskBuilder implements Runnable {
+public abstract class Task implements Runnable {
     private long repeat = -1L;
     private long delay = -1L;
     private PluginInfo plugin;
@@ -18,7 +18,7 @@ public abstract class TaskBuilder implements Runnable {
      *
      * @param plugin Plugin Creating
      */
-    public TaskBuilder(PluginInfo plugin) {
+    public Task(PluginInfo plugin) {
         if (Util.isNull(plugin)) throw new NullPointerException();
         this.plugin = plugin;
     }
@@ -38,7 +38,7 @@ public abstract class TaskBuilder implements Runnable {
      * @param value Value
      * @return Task Builder
      */
-    public TaskBuilder repeat(long value) {
+    public Task repeat(long value) {
         if (Util.isNull(value)) throw new NullPointerException();
         this.repeat = value;
         return this;
@@ -59,7 +59,7 @@ public abstract class TaskBuilder implements Runnable {
      * @param value Value
      * @return Task Builder
      */
-    public TaskBuilder delay(long value) {
+    public Task delay(long value) {
         if (Util.isNull(value)) throw new NullPointerException();
         this.delay = value;
         return this;

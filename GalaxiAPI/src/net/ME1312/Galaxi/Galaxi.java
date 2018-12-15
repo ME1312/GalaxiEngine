@@ -4,12 +4,9 @@ import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import net.ME1312.Galaxi.Plugin.PluginManager;
-import net.ME1312.Galaxi.Plugin.TaskBuilder;
+import net.ME1312.Galaxi.Plugin.Task;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +37,7 @@ public abstract class Galaxi {
      * @param builder SubTaskBuilder
      * @return Task ID
      */
-    public UUID schedule(TaskBuilder builder) {
+    public UUID schedule(Task builder) {
         if (Util.isNull(builder)) throw new NullPointerException();
         UUID sid = Util.getNew(schedule.keySet(), UUID::randomUUID);
         TimerTask task = new TimerTask() {
@@ -120,7 +117,7 @@ public abstract class Galaxi {
      */
     public UUID schedule(PluginInfo plugin, Runnable run, TimeUnit unit, long delay, long repeat) {
         if (Util.isNull(plugin, run, unit, delay, repeat)) throw new NullPointerException();
-        return schedule(new TaskBuilder(plugin) {
+        return schedule(new Task(plugin) {
             @Override
             public void run() {
                 run.run();
