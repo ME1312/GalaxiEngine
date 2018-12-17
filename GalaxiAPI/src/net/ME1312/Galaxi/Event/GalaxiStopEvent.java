@@ -3,11 +3,13 @@ package net.ME1312.Galaxi.Event;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Event.CancellableEvent;
 import net.ME1312.Galaxi.Library.Event.Event;
+import net.ME1312.Galaxi.Library.Event.ReverseOrder;
 import net.ME1312.Galaxi.Library.Util;
 
 /**
  * Galaxi Engine Stop Event Class
  */
+@ReverseOrder
 public class GalaxiStopEvent extends CancellableEvent {
     private int code;
 

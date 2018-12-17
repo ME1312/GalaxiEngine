@@ -204,16 +204,27 @@ public abstract class PluginManager {
      */
     public <T extends Event> void executeEvent(Class<T> type, T event) {
         if (Util.isNull(event)) throw new NullPointerException();
+        if (!type.isInstance(event)) throw new ClassCastException(event.getClass().getCanonicalName() + " cannot be cast to " + type.getCanonicalName());
+        boolean reverse = type.isAnnotationPresent(ReverseOrder.class);
+
+        LinkedList<Short> o = new LinkedList<>(listeners.keySet());
+        if (reverse) Collections.reverse(o);
         for (Short order : listeners.keySet()) {
             if (listeners.get(order).keySet().contains(type)) {
-                for (PluginInfo plugin : listeners.get(order).get(type).keySet()) {
+                LinkedList<PluginInfo> p = new LinkedList<>(listeners.get(order).get(type).keySet());
+                if (reverse) Collections.reverse(p);
+                for (PluginInfo plugin : p) {
                     try {
                         Util.reflect(Event.class.getDeclaredField("plugin"), event, plugin);
                     } catch (Exception e) {
                         Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
                     }
-                    for (Object listener : listeners.get(order).get(type).get(plugin).keySet()) {
-                        for (Method method : listeners.get(order).get(type).get(plugin).get(listener)) {
+                    LinkedList<Object> l = new LinkedList<>(listeners.get(order).get(type).get(plugin).keySet());
+                    if (reverse) Collections.reverse(l);
+                    for (Object listener : l) {
+                        LinkedList<Method> m = new LinkedList<>(listeners.get(order).get(type).get(plugin).get(listener));
+                        if (reverse) Collections.reverse(m);
+                        for (Method method : m) {
                             if (!(event instanceof CancellableEvent) || !((CancellableEvent) event).isCancelled() || (method.isAnnotationPresent(Subscribe.class) && method.getAnnotation(Subscribe.class).override())) {
                                 try {
                                     method.invoke(listener, event);
