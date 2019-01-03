@@ -52,7 +52,7 @@ public final class FileLogger extends OutputStream {
                 iwriter = new FileOutputStream(file, true);
                 iwriter.write(("<h1>" + name + "</h1>\n").getBytes("UTF-8"));
                 iwriter.flush();
-                writer = new HTMLogger(iwriter);
+                writer = HTMLogger.wrap(iwriter);
             }
         }
     }

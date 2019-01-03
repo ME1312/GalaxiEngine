@@ -121,7 +121,7 @@ public abstract class PluginManager {
      */
     @SafeVarargs
     public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Listener<T>... listeners) {
-        registerListener(plugin, event, ListenerOrder.NORMAL, listeners);
+        registerListener(plugin, event, null, listeners);
     }
 
 
@@ -131,16 +131,23 @@ public abstract class PluginManager {
      * @see ListenerOrder
      * @param plugin PluginInfo
      * @param event Event Type
-     * @param order Event Order (will convert to short)
+     * @param order Listener Order (will convert to short)
      * @param listeners Listeners
      * @param <T> Event Type
      */
     @SafeVarargs
     public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<T>... listeners) {
         for (Listener listener : listeners) {
-            if (Util.isNull(plugin, event, order, listener)) throw new NullPointerException();
+            if (Util.isNull(plugin, event, listener)) throw new NullPointerException();
             try {
-                registerListener(plugin, event, order.shortValue(), listener, Listener.class.getMethod("run", Event.class));
+                short o;
+                Method m = Listener.class.getMethod("run", Event.class);
+                if (order == null) {
+                    if (m.isAnnotationPresent(Subscribe.class)) {
+                        o = m.getAnnotation(Subscribe.class).order();
+                    } else o = ListenerOrder.NORMAL;
+                } else o = order.shortValue();
+                registerListener(plugin, event, o, listener, m);
             } catch (Exception e) {
                 Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
             }

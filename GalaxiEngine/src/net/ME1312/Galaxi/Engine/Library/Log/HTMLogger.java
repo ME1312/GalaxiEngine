@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Engine.Library.Log;
 
+import net.ME1312.Galaxi.Library.Container;
 import org.fusesource.jansi.AnsiOutputStream;
 
 import java.io.IOException;
@@ -28,9 +29,23 @@ public class HTMLogger extends AnsiOutputStream {
      * Parse data from an OutputStream
      *
      * @param raw OutputStream
+     * @return HTMLogger
      */
-    public HTMLogger(final OutputStream raw) {
-        super(new OutputStream() {
+    public static HTMLogger wrap(OutputStream raw) {
+        return wrap(raw, HTMLogger::new);
+    }
+
+    /**
+     * Parse data from an OutputStream
+     *
+     * @param raw OutputStream
+     * @param constructor Implementing Constructor
+     * @param <T> Logger Type
+     * @return HTMLogger
+     */
+    public static <T extends HTMLogger> T wrap(OutputStream raw, HTMConstructor<T> constructor) {
+        Container<T> html = new Container<T>(null);
+        html.set(constructor.construct(raw, new OutputStream() {
             private boolean nbsp = false;
 
             @Override
@@ -54,13 +69,22 @@ public class HTMLogger extends AnsiOutputStream {
                         case 62:
                             raw.write(BYTES_GT);
                             break;
+                        case 10:
+                            html.get().closeAttributes();
                         default:
                             raw.write(data);
                     }
                 }
             }
-        });
+        }));
+        return html.get();
+    }
+    protected HTMLogger(final OutputStream raw, OutputStream wrapped) {
+        super(wrapped);
         this.raw = raw;
+    }
+    public interface HTMConstructor<T extends HTMLogger> {
+        T construct(OutputStream raw, OutputStream wrapped);
     }
 
     private void write(String s) throws IOException {
@@ -72,7 +96,7 @@ public class HTMLogger extends AnsiOutputStream {
         closingAttributes.add(0, s);
     }
 
-    private void closeAttribute(String s) throws IOException {
+    protected void closeAttribute(String s) throws IOException {
         LinkedList<String> closedAttributes = new LinkedList<String>();
         LinkedList<String> closingAttributes = new LinkedList<String>();
         LinkedList<String> unclosedAttributes = new LinkedList<String>();
@@ -96,7 +120,7 @@ public class HTMLogger extends AnsiOutputStream {
         }
     }
 
-    private void closeAttributes() throws IOException {
+    protected void closeAttributes() throws IOException {
         for (String attr : closingAttributes) {
             write("</" + attr.split(" ", 2)[0] + ">");
         }

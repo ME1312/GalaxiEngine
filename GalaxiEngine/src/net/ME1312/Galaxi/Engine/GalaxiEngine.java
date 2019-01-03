@@ -33,7 +33,7 @@ import java.util.jar.Manifest;
 /**
  * Galaxi Engine Main Class
  */
-@Plugin(name = "GalaxiEngine", version = "3.2.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@Plugin(name = "GalaxiEngine", version = "3.2.0b", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 

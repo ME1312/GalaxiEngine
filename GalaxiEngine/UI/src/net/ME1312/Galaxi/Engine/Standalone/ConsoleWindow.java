@@ -51,7 +51,7 @@ public final class ConsoleWindow extends OutputStream {
     private boolean first = true;
     private int fontSize = 12;
     ByteArrayOutputStream scache = new ByteArrayOutputStream();
-    private AnsiUIOutputStream stream = new AnsiUIOutputStream(new OutputStream() {
+    private AnsiUIOutputStream stream = HTMLogger.wrap(new OutputStream() {
 
         @Override
         public void write(int b) throws IOException {
@@ -72,6 +72,11 @@ public final class ConsoleWindow extends OutputStream {
                 }
                 scache = new ByteArrayOutputStream();
             }
+        }
+    }, new HTMLogger.HTMConstructor<AnsiUIOutputStream>() {
+        @Override
+        public AnsiUIOutputStream construct(OutputStream raw, OutputStream wrapped) {
+            return new AnsiUIOutputStream(raw, wrapped);
         }
     });
     private boolean[] kpressed = new boolean[65535];
@@ -800,8 +805,8 @@ public final class ConsoleWindow extends OutputStream {
         }
     }
     private class AnsiUIOutputStream extends HTMLogger {
-        public AnsiUIOutputStream(OutputStream os) {
-            super(os);
+        public AnsiUIOutputStream(OutputStream raw, OutputStream wrapped) {
+            super(raw, wrapped);
         }
 
         public void ansi(boolean value) {
