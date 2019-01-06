@@ -181,7 +181,7 @@ public class GalaxiEngine extends Galaxi {
                 pluginManager.executeEvent(new GalaxiStartEvent(this));
             } catch (Exception e) {}
 
-            new Timer().schedule(new TimerTask() {
+            new Timer(getEngineInfo().getName() + "::Routine_Update_Check").schedule(new TimerTask() {
                 @Override
                 public void run() {
                     try {

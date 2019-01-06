@@ -115,7 +115,7 @@ public class DefaultCommands {
                                     if (engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) Util.isException(() -> engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run());
                                 }
                                 checking = false;
-                            }).start();
+                            }, Galaxi.getInstance().getEngineInfo().getName() + "::Update_Check").start();
                         }
                     } else {
                         sender.sendMessage("There is no plugin with that name");

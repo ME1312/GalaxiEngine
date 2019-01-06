@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Library.Log;
 
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
@@ -182,6 +183,6 @@ public final class Logger {
                 }
                 Util.isException(() -> Thread.sleep(32));
             }
-        })).start();
+        }, Galaxi.getInstance().getEngineInfo().getName() + "::Log_Spooler")).start();
     }
 }

@@ -336,7 +336,7 @@ public final class ConsoleWindow extends OutputStream {
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                new Thread() {
+                new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Shutdown") {
                     @Override
                     public void run() {
                         try {
@@ -431,7 +431,7 @@ public final class ConsoleWindow extends OutputStream {
             public void actionPerformed(ActionEvent event) {
                 if (input.getText().length() > 0 && !input.getText().equals(">")) {
                     final String command = (input.getText().startsWith(">"))?input.getText().substring(1):input.getText();
-                    new Thread() {
+                    new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Command") {
                         @Override
                         public void run() {
                             try {

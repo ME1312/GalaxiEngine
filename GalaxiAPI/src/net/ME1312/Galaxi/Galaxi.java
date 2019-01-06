@@ -52,7 +52,7 @@ public abstract class Galaxi {
             }
         };
 
-        schedule.put(sid, new Timer("ScheduledTask_" + sid.toString()));
+        schedule.put(sid, new Timer(builder.plugin().getName() + "::Scheduled_Task(" + sid + ')'));
         if (builder.repeat() > 0) {
             if (builder.delay() > 0) {
                 schedule.get(sid).scheduleAtFixedRate(task, builder.delay(), builder.repeat());
@@ -63,7 +63,7 @@ public abstract class Galaxi {
             if (builder.delay() > 0) {
                 schedule.get(sid).schedule(task, builder.delay());
             } else {
-                new Thread(task).start();
+                new Thread(task, builder.plugin().getName() + "::Scheduled_Task(" + sid + ')').start();
             }
         }
         return sid;
