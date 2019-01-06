@@ -5,7 +5,6 @@ import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
-import org.fusesource.jansi.AnsiOutputStream;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -20,11 +19,18 @@ import javax.swing.text.html.StyleSheet;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
 
+import static net.ME1312.Galaxi.Engine.GalaxiOption.MAX_CONSOLE_WINDOW_SCROLLBACK;
+
 public final class ConsoleWindow extends OutputStream {
+    private static final int MAX_SCROLLBACK = (Util.getDespiteException(new Util.ExceptionReturnRunnable<Integer>() {
+        @Override
+        public Integer run() throws Throwable {
+            return Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr());
+        }
+    }, 0) > 0)?Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr()):MAX_CONSOLE_WINDOW_SCROLLBACK.get();
     private static final String RESET_VALUE = "\n\u00A0\n\u00A0";
     private Class<?> READER;
     private Object reader;
@@ -53,11 +59,25 @@ public final class ConsoleWindow extends OutputStream {
     ByteArrayOutputStream scache = new ByteArrayOutputStream();
     private AnsiUIOutputStream stream = HTMLogger.wrap(new OutputStream() {
 
+        private int countLines(String str) {
+            int count = 0;
+            for (int i = 0; i < str.length(); i++) if (str.charAt(i) == '\n') count++;
+            return count;
+        }
+
         @Override
         public void write(int b) throws IOException {
             scache.write(b);
             if (b == '\n') {
                 try {
+                    String content;
+                    while (countLines(content = log.getDocument().getText(0, log.getDocument().getLength())) > MAX_SCROLLBACK + 2) {
+                        int lineBreak = content.indexOf('\n', 2);
+                        if (lineBreak >= 0) {
+                            log.getDocument().remove(2, lineBreak);
+                        }
+                    }
+
                     HTMLEditorKit kit = (HTMLEditorKit) log.getEditorKit();
                     HTMLDocument doc = (HTMLDocument) log.getDocument();
                     kit.insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), "UTF-8"), 0, 0, null);
