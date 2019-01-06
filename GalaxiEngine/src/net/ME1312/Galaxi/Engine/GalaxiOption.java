@@ -15,7 +15,7 @@ public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<File> APPLICATION_DIRECTORY = new GalaxiOption<>("user.dir", File::new);
     public static final GalaxiOption<Boolean> ENABLE_RELOAD = new GalaxiOption<>(() -> false);
     public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(() -> new File(APPLICATION_DIRECTORY.get(), "Logs"));
-    public static final GalaxiOption<Integer> MAX_CONSOLE_WINDOW_SCROLLBACK = new GalaxiOption<Integer>("galaxi.ui.console.max_scrollback", usr -> (Util.getDespiteException(() -> Integer.parseInt(usr), 0) > 0)?Integer.parseInt(usr):15000);
+    public static final GalaxiOption<Integer> MAX_CONSOLE_WINDOW_SCROLLBACK = new GalaxiOption<Integer>("galaxi.ui.console.max_scrollback", usr -> (Util.getDespiteException(() -> Integer.parseInt(usr), 0) >= 128)?Integer.parseInt(usr):15000);
     public static final GalaxiOption<Boolean> SHOW_CONSOLE_WINDOW = new GalaxiOption<>("galaxi.ui.console", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> USE_RAW_LOG = new GalaxiOption<>("galaxi.log.raw", usr -> usr.equalsIgnoreCase("true") || (usr.length() == 0 && GraphicsEnvironment.isHeadless()));
 

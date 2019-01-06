@@ -70,14 +70,16 @@ public final class ConsoleWindow extends OutputStream {
             scache.write(b);
             if (b == '\n') {
                 try {
+                    int lines;
                     String content;
-                    while (countLines(content = log.getDocument().getText(0, log.getDocument().getLength())) > MAX_SCROLLBACK + 2) {
-                        int lineBreak = content.indexOf('\n', 2);
-                        if (lineBreak >= 0) {
+                    while (log.getSelectionStart() == log.getSelectionEnd() && (lines = countLines(content = log.getDocument().getText(0, log.getDocument().getLength()))) > MAX_SCROLLBACK) {
+                        int lineBreak = 1;
+                        for (lines -= MAX_SCROLLBACK; lines > 0; lines--) lineBreak = content.indexOf('\n', lineBreak + 1);
+                        if (lineBreak >= 2) {
                             log.getDocument().remove(2, lineBreak);
-                        }
+                        } else break;
                     }
-
+                } catch (Exception e) {} try {
                     HTMLEditorKit kit = (HTMLEditorKit) log.getEditorKit();
                     HTMLDocument doc = (HTMLDocument) log.getDocument();
                     kit.insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), "UTF-8"), 0, 0, null);
@@ -87,9 +89,7 @@ public final class ConsoleWindow extends OutputStream {
                             hScroll();
                         }
                     });
-                } catch (BadLocationException e) {
-                    e.printStackTrace();
-                }
+                } catch (Exception e) {}
                 scache = new ByteArrayOutputStream();
             }
         }
