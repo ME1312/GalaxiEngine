@@ -42,7 +42,7 @@
                         <configuration>
                             <tasks>
                                 <jar destfile="${basedir}/../../Artifacts/GalaxiEngine.jar" update="true">
-                                    <zipfileset src="${basedir}/jansi.jar" prefix="org" />
+                                    <zipfileset src="${basedir}/jansi.jar" includes="org/**" />
                                     <fileset dir="${project.build.directory}/classes" includes="**" />
                                 </jar>
                             </tasks>

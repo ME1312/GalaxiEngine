@@ -52,7 +52,16 @@ public abstract class Galaxi {
             }
         };
 
-        schedule.put(sid, new Timer(builder.plugin().getName() + "::Scheduled_Task(" + sid + ')'));
+        String name;
+        if (builder.getName() != null) {
+            name = builder.getName().replace(':', '.').replace('(', '[').replace(')', ']').replace(' ', '_');
+            if (builder.getIdentifier() != null) name += '(' + builder.getIdentifier() + ')';
+        } else {
+            name = "Scheduled_Task(" + sid.toString().replace("-", "") + ')';
+        }
+        name = builder.plugin().getName() + "::" + name;
+
+        schedule.put(sid, new Timer(name));
         if (builder.repeat() > 0) {
             if (builder.delay() > 0) {
                 schedule.get(sid).scheduleAtFixedRate(task, builder.delay(), builder.repeat());
@@ -63,7 +72,7 @@ public abstract class Galaxi {
             if (builder.delay() > 0) {
                 schedule.get(sid).schedule(task, builder.delay());
             } else {
-                new Thread(task, builder.plugin().getName() + "::Scheduled_Task(" + sid + ')').start();
+                new Thread(task, name).start();
             }
         }
         return sid;
@@ -84,12 +93,103 @@ public abstract class Galaxi {
      * Schedule a task
      *
      * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param run What to run
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, Runnable run) {
+        return schedule(plugin, name, run, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param identifier Task Identifier
+     * @param run What to run
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, String identifier, Runnable run) {
+        return schedule(plugin, name, identifier, run, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
      * @param run What to Run
      * @param delay Task Delay
      * @return Task ID
      */
     public UUID schedule(PluginInfo plugin, Runnable run, long delay) {
         return schedule(plugin, run, delay, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param run What to Run
+     * @param delay Task Delay
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, Runnable run, long delay) {
+        return schedule(plugin, name, run, delay, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param identifier Task Identifier
+     * @param run What to Run
+     * @param delay Task Delay
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, String identifier, Runnable run, long delay) {
+        return schedule(plugin, name, identifier, run, delay, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param run What to Run
+     * @param delay Task Delay
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, Runnable run, TimeUnit unit, long delay) {
+        return schedule(plugin, run, unit, delay, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param run What to Run
+     * @param delay Task Delay
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, Runnable run, TimeUnit unit, long delay) {
+        return schedule(plugin, name, run, unit, delay, -1L);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param identifier Task Identifier
+     * @param run What to Run
+     * @param delay Task Delay
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, String identifier, Runnable run, TimeUnit unit, long delay) {
+        return schedule(plugin, name, identifier, run, unit, delay, -1L);
     }
 
     /**
@@ -109,6 +209,35 @@ public abstract class Galaxi {
      * Schedule a task
      *
      * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param run What to Run
+     * @param delay Task Delay
+     * @param repeat Task Repeat Interval
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, Runnable run, long delay, long repeat) {
+        return schedule(plugin, name, run, TimeUnit.MILLISECONDS, delay, repeat);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param identifier Task Identifier
+     * @param run What to Run
+     * @param delay Task Delay
+     * @param repeat Task Repeat Interval
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, String identifier, Runnable run, long delay, long repeat) {
+        return schedule(plugin, name, identifier, run, TimeUnit.MILLISECONDS, delay, repeat);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
      * @param run What to Run
      * @param unit TimeUnit to use
      * @param delay Task Delay
@@ -116,8 +245,39 @@ public abstract class Galaxi {
      * @return Task ID
      */
     public UUID schedule(PluginInfo plugin, Runnable run, TimeUnit unit, long delay, long repeat) {
+        return schedule(plugin, null, run, unit, delay, repeat);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param run What to Run
+     * @param unit TimeUnit to use
+     * @param delay Task Delay
+     * @param repeat Task Repeat Interval
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, Runnable run, TimeUnit unit, long delay, long repeat) {
+        return schedule(plugin, name, null, run, unit, delay, repeat);
+    }
+
+    /**
+     * Schedule a task
+     *
+     * @param plugin Plugin Scheduling
+     * @param name Task Name
+     * @param identifier Task Identifier
+     * @param run What to Run
+     * @param unit TimeUnit to use
+     * @param delay Task Delay
+     * @param repeat Task Repeat Interval
+     * @return Task ID
+     */
+    public UUID schedule(PluginInfo plugin, String name, String identifier, Runnable run, TimeUnit unit, long delay, long repeat) {
         if (Util.isNull(plugin, run, unit, delay, repeat)) throw new NullPointerException();
-        return schedule(new Task(plugin) {
+        return schedule(new Task(plugin, name, identifier) {
             @Override
             public void run() {
                 run.run();
