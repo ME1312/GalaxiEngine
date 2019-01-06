@@ -4,6 +4,7 @@ import jline.console.completer.Completer;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
 import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
@@ -42,6 +43,7 @@ public class ConsoleReader extends Thread implements Completer {
      * @param status Status Container
      */
     public ConsoleReader(GalaxiEngine engine, jline.console.ConsoleReader jline, Container<Boolean> status) {
+        super(Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         this.engine = engine;
         this.jline = jline;
         this.running = status;

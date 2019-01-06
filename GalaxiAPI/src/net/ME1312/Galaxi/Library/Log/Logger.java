@@ -43,7 +43,7 @@ public final class Logger {
         severe = new LogStream(this, SEVERE, pse);
 
         this.prefix = prefix;
-        if (thread == null || !thread.isAlive()) log();
+        if (Galaxi.getInstance() != null && (thread == null || !thread.isAlive())) log();
     }
 
     public final LogStream message;
