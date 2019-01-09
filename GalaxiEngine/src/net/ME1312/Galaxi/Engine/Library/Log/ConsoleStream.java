@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 /**
@@ -39,8 +41,8 @@ public class ConsoleStream extends OutputStream {
                     window.write(buffer);
                     window.write(i);
                 }
-                original.write(buffer);
-                original.print(Ansi.ansi().a(Ansi.Attribute.RESET).toString());
+                original.write(new String(buffer, StandardCharsets.UTF_8).getBytes(Charset.defaultCharset()));
+                original.write(Ansi.ansi().a(Ansi.Attribute.RESET).toString().getBytes(Charset.defaultCharset()));
                 original.write(i);
                 show();
             } else {

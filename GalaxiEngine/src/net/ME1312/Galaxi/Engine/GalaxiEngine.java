@@ -8,6 +8,8 @@ import net.ME1312.Galaxi.Event.GalaxiStopEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Config.YAMLSection;
 import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Log.LogLevel;
+import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
@@ -20,8 +22,6 @@ import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.nio.charset.Charset;
@@ -29,6 +29,8 @@ import java.util.*;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;
+
+import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_DEBUG_MESSAGES;
 
 /**
  * Galaxi Engine Main Class
@@ -101,6 +103,8 @@ public class GalaxiEngine extends Galaxi {
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
 
+        if (!((SHOW_DEBUG_MESSAGES.usr().length() > 0 && SHOW_DEBUG_MESSAGES.def()) || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.get())))
+            Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
         jline.console.ConsoleReader jline = new jline.console.ConsoleReader(System.in, AnsiConsole.out);
         Util.reflect(SystemLogger.class.getDeclaredMethod("start", PrintStream.class, PrintStream.class, jline.console.ConsoleReader.class), null, AnsiConsole.out(), AnsiConsole.err(), jline);
 

@@ -36,6 +36,7 @@ public final class Logger {
     public Logger(String prefix) {
         if (Util.isNull(prefix)) throw new NullPointerException();
         if (prefix.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty prefix");
+        debug = new LogStream(this, DEBUG, pso);
         message = new LogStream(this, MESSAGE, pso);
         info = new LogStream(this, INFO, pso);
         warn = new LogStream(this, WARN, pso);
@@ -43,9 +44,9 @@ public final class Logger {
         severe = new LogStream(this, SEVERE, pse);
 
         this.prefix = prefix;
-        if (Galaxi.getInstance() != null && (thread == null || !thread.isAlive())) log();
     }
 
+    public final LogStream debug;
     public final LogStream message;
     public final LogStream info;
     public final LogStream warn;
@@ -105,7 +106,7 @@ public final class Logger {
             LogStream last = null;
             boolean terminated = true;
             while (running) {
-                while (messages.size() > 0) try {
+                while (running && messages.size() > 0) try {
                     NamedContainer<LogStream, String> container = Util.getDespiteException(() -> messages.get(0), null);
                     if (container != null) {
                         LogStream stream = container.name();

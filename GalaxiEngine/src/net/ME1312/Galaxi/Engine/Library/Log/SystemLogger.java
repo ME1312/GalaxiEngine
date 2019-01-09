@@ -34,6 +34,7 @@ public final class SystemLogger extends OutputStream {
 
         Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, out)), false, "UTF-8"));
         Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pse"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, err)), false, "UTF-8"));
+        Util.reflect(Logger.class.getDeclaredMethod("log"), null);
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
         System.setErr(new PrintStream(new SystemLogger(true), false, "UTF-8"));

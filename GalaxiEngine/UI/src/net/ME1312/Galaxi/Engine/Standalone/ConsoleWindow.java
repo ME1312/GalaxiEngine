@@ -75,7 +75,7 @@ public final class ConsoleWindow extends OutputStream {
                     while (log.getSelectionStart() == log.getSelectionEnd() && (lines = countLines(content = log.getDocument().getText(0, log.getDocument().getLength()))) > MAX_SCROLLBACK) {
                         int lineBreak = 1;
                         for (lines -= MAX_SCROLLBACK; lines > 0; lines--) lineBreak = content.indexOf('\n', lineBreak + 1);
-                        if (lineBreak >= 2) {
+                        if (lineBreak >= 2 && log.getSelectionStart() == log.getSelectionEnd()) {
                             log.getDocument().remove(2, lineBreak);
                         } else break;
                     }
