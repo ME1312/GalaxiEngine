@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -246,11 +247,13 @@ public final class Util {
     public static void deleteDirectory(File folder) {
         File[] files = folder.listFiles();
         if(files!=null) {
-            for(File f: files) {
-                if(f.isDirectory()) {
+            for(File f : files) {
+                if(f.isDirectory() && !Files.isSymbolicLink(f.toPath())) {
                     deleteDirectory(f);
-                } else {
-                    f.delete();
+                } else try {
+                    Files.delete(f.toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
