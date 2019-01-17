@@ -11,11 +11,10 @@
 
     <dependencies>
         <dependency>
-            <systemPath>${basedir}/UI/jansi.jar</systemPath>
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
             <version>1.17.1</version>
-            <scope>system</scope>
+            <scope>compile</scope>
             <optional>true</optional>
         </dependency>
         <dependency>
