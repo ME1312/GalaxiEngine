@@ -144,14 +144,16 @@ public final class ConsoleWindow extends OutputStream {
                             int position = input.getCaretPosition();
                             List<CharSequence> candidates = new LinkedList<CharSequence>();
                             if (icache == null || iauto == Boolean.FALSE) {
+                                candidates.add((input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
                                 READER.getMethod("complete", String.class, int.class, List.class).invoke(reader, (input.getText().startsWith(">"))?input.getText().substring(1):input.getText(), position, candidates);
                                 icache = new NamedContainer<>(position, candidates);
-                                iautopos = 0;
+                                iautopos = (kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE)?candidates.size() - 1:1;
                             } else {
                                 candidates = icache.get();
-                                iautopos++;
-                                if (iautopos >= candidates.size()) iautopos = 0;
+                                iautopos += (kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE)?-1:1;
                             }
+                            if (iautopos >= candidates.size()) iautopos = 0;
+                            if (iautopos < 0) iautopos = candidates.size() - 1;
                             if (candidates.size() > 0) {
                                 iauto = true;
                                 input.setText(candidates.get(iautopos).toString());
@@ -460,14 +462,7 @@ public final class ConsoleWindow extends OutputStream {
                 super.insertString(fb, offset, string, attr);
             }
 
-            @Override
-            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                if (offset < 1) {
-                    length = Math.max(0, length - 1);
-                    offset = input.getDocument().getLength();
-                    input.setCaretPosition(offset);
-                }
-
+            private void update() {
                 if (iauto == Boolean.TRUE) {
                     iauto = null;
                 } else if (iauto == null) {
@@ -478,7 +473,16 @@ public final class ConsoleWindow extends OutputStream {
                 } else if (popup.history == null) {
                     popup.history = false;
                 }
+            }
 
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (offset < 1) {
+                    length = Math.max(0, length - 1);
+                    offset = input.getDocument().getLength();
+                    input.setCaretPosition(offset);
+                }
+                update();
                 try {
                     super.replace(fb, offset, length, text, attrs);
                 } catch (BadLocationException e) {
@@ -492,6 +496,7 @@ public final class ConsoleWindow extends OutputStream {
                     length = Math.max(0, length + offset - 1);
                     offset = 1;
                 }
+                update();
                 if (length > 0) {
                     super.remove(fb, offset, length);
                 }
