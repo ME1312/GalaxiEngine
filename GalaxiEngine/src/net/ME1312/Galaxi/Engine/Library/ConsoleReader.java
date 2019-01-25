@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_CONSOLE_WINDOW;
-import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_CONSOLE_VARIABLES;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.PARSE_CONSOLE_VARIABLES;
 
 /**
  * Console Reader Class
@@ -240,7 +240,7 @@ public class ConsoleReader extends Thread implements Completer {
                                 break;
                             case '$':
                                 int varEnd;
-                                if ((USE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || USE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
+                                if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
                                     String var = str.substring(i + 1, varEnd);
                                     String replacement;
                                     if (System.getProperty(var) != null) {
@@ -253,7 +253,7 @@ public class ConsoleReader extends Thread implements Completer {
                                 } else part.appendCodePoint(ch);
                                 break;
                             case '%':
-                                if ((USE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || USE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
+                                if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
                                     String var = str.substring(i + 1, varEnd);
                                     String replacement;
                                     if (System.getenv(var) != null) {
