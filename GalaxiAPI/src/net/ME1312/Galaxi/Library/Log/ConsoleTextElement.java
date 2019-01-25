@@ -144,9 +144,11 @@ public class ConsoleTextElement extends TextElement {
      */
     public URL onClick() {
         try {
-            return new URL(element.getRawString("a", null));
+            if (element.contains("a")) {
+                return new URL(element.getRawString("a"));
+            } else return null;
         } catch (Exception e) {
-            e.printStackTrace();
+            if (!(e instanceof MalformedURLException)) e.printStackTrace();
             return null;
         }
     }

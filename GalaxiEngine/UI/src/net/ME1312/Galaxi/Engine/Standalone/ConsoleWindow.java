@@ -459,6 +459,7 @@ public final class ConsoleWindow extends OutputStream {
                 if (offset < 1) {
                     return;
                 }
+                string = string.replace("\n", "\\n");
                 super.insertString(fb, offset, string, attr);
             }
 
@@ -477,10 +478,12 @@ public final class ConsoleWindow extends OutputStream {
 
             @Override
             public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                text = text.replace("\n", "\\n");
                 if (offset < 1) {
                     length = Math.max(0, length - 1);
                     offset = input.getDocument().getLength();
                     input.setCaretPosition(offset);
+                    if (text.startsWith(">")) text = text.substring(1);
                 }
                 update();
                 try {

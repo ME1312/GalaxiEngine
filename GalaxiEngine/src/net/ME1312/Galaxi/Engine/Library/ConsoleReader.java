@@ -7,6 +7,7 @@ import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback;
 import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
@@ -17,13 +18,11 @@ import net.ME1312.Galaxi.Plugin.PluginManager;
 import java.awt.*;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.TreeMap;
 
-import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_CONSOLE_WINDOW;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.PARSE_CONSOLE_VARIABLES;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_CONSOLE_WINDOW;
 
 /**
  * Console Reader Class
@@ -89,12 +88,18 @@ public class ConsoleReader extends Thread implements Completer {
     @Override
     public int complete(String full, int cursor, List<CharSequence> candidates) {
         if (full != null && full.length() > 0 && (chat == null || full.startsWith("/"))) {
-            String before = "";
-            LinkedList<String> args = new LinkedList<String>();
-            args.addAll(Arrays.asList(unescapeCommand(full)));
-            String cmd = args.get(0);
-            args.remove(0);
-            if (cmd.startsWith("/")) cmd = cmd.substring(1);
+            LinkedList<Map.Entry<String, String>> args = new LinkedList<Map.Entry<String, String>>();
+            args.addAll(translateCommand(full, true).entrySet());
+            Map.Entry<String, String> cmd = args.getFirst();
+            args.removeFirst();
+
+            StringBuilder before = new StringBuilder();
+            before.append(cmd.getKey());
+            for (Map.Entry<String, String> entry : args) if (entry != args.getLast()) {
+                before.append(' ');
+                before.append(entry.getKey());
+            }
+            if (cmd.getValue().startsWith("/")) cmd.setValue(cmd.getValue().substring(1));
 
             TreeMap<String, Command> commands;
             try {
@@ -105,16 +110,19 @@ public class ConsoleReader extends Thread implements Completer {
             }
 
             if (args.size() == 0) {
-                if (cmd.length() > 0)
+                if (cmd.getValue().length() > 0)
                     for (String handle : commands.keySet())
-                        if (handle.startsWith(cmd.toLowerCase()))
+                        if (handle.startsWith(cmd.getValue().toLowerCase()))
                             candidates.add(((full.startsWith("/"))?"/":"") + escapeCommand(handle));
-            } else if (commands.keySet().contains(cmd.toLowerCase())) {
-                CompletionHandler autocompletor = commands.get(cmd.toLowerCase()).autocomplete();
+            } else if (commands.keySet().contains(cmd.getValue().toLowerCase())) {
+                CompletionHandler autocompletor = commands.get(cmd.getValue().toLowerCase()).autocomplete();
+                String beginning = before.toString();
+                String[] arguments = new String[args.size()];
+                for (int i = 0; i < args.size(); i++) arguments[i] = args.get(i).getValue();
                 if (autocompletor != null)
-                    for (String autocomplete : autocompletor.complete(ConsoleCommandSender.get(), cmd, args.toArray(new String[args.size()])))
+                    for (String autocomplete : autocompletor.complete(ConsoleCommandSender.get(), cmd.getValue(), arguments))
                         if (!Util.isNull(autocomplete) && autocomplete.length() > 0)
-                            candidates.add(before + ' ' + escapeCommand(autocomplete));
+                            candidates.add(beginning + ' ' + escapeCommand(autocomplete));
             }
         }
         return candidates.isEmpty()?-1:0;
@@ -159,8 +167,8 @@ public class ConsoleReader extends Thread implements Completer {
         if (!event.isCancelled()) {
             String line = event.getCommand();
             LinkedList<String> args = new LinkedList<String>();
-            args.addAll(Arrays.asList(unescapeCommand(line)));
-            String cmd = args.get(0);
+            args.addAll(unescapeCommand(line, false));
+            String cmd = args.getFirst();
             args.remove(0);
             if (cmd.startsWith("/")) cmd = cmd.substring(1);
 
@@ -205,14 +213,15 @@ public class ConsoleReader extends Thread implements Completer {
     }
 
     /**
-     * Unescapes a command
+     * Parse Escapes in a command
      *
      * @param str String
-     * @return Split String
+     * @return Escape translations
      */
-    private String[] unescapeCommand(String str) {
-        List<String> parts = new LinkedList<String>();
-        StringBuilder part = new StringBuilder(str.length());
+    private Map<String, String> translateCommand(String str, boolean includeFinal) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
+        StringBuilder part = new StringBuilder();
+        int start = 0;
 
         boolean between = true;
         boolean literal = false;
@@ -220,152 +229,163 @@ public class ConsoleReader extends Thread implements Completer {
         for (int i = 0; i < str.length(); i++) {
             int ch = str.codePointAt(i);
             if (ch == '\'') {
+                if (literal && i + 1 < str.length() && str.codePointAt(i + 1) == '\'') part.appendCodePoint(ch);
                 literal = !literal;
+            } else if (literal) {
+                part.appendCodePoint(ch);
+                between = false;
             } else {
-                if (literal) {
-                    part.appendCodePoint(ch);
-                    between = false;
+                if (!whitespaced && ch == ' ') {
+                    if (!between) {
+                        map.put(str.substring(start, i), part.toString());
+                        part = new StringBuilder(str.length());
+                    }
+                    start = i + 1;
+                    between = true;
                 } else {
-                    if (!whitespaced && ch == ' ') {
-                        if (!between) {
-                            parts.add(part.toString());
-                            part = new StringBuilder(str.length());
-                        }
-                        between = true;
-                    } else {
-                        between = false;
-                        switch (ch) {
-                            case '\"':
-                                whitespaced = !whitespaced;
-                                break;
-                            case '$':
-                                int varEnd;
-                                if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
-                                    String var = str.substring(i + 1, varEnd);
-                                    String replacement;
-                                    if (System.getProperty(var) != null) {
-                                        replacement = System.getProperty(var);
-                                    } else {
-                                        replacement = "null";
-                                    }
-                                    part.append(replacement);
-                                    i += varEnd;
-                                } else part.appendCodePoint(ch);
-                                break;
-                            case '%':
-                                if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
-                                    String var = str.substring(i + 1, varEnd);
-                                    String replacement;
-                                    if (System.getenv(var) != null) {
-                                        replacement = System.getenv(var);
-                                    } else {
-                                        replacement = "null";
-                                    }
-                                    part.append(replacement);
-                                    i += varEnd;
-                                } else part.appendCodePoint(ch);
-                                break;
-                            case '\\':
-                                int nextChar = (i == str.length() - 1) ? '\\' : str
-                                        .codePointAt(i + 1);
-                                // Octal escape?
-                                if (nextChar >= '0' && nextChar <= '7') {
-                                    StringBuilder code = new StringBuilder();
-                                    code.appendCodePoint(nextChar);
+                    between = false;
+                    switch (ch) {
+                        case '\"':
+                            if (whitespaced && i + 1 < str.length() && str.codePointAt(i + 1) == '\"') part.appendCodePoint(ch);
+                            whitespaced = !whitespaced;
+                            break;
+                        case '$':
+                            int varEnd;
+                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
+                                String var = str.substring(i + 1, varEnd);
+                                String replacement;
+                                if (System.getProperty(var) != null) {
+                                    replacement = System.getProperty(var);
+                                } else {
+                                    replacement = "null";
+                                }
+                                part.append(replacement);
+                                i = varEnd;
+                            } else part.appendCodePoint(ch);
+                            break;
+                        case '%':
+                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
+                                String var = str.substring(i + 1, varEnd);
+                                String replacement;
+                                if (System.getenv(var) != null) {
+                                    replacement = System.getenv(var);
+                                } else {
+                                    replacement = "null";
+                                }
+                                part.append(replacement);
+                                i = varEnd;
+                            } else part.appendCodePoint(ch);
+                            break;
+                        case '\\':
+                            int nextChar = (i == str.length() - 1) ? '\\' : str
+                                    .codePointAt(i + 1);
+                            // Octal escape?
+                            if (nextChar >= '0' && nextChar <= '7') {
+                                StringBuilder code = new StringBuilder();
+                                code.appendCodePoint(nextChar);
+                                i++;
+                                if ((i < str.length() - 1) && str.codePointAt(i + 1) >= '0'
+                                        && str.codePointAt(i + 1) <= '7') {
+                                    code.appendCodePoint(str.codePointAt(i + 1));
                                     i++;
                                     if ((i < str.length() - 1) && str.codePointAt(i + 1) >= '0'
                                             && str.codePointAt(i + 1) <= '7') {
                                         code.appendCodePoint(str.codePointAt(i + 1));
                                         i++;
-                                        if ((i < str.length() - 1) && str.codePointAt(i + 1) >= '0'
-                                                && str.codePointAt(i + 1) <= '7') {
-                                            code.appendCodePoint(str.codePointAt(i + 1));
-                                            i++;
-                                        }
                                     }
-                                    part.append((char) Integer.parseInt(code.toString(), 8));
-                                    continue;
                                 }
-                                switch (nextChar) {
-                                    case '\\':
-                                        ch = '\\';
-                                        break;
-                                    case ' ':
-                                        ch = ' ';
-                                        break;
-                                    case '$':
-                                        ch = '$';
-                                        break;
-                                    case '%':
-                                        ch = '%';
-                                        break;
-                                    case 'b':
-                                        ch = '\b';
-                                        break;
-                                    case 'f':
-                                        ch = '\f';
-                                        break;
-                                    case 'n':
-                                        ch = '\n';
-                                        break;
-                                    case 'r':
-                                        ch = '\r';
-                                        break;
-                                    case 't':
-                                        ch = '\t';
-                                        break;
-                                    case '\"':
-                                        ch = '\"';
-                                        break;
-                                    case '\'':
-                                        ch = '\'';
-                                        break;
-                                    // Hex Unicode Char: u????
-                                    // Hex Unicode Codepoint: u{??????}
-                                    case 'u':
-                                        try {
-                                            if (i >= str.length() - 4) throw new IllegalStateException();
-                                            StringBuilder escape = new StringBuilder();
-                                            int offset = 2;
+                                part.append((char) Integer.parseInt(code.toString(), 8));
+                                continue;
+                            }
+                            switch (nextChar) {
+                                case '\\':
+                                    ch = '\\';
+                                    break;
+                                case ' ':
+                                    ch = ' ';
+                                    break;
+                                case '$':
+                                    ch = '$';
+                                    break;
+                                case '%':
+                                    ch = '%';
+                                    break;
+                                case 'b':
+                                    ch = '\b';
+                                    break;
+                                case 'f':
+                                    ch = '\f';
+                                    break;
+                                case 'n':
+                                    ch = '\n';
+                                    break;
+                                case 'r':
+                                    ch = '\r';
+                                    break;
+                                case 't':
+                                    ch = '\t';
+                                    break;
+                                case '\"':
+                                    ch = '\"';
+                                    break;
+                                case '\'':
+                                    ch = '\'';
+                                    break;
+                                // Hex Unicode Char: u????
+                                // Hex Unicode Codepoint: u{??????}
+                                case 'u':
+                                    try {
+                                        if (i >= str.length() - 4) throw new IllegalStateException();
+                                        StringBuilder escape = new StringBuilder();
+                                        int offset = 2;
 
-                                            if (str.codePointAt(i + 2) != '{') {
-                                                if (i >= str.length() - 5) throw new IllegalStateException();
-                                                while (offset <= 5) {
-                                                    Integer.toString(str.codePointAt(i + offset), 16);
-                                                    escape.appendCodePoint(str.codePointAt(i + offset));
-                                                    offset++;
-                                                }
-                                                offset--;
-                                            } else {
+                                        if (str.codePointAt(i + 2) != '{') {
+                                            if (i >= str.length() - 5) throw new IllegalStateException();
+                                            while (offset <= 5) {
+                                                Integer.toString(str.codePointAt(i + offset), 16);
+                                                escape.appendCodePoint(str.codePointAt(i + offset));
                                                 offset++;
-                                                while (str.codePointAt(i + offset) != '}') {
-                                                    Integer.toString(str.codePointAt(i + offset), 16);
-                                                    escape.appendCodePoint(str.codePointAt(i + offset));
-                                                    offset++;
-                                                }
                                             }
-                                            part.append(new String(new int[]{
-                                                    Integer.parseInt(escape.toString(), 16)
-                                            }, 0, 1));
-
-                                            i += offset;
-                                            continue;
-                                        } catch (Throwable e) {
-                                            ch = 'u';
-                                            break;
+                                            offset--;
+                                        } else {
+                                            offset++;
+                                            while (str.codePointAt(i + offset) != '}') {
+                                                Integer.toString(str.codePointAt(i + offset), 16);
+                                                escape.appendCodePoint(str.codePointAt(i + offset));
+                                                offset++;
+                                            }
                                         }
-                                }
-                                i++;
-                            default:
-                                part.appendCodePoint(ch);
-                                break;
-                        }
+                                        part.append(new String(new int[]{
+                                                Integer.parseInt(escape.toString(), 16)
+                                        }, 0, 1));
+
+                                        i += offset;
+                                        continue;
+                                    } catch (Throwable e) {
+                                        ch = 'u';
+                                        break;
+                                    }
+                            }
+                            i++;
+                        default:
+                            part.appendCodePoint(ch);
+                            break;
                     }
                 }
             }
         }
 
-        if (!between) parts.add(part.toString());
-        return parts.toArray(new String[0]);
+        if (includeFinal || !between) map.put(str.substring(start), part.toString());
+        return map;
+    }
+
+    /**
+     * Unescapes a command
+     *
+     * @param str String
+     * @return Unescaped String
+     */
+    private Collection<String> unescapeCommand(String str, boolean includeFinal) {
+        return translateCommand(str, includeFinal).values();
     }
 }
