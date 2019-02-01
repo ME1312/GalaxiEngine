@@ -25,7 +25,7 @@ public final class FileLogger extends OutputStream {
 
     FileLogger(OutputStream origin) throws IOException {
         this.origin = origin;
-        if (iwriter == null) {
+        if (tmpwriter == null) {
             File dir = LOG_DIRECTORY.get();
             int i = 1;
             if (dir.isDirectory()) try {
