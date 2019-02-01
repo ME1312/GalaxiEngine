@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Engine.Library.Log;
 
-import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -10,6 +9,7 @@ import java.util.Calendar;
 import java.util.regex.Pattern;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.LOG_DIRECTORY;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_LOG_FILE;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_RAW_LOG;
 
 /**
@@ -27,10 +27,8 @@ public final class FileLogger extends OutputStream {
         this.origin = origin;
         if (iwriter == null) {
             File dir = LOG_DIRECTORY.get();
-            dir.mkdirs();
-
             int i = 1;
-            try {
+            if (dir.isDirectory()) try {
                 for (File file : dir.listFiles()) {
                     if (Pattern.compile("^" + Pattern.quote(Galaxi.getInstance().getAppInfo().getName()) + " #\\d+ \\((?:\\d{1,2}-){2}\\d+\\)\\.log(?:\\.(?:txt|htm|zip))?$").matcher(file.getName()).find()) i++;
                 }
@@ -41,18 +39,21 @@ public final class FileLogger extends OutputStream {
             tmp.deleteOnExit();
             tmpwriter = new FileOutputStream(tmp);
 
-            if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || USE_RAW_LOG.get()) {
-                file = new File(dir, name + ".log.txt");
+            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || USE_LOG_FILE.get()) {
+                dir.mkdirs();
+                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || USE_RAW_LOG.get()) {
+                    file = new File(dir, name + ".log.txt");
 
-                writer = iwriter = new FileOutputStream(file);
-            } else {
-                file = new File(dir, name + ".log.htm");
-                Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Library/Files/GalaxiLog.htm", file.getAbsolutePath());
+                    writer = iwriter = new FileOutputStream(file);
+                } else {
+                    file = new File(dir, name + ".log.htm");
+                    Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Library/Files/GalaxiLog.htm", file.getAbsolutePath());
 
-                iwriter = new FileOutputStream(file, true);
-                iwriter.write(("<h1>" + name + "</h1>\n").getBytes("UTF-8"));
-                iwriter.flush();
-                writer = HTMLogger.wrap(iwriter);
+                    iwriter = new FileOutputStream(file, true);
+                    iwriter.write(("<h1>" + name + "</h1>\n").getBytes("UTF-8"));
+                    iwriter.flush();
+                    writer = HTMLogger.wrap(iwriter);
+                }
             }
         }
     }
