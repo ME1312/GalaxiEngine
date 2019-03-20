@@ -1,11 +1,13 @@
-package net.ME1312.Galaxi.Library;
+package net.ME1312.Galaxi.Library.Callback;
 
 /**
- * Callback Class
+ * Callback
+ *
+ * @param <T> Object
  */
 public interface Callback<T> {
     /**
-     * Run the Callback
+     * Callback
      *
      * @param obj Object
      */

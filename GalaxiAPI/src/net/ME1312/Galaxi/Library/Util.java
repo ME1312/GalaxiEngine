@@ -1,5 +1,9 @@
 package net.ME1312.Galaxi.Library;
 
+import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
+import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;
+import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
+
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -17,15 +21,6 @@ import java.util.zip.ZipOutputStream;
  */
 public final class Util {
     private Util(){}
-    public interface ExceptionReturnRunnable<R> {
-        R run() throws Throwable;
-    }
-    public interface ExceptionRunnable {
-        void run() throws Throwable;
-    }
-    public interface ReturnRunnable<R> {
-        R run();
-    }
 
     /**
      * Checks values to make sure they're not null

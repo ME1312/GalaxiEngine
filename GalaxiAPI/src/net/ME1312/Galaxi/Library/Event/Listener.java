@@ -1,9 +1,7 @@
 package net.ME1312.Galaxi.Library.Event;
 
-import net.ME1312.Galaxi.Library.Callback;
+import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
-
-import java.lang.reflect.Method;
 
 /**
  * Event Listener Layout Class<br>

@@ -176,10 +176,10 @@ public final class Logger {
                             stream.stream.get().print('\n');
                         }
 
-                        Logger.messages.remove(0);
                     }
+                    Util.isException(() -> Logger.messages.remove(0));
                 } catch (Throwable e) {
-                    Logger.messages.remove(0);
+                    Util.isException(() -> Logger.messages.remove(0));
                     if (pse.get() != null) e.printStackTrace(pse.get());
                 }
                 Util.isException(() -> Thread.sleep(32));

@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Engine;
 
+import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -25,7 +26,7 @@ public final class GalaxiOption<T> extends Container<T> {
     private static boolean lock = false;
     private final T def;
     private final String usr;
-    private GalaxiOption(Util.ExceptionReturnRunnable<T> def) {
+    private GalaxiOption(ExceptionReturnRunnable<T> def) {
         this(null, usr -> def.run());
     }
     private GalaxiOption(String usr, OptionConstructor<T> def) {
