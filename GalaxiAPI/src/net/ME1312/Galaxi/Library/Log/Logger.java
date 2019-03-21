@@ -24,8 +24,9 @@ public final class Logger {
     private static boolean running = true;
     static final LinkedList<NamedContainer<LogStream, String>> messages = new LinkedList<NamedContainer<LogStream, String>>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
-    private static Thread thread;
     private LinkedList<LogFilter> lFilters = new LinkedList<LogFilter>();
+    private final java.util.logging.Logger primitive;
+    private static Thread thread;
     final String prefix;
 
     /**
@@ -43,6 +44,9 @@ public final class Logger {
         error = new LogStream(this, ERROR, pse);
         severe = new LogStream(this, SEVERE, pse);
 
+        primitive = java.util.logging.Logger.getAnonymousLogger();
+        primitive.addHandler(new PrimitiveLogHandler(this));
+
         this.prefix = prefix;
     }
 
@@ -52,6 +56,15 @@ public final class Logger {
     public final LogStream warn;
     public final LogStream error;
     public final LogStream severe;
+
+    /**
+     * Get this logger as a standard Java Logger
+     *
+     * @return Standard Java Logger
+     */
+    public java.util.logging.Logger toPrimitive() {
+        return primitive;
+    }
 
     /**
      * Get the prefix this logger uses
