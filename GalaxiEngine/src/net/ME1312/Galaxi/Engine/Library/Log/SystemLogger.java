@@ -22,7 +22,7 @@ import java.util.List;
  * System.out and System.err Override Class
  */
 public final class SystemLogger extends OutputStream {
-    private HashMap<String, NamedContainer<LogStream, ByteArrayOutputStream>> last = new HashMap<String, NamedContainer<LogStream, ByteArrayOutputStream>>();
+    private HashMap<String, LogStream> last = new HashMap<String, LogStream>();
     private boolean error;
 
     SystemLogger(boolean level) {
@@ -58,14 +58,11 @@ public final class SystemLogger extends OutputStream {
         }
         if (!last.keySet().contains(origin)) {
             Logger log = new Logger(origin);
-            last.put(origin, new NamedContainer<LogStream, ByteArrayOutputStream>((error)?log.error:log.info, new ByteArrayOutputStream()));
+            last.put(origin, (error)?log.error:log.info);
         }
-        NamedContainer<LogStream, ByteArrayOutputStream> log = last.get(origin);
-        log.get().write(c);
-        if (c == '\n') {
-            log.name().print(log.get().toString("UTF-8").replace("\r\n", "\n"));
-            last.remove(origin);
-        }
+        LogStream log = last.get(origin);
+        log.toPrimitive().write(c);
+        if (c == '\n') last.remove(origin);
     }
 
     private static void stop() throws Exception {

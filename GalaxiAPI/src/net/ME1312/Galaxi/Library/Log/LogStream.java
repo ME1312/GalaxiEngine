@@ -5,12 +5,7 @@ import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.TextElement;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.Field;
-import java.net.URLEncoder;
-import java.util.LinkedList;
+import java.io.*;
 import java.util.List;
 
 /**
@@ -19,12 +14,34 @@ import java.util.List;
 public final class LogStream {
     private Logger logger;
     private LogLevel level;
+    private PrintStream primitive;
     Container<PrintStream> stream;
 
     LogStream(Logger logger, LogLevel level, Container<PrintStream> stream) {
         this.logger = logger;
         this.level = level;
         this.stream = stream;
+        this.primitive = Util.getDespiteException(() -> new PrintStream(new OutputStream() {
+            ByteArrayOutputStream pending = new ByteArrayOutputStream();
+
+            @Override
+            public void write(int b) throws IOException {
+                pending.write(b);
+                if (b == '\n') {
+                    print(pending.toString("UTF-8").replace("\r\n", "\n"));
+                    pending.reset();
+                }
+            }
+        }, true, "UTF-8"), null);
+    }
+
+    /**
+     * Get this logger as a standard Java PrintStream
+     *
+     * @return Standard Java PrintStream
+     */
+    public PrintStream toPrimitive() {
+        return primitive;
     }
 
     /**
