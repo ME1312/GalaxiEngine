@@ -45,6 +45,7 @@ public final class Logger {
         severe = new LogStream(this, SEVERE, pse);
 
         primitive = java.util.logging.Logger.getAnonymousLogger();
+        primitive.setUseParentHandlers(false);
         primitive.addHandler(new PrimitiveLogHandler(this));
 
         this.prefix = prefix;
