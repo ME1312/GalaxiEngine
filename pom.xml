@@ -8,6 +8,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>GalaxiAPI/global</module>
         <module>GalaxiAPI</module>
         <module>GalaxiEngine</module>
         <module>GalaxiEngine/UI</module>

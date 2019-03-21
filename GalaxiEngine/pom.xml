@@ -31,6 +31,12 @@
         </dependency>
         <dependency>
             <groupId>net.ME1312.Galaxi</groupId>
+            <artifactId>GalaxiUtil</artifactId>
+            <version>-PLACEHOLDER</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.ME1312.Galaxi</groupId>
             <artifactId>GalaxiAPI</artifactId>
             <version>-PLACEHOLDER</version>
             <scope>compile</scope>
@@ -147,6 +153,7 @@
                             <additionalOptions>-Xdoclint:none</additionalOptions>
                             <includeDependencySources>true</includeDependencySources>
                             <dependencySourceIncludes>
+                                <dependencySourceInclude>net.ME1312.Galaxi:GalaxiUtil:*</dependencySourceInclude>
                                 <dependencySourceInclude>net.ME1312.Galaxi:GalaxiAPI:*</dependencySourceInclude>
                             </dependencySourceIncludes>
                         </configuration>
