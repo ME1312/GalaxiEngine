@@ -2,6 +2,7 @@ package net.ME1312.Galaxi.Library.Log;
 
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Config.YAMLSection;
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.TextElement;
 
@@ -33,7 +34,7 @@ public class ConsoleTextElement extends TextElement {
      *
      * @param element Raw Element
      */
-    public ConsoleTextElement(YAMLSection element) {
+    public ConsoleTextElement(ObjectMap<String> element) {
         super(element);
     }
 
@@ -91,7 +92,7 @@ public class ConsoleTextElement extends TextElement {
         if (element.getObject("bc", null) == null) {
             return null;
         } else {
-            YAMLSection bc = element.getSection("bc");
+            ObjectMap<String> bc = element.getMap("bc");
             return new Color(bc.getInt("r"), bc.getInt("g"), bc.getInt("b"), bc.getInt("a"));
         }
     }

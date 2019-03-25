@@ -81,7 +81,7 @@ public class YAMLConfig {
     public void save() throws IOException {
         if (!file.exists()) file.createNewFile();
         FileWriter writer = new FileWriter(file);
-        yaml.dump(config.map, writer);
+        yaml.dump(config.clone(), writer);
         writer.close();
     }
 
@@ -96,7 +96,7 @@ public class YAMLConfig {
 
     @Override
     public String toString() {
-        return yaml.dump(config.map);
+        return config.toString();
     }
 
     static DumperOptions getDumperOptions() {

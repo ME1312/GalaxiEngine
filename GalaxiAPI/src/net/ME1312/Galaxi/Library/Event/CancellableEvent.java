@@ -2,8 +2,10 @@ package net.ME1312.Galaxi.Library.Event;
 
 /**
  * Cancellable SubEvent Layout Class
+ *
+ * @see net.ME1312.Galaxi.Library.Event.Cancellable for the interface version
  */
-public abstract class CancellableEvent extends Event {
+public abstract class CancellableEvent extends Event implements Cancellable {
     private boolean cancelled;
 
     /**

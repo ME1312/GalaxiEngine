@@ -1,12 +1,14 @@
 package net.ME1312.Galaxi.Library;
 
-import net.ME1312.Galaxi.Library.Config.YAMLSection;
-import net.ME1312.Galaxi.Library.Config.YAMLValue;
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
+import net.ME1312.Galaxi.Library.Map.ObjectMapValue;
 
 /**
  * Extra Data Handler Layout Class
+ *
+ * @param <K> Key Type
  */
-public interface ExtraDataHandler {
+public interface ExtraDataHandler<K> {
     /**
      * Add an extra value to this Object
      *
@@ -29,14 +31,14 @@ public interface ExtraDataHandler {
      * @param handle Handle
      * @return Value
      */
-    YAMLValue getExtra(String handle);
+    ObjectMapValue<K> getExtra(String handle);
 
     /**
      * Get the extra value section
      *
      * @return Extra Value Section
      */
-    YAMLSection getExtra();
+    ObjectMap<K> getExtra();
 
     /**
      * Remove an extra value from this Object

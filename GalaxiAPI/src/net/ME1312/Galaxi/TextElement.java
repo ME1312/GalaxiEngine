@@ -1,6 +1,7 @@
 package net.ME1312.Galaxi;
 
 import net.ME1312.Galaxi.Library.Config.YAMLSection;
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Util;
 
 import java.awt.Color;
@@ -12,7 +13,7 @@ import java.util.*;
 public class TextElement {
     private LinkedList<TextElement> before = new LinkedList<TextElement>();
     private LinkedList<TextElement> after = new LinkedList<TextElement>();
-    protected YAMLSection element;
+    protected ObjectMap<String> element;
 
     /**
      * Create a new Text Element
@@ -34,11 +35,11 @@ public class TextElement {
      *
      * @param element Raw Element
      */
-    public TextElement(YAMLSection element) {
+    public TextElement(ObjectMap<String> element) {
         if (Util.isNull(element.getRawString("msg", null))) throw new NullPointerException();
         this.element = element;
-        for (YAMLSection e : element.getSectionList("pre", new LinkedList<YAMLSection>())) before.add(new TextElement(e));
-        for (YAMLSection e : element.getSectionList("post", new LinkedList<YAMLSection>())) after.add(new TextElement(e));
+        for (ObjectMap<String> e : element.getMapList("pre", new LinkedList<ObjectMap<String>>())) before.add(new TextElement(e));
+        for (ObjectMap<String> e : element.getMapList("post", new LinkedList<ObjectMap<String>>())) after.add(new TextElement(e));
     }
 
     /**
@@ -159,7 +160,7 @@ public class TextElement {
         if (element.getObject("c", null) == null) {
             return null;
         } else {
-            YAMLSection c = element.getSection("c");
+            ObjectMap<String> c = element.getMap("c");
             return new Color(c.getInt("r"), c.getInt("g"), c.getInt("b"), c.getInt("a"));
         }
     }
@@ -194,13 +195,13 @@ public class TextElement {
      *
      * @return Raw Element
      */
-    public YAMLSection toRaw() {
+    public ObjectMap<String> toRaw() {
         return toRaw(new ArrayList<TextElement>());
     }
-    private YAMLSection toRaw(List<TextElement> past) {
+    private ObjectMap<String> toRaw(List<TextElement> past) {
         past.add(this);
 
-        LinkedList<YAMLSection> before = new LinkedList<YAMLSection>();
+        LinkedList<ObjectMap<String>> before = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.before) {
             if (past.contains(e)) throw new IllegalStateException("Infinite text prepend loop");
             List<TextElement> p = new ArrayList<TextElement>();
@@ -210,7 +211,7 @@ public class TextElement {
         if (!before.isEmpty()) element.set("pre", before);
         else if (element.contains("pre")) element.remove("pre");
 
-        LinkedList<YAMLSection> after = new LinkedList<YAMLSection>();
+        LinkedList<ObjectMap<String>> after = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.after) {
             if (past.contains(e)) throw new IllegalStateException("Infinite text append loop");
             List<TextElement> p = new ArrayList<TextElement>();
@@ -221,10 +222,5 @@ public class TextElement {
         else if (element.contains("post")) element.remove("post");
 
         return element.clone();
-    }
-
-    @Override
-    public String toString() {
-        return toRaw().toJSON().toString();
     }
 }

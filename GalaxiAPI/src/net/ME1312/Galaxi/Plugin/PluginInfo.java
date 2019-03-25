@@ -1,10 +1,10 @@
 package net.ME1312.Galaxi.Plugin;
 
-import net.ME1312.Galaxi.Library.Config.YAMLSection;
-import net.ME1312.Galaxi.Library.Config.YAMLValue;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
 import net.ME1312.Galaxi.Library.Log.Logger;
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
+import net.ME1312.Galaxi.Library.Map.ObjectMapValue;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
@@ -44,7 +44,7 @@ public class PluginInfo implements ExtraDataHandler {
     private Logger logger = null;
     private Runnable updateChecker = null;
     private boolean enabled = false;
-    private YAMLSection extra = new YAMLSection();
+    private ObjectMap<String> extra = new ObjectMap<String>();
 
     public static class Dependency {
         private String name;
@@ -377,13 +377,13 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     @Override
-    public YAMLValue getExtra(String handle) {
+    public ObjectMapValue<String> getExtra(String handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
         return extra.get(handle);
     }
 
     @Override
-    public YAMLSection getExtra() {
+    public ObjectMap<String> getExtra() {
         return extra.clone();
     }
 

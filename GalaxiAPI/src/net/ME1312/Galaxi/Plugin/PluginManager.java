@@ -232,7 +232,7 @@ public abstract class PluginManager {
                         LinkedList<Method> m = new LinkedList<>(listeners.get(order).get(type).get(plugin).get(listener));
                         if (reverse) Collections.reverse(m);
                         for (Method method : m) {
-                            if (!(event instanceof CancellableEvent) || !((CancellableEvent) event).isCancelled() || (method.isAnnotationPresent(Subscribe.class) && method.getAnnotation(Subscribe.class).override())) {
+                            if (!(event instanceof Cancellable) || !((Cancellable) event).isCancelled() || (method.isAnnotationPresent(Subscribe.class) && method.getAnnotation(Subscribe.class).override())) {
                                 try {
                                     method.invoke(listener, event);
                                 } catch (InvocationTargetException e) {

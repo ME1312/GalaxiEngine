@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Library.Config;
+package net.ME1312.Galaxi.Library.Map;
 
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
@@ -10,29 +10,38 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * YAML Value Class
+ * Object Map Class
+ *
+ * @param <K> Key Type
  */
 @SuppressWarnings({"unchecked", "unused"})
-public class YAMLValue {
+public class ObjectMapValue<K> {
     Object obj;
-    String label;
-    YAMLSection up;
-    private Yaml yaml;
+    K label;
+    ObjectMap<K> up;
 
-    YAMLValue(Object obj, YAMLSection up, String label, Yaml yaml) {
+    ObjectMapValue(Object obj, ObjectMap<K> up, K label) {
         this.obj = obj;
         this.label = label;
-        this.yaml = yaml;
         this.up = up;
     }
 
     /**
-     * Get the YAML Section this Object was defined in
+     * Get the Object Map this Object was defined in
      *
-     * @return YAML Section
+     * @return Object Map
      */
-    public YAMLSection getDefiningSection() {
+    public ObjectMap<K> getParent() {
         return up;
+    }
+
+    /**
+     * Get the Handle this Object uses
+     *
+     * @return Object Handle
+     */
+    public K getHandle() {
+        return label;
     }
 
     /**
@@ -72,25 +81,25 @@ public class YAMLValue {
     }
 
     /**
-     * Get Object as YAML Section
+     * Get Object as Object Map
      *
-     * @return YAML Section
+     * @return Object Map
      */
-    public YAMLSection asSection() {
-        if (obj != null) return new YAMLSection((Map<String, ?>) obj, up, label, yaml);
+    public ObjectMap<K> asMap() {
+        if (obj != null) return new ObjectMap((Map<String, ?>) obj, up, label);
         else return null;
     }
 
     /**
-     * Get Object as YAML Section List
+     * Get Object as Object Map List
      *
-     * @return YAML Section List
+     * @return Object Map List
      */
-    public List<YAMLSection> asSectionList() {
+    public List<ObjectMap<K>> asMapList() {
         if (obj != null) {
-            List<YAMLSection> values = new ArrayList<YAMLSection>();
-            for (Map<String, ?> value : (List<? extends Map<String, ?>>) obj) {
-                values.add(new YAMLSection(value, null, null, yaml));
+            List<ObjectMap<K>> values = new ArrayList<ObjectMap<K>>();
+            for (Map<K, ?> value : (List<? extends Map<K, ?>>) obj) {
+                values.add(new ObjectMap(value, null, null));
             }
             return values;
         } else return null;
@@ -305,11 +314,11 @@ public class YAMLValue {
     }
 
     /**
-     * Check if object is a YAML Section
+     * Check if object is an Object Map
      *
-     * @return YAML Section Status
+     * @return ObjectMap Status
      */
-    public boolean isSection() {
+    public boolean isMap() {
         return (obj instanceof Map);
     }
 
@@ -354,8 +363,8 @@ public class YAMLValue {
         if (obj == null) {
             return object == null;
         } else {
-            if (object instanceof YAMLValue) {
-                return obj.equals(((YAMLValue) object).obj);
+            if (object instanceof ObjectMapValue) {
+                return obj.equals(((ObjectMapValue) object).obj);
             } else {
                 return obj.equals(object);
             }

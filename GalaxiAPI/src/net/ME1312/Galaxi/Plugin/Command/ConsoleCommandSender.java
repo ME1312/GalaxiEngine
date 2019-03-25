@@ -1,8 +1,8 @@
 package net.ME1312.Galaxi.Plugin.Command;
 
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Config.YAMLSection;
-import net.ME1312.Galaxi.Library.Config.YAMLValue;
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
+import net.ME1312.Galaxi.Library.Map.ObjectMapValue;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.TextElement;
 
@@ -11,7 +11,7 @@ import net.ME1312.Galaxi.TextElement;
  */
 public final class ConsoleCommandSender implements CommandSender {
     private static ConsoleCommandSender instance;
-    private YAMLSection extra = new YAMLSection();
+    private ObjectMap<String> extra = new ObjectMap<String>();
 
     /**
      * Get the Console Command Sender
@@ -57,13 +57,13 @@ public final class ConsoleCommandSender implements CommandSender {
     }
 
     @Override
-    public YAMLValue getExtra(String handle) {
+    public ObjectMapValue<String> getExtra(String handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
         return extra.get(handle);
     }
 
     @Override
-    public YAMLSection getExtra() {
+    public ObjectMap<String> getExtra() {
         return extra.clone();
     }
 
