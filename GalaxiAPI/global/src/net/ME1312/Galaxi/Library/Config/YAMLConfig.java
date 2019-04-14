@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Library.Config;
 
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Util;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -81,7 +82,7 @@ public class YAMLConfig {
     public void save() throws IOException {
         if (!file.exists()) file.createNewFile();
         FileWriter writer = new FileWriter(file);
-        yaml.dump(config.clone(), writer);
+        yaml.dump(Util.getDespiteException(() -> Util.reflect(ObjectMap.class.getDeclaredField("map"), config), null), writer);
         writer.close();
     }
 

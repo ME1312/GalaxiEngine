@@ -70,6 +70,15 @@ public class YAMLSection extends ObjectMap<String> {
     }
 
     /**
+     * Creates a YAML Section from Map Contents
+     *
+     * @param map Map
+     */
+    public YAMLSection(ObjectMap<String> map) {
+        this(map.get());
+    }
+
+    /**
      * Creates a YAML Section from JSON Contents
      *
      * @param json JSON
@@ -85,9 +94,18 @@ public class YAMLSection extends ObjectMap<String> {
         if (map != null) setAll(map);
     }
 
+    /**
+     * Clone this Map
+     *
+     * @return Map Clone
+     */
+    public YAMLSection clone() {
+        return new YAMLSection(map);
+    }
+
     @Override
     public String toString() {
-        return yaml.dump(clone());
+        return yaml.dump(map);
     }
 
     /**
@@ -96,6 +114,6 @@ public class YAMLSection extends ObjectMap<String> {
      * @return JSON
      */
     public JSONObject toJSON() {
-        return new JSONObject(clone());
+        return new JSONObject(map);
     }
 }

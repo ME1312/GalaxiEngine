@@ -12,7 +12,7 @@ import java.util.*;
  */
 @SuppressWarnings({"unchecked", "unused"})
 public class ObjectMap<K> {
-    LinkedHashMap<K, Object> map;
+    protected LinkedHashMap<K, Object> map;
     K handle = null;
     ObjectMap<K> up = null;
 
@@ -35,7 +35,7 @@ public class ObjectMap<K> {
         setAll(map);
     }
 
-    ObjectMap(Map<? extends K, ?> map, ObjectMap up, K handle) {
+    ObjectMap(Map<? extends K, ?> map, ObjectMap<K> up, K handle) {
         this.map = new LinkedHashMap<K, Object>();
         this.handle = handle;
         this.up = up;
