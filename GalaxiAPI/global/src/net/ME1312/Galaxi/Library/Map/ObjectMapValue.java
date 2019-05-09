@@ -4,10 +4,7 @@ import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 import org.yaml.snakeyaml.Yaml;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Object Map Class
@@ -212,9 +209,9 @@ public class ObjectMapValue<K> {
      */
     public List<String> asRawStringList() {
         if (obj != null) {
-            List<String> values = new ArrayList<String>();
+            List<String> values = new LinkedList<>();
             for (Object value : (List<?>) obj) {
-                values.add(value.toString());
+                values.add((value == null)?null:value.toString());
             }
             return values;
         } else return null;
@@ -239,7 +236,7 @@ public class ObjectMapValue<K> {
         if (obj != null) {
             List<String> values = new ArrayList<String>();
             for (String value : asRawStringList()) {
-                values.add(Util.unescapeJavaString(value));
+                values.add((value == null)?null:Util.unescapeJavaString(value));
             }
             return values;
         } else return null;
@@ -264,7 +261,7 @@ public class ObjectMapValue<K> {
         if (obj != null) {
             List<UUID> values = new ArrayList<UUID>();
             for (String value : (List<String>) obj) {
-                values.add(UUID.fromString(value));
+                values.add((value == null)?null:UUID.fromString(value));
             }
             return values;
         } else return null;
@@ -289,7 +286,7 @@ public class ObjectMapValue<K> {
         if (obj != null) {
             List<Version> values = new ArrayList<Version>();
             for (String value : (List<String>) obj) {
-                values.add(Version.fromString(value));
+                values.add((value == null)?null:Version.fromString(value));
             }
             return values;
         } else return null;

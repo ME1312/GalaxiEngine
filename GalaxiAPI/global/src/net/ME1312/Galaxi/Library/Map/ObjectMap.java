@@ -473,7 +473,7 @@ public class ObjectMap<K> {
         } else if (def != null) {
             List<ObjectMap<K>> values = new ArrayList<ObjectMap<K>>();
             for (ObjectMap<? extends K> value : def) {
-                values.add(new ObjectMap(value.get(), null, null));
+                values.add(new ObjectMap((value == null)?null:value.get(), null, null));
             }
             return values;
         } else return null;
