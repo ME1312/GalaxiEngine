@@ -49,7 +49,9 @@ public final class Util {
         List<K> values = new ArrayList<K>();
 
         for (K key : map.keySet()) {
-            if (map.get(key).equals(value)) {
+            if (map.get(key) == null || value == null) {
+                if (key == value) values.add(key);
+            } else if (map.get(key).equals(value)) {
                 values.add(key);
             }
         }
