@@ -260,7 +260,7 @@ public class ObjectMapValue<K> {
     public List<UUID> asUUIDList() {
         if (obj != null) {
             List<UUID> values = new ArrayList<UUID>();
-            for (String value : (List<String>) obj) {
+            for (String value : asRawStringList()) {
                 values.add((value == null)?null:UUID.fromString(value));
             }
             return values;
@@ -285,7 +285,7 @@ public class ObjectMapValue<K> {
     public List<Version> asVersionList() {
         if (obj != null) {
             List<Version> values = new ArrayList<Version>();
-            for (String value : (List<String>) obj) {
+            for (String value : asRawStringList()) {
                 values.add((value == null)?null:Version.fromString(value));
             }
             return values;
