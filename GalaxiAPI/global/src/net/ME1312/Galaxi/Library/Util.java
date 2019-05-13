@@ -311,7 +311,7 @@ public final class Util {
 
             for(String next : zipsearch(file, file)){
 
-                ZipEntry ze= new ZipEntry(next);
+                ZipEntry ze= new ZipEntry(next.replace(File.separatorChar, '/'));
                 zos.putNextEntry(ze);
 
                 FileInputStream in = new FileInputStream(dir.getAbsolutePath() + File.separator + next);
@@ -337,7 +337,7 @@ public final class Util {
             ZipInputStream zis = new ZipInputStream(zip);
             ZipEntry ze;
             while ((ze = zis.getNextEntry()) != null) {
-                File newFile = new File(dir + File.separator + ze.getName());
+                File newFile = new File(dir + File.separator + ze.getName().replace('/', File.separatorChar));
                 if (newFile.exists()) {
                     if (newFile.isDirectory()) {
                         Util.deleteDirectory(newFile);
