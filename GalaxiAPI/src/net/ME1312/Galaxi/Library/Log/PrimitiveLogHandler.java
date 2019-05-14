@@ -42,7 +42,7 @@ public final class PrimitiveLogHandler extends Handler {
                     message = message.replace("{" + i + "}", Util.getDespiteException(() -> (obj == null)?"null":obj.toString(), ""));
                     i++;
                 }
-                stream.println(message);
+                stream.println(message.replace("\r", ""));
             }
         }
     }
