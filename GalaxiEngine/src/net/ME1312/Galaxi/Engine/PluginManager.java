@@ -1,21 +1,17 @@
 package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Engine.Library.PluginClassLoader;
-import net.ME1312.Galaxi.Library.Event.*;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
-import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Dependency;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -26,7 +22,7 @@ import java.util.jar.JarFile;
  */
 public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
     private HashMap<String, PluginInfo> plugins = new LinkedHashMap<String, PluginInfo>();
-    private List<String> knownClasses = new ArrayList<String>();
+    private HashMap<String, ClassLoader> knownClasses = new HashMap<String, ClassLoader>();
     private GalaxiEngine engine;
 
     PluginManager(GalaxiEngine engine) {
@@ -38,7 +34,8 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
      *
      * @param clazz A class from the library to search
      */
-    public void findClasses(Class<?> clazz) throws IOException {
+    public String[] findClasses(Class<?> clazz) throws IOException {
+        LinkedList<String> classes = new LinkedList<String>();
         try {
             JarFile jarFile = new JarFile(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
             Enumeration<JarEntry> entries = jarFile.entries();
@@ -47,18 +44,21 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                 JarEntry entry = entries.nextElement();
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
                     String e = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
-                    if (!knownClasses.contains(e)) knownClasses.add(e);
+                    if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());
+                    if (!classes.contains(e)) classes.add(e);
                 }
             }
         } catch (URISyntaxException e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
+        return classes.toArray(new String[0]);
     }
 
     /**
      * Load plugins
      *
      * @param directories Directories to search
+     * @return Amount of plugins loaded
      */
     public int loadPlugins(File... directories) {
         LinkedList<File> pljars = new LinkedList<File>();
@@ -80,8 +80,8 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                 try {
                     JarFile jar = new JarFile(file);
                     Enumeration<JarEntry> entries = jar.entries();
-                    PluginClassLoader loader = new PluginClassLoader(this.getClass().getClassLoader(), file);
-                    List<String> contents = new ArrayList<String>();
+                    PluginClassLoader loader = PluginClassLoader.get(this.getClass().getClassLoader(), file);
+                    //List<String> contents = new ArrayList<String>();
 
                     loader.setDefaultClass(ClassNotFoundException.class);
                     boolean isplugin = false;
@@ -89,7 +89,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                         JarEntry entry = entries.nextElement();
                         if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
                             String cname = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
-                            contents.add(cname);
+                            knownClasses.put(cname, loader);
                             try {
                                 Class<?> clazz = loader.loadClass(cname);
                                 if (clazz.isAnnotationPresent(Plugin.class)) {
@@ -109,7 +109,6 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                     if (!isplugin) {
                         engine.getAppInfo().getLogger().info.println("Loaded Library: " + file.getName());
                     }
-                    knownClasses.addAll(contents);
                     jar.close();
                 } catch (Throwable e) {
                     engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Problem searching possible plugin jar: " + file.getName()));
@@ -159,8 +158,8 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                                         }
                                     }
                                     plugin.addExtra("galaxi.plugin.loadafter", new ArrayList<String>());
-                                    if (loader.getFiles().length > 0 && loader.getFiles()[0] != null) {
-                                        Util.reflect(PluginInfo.class.getDeclaredField("dir"), plugin, new File(loader.getFiles()[0].getParentFile(), plugin.getName()));
+                                    if (loader.getFile() != null) {
+                                        Util.reflect(PluginInfo.class.getDeclaredField("dir"), plugin, new File(loader.getFile().getParentFile(), plugin.getName()));
                                     }
                                     plugins.put(plugin.getName().toLowerCase(), plugin);
                                 } catch (IllegalPluginException e) {

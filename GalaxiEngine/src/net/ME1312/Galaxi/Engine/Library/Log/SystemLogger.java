@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public final class SystemLogger extends OutputStream {
 
     @SuppressWarnings("unchecked")
     private List<String> getKnownClasses() {
-        return Util.getDespiteException(() -> Util.reflect(PluginManager.class.getDeclaredField("knownClasses"), GalaxiEngine.getInstance().getPluginManager()), null);
+        return new ArrayList<>(Util.<HashMap<String, ClassLoader>>getDespiteException(() -> Util.reflect(PluginManager.class.getDeclaredField("knownClasses"), GalaxiEngine.getInstance().getPluginManager()), null).keySet());
     }
 
     @Override

@@ -4,63 +4,65 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.LinkedList;
 
 /**
  * Plugin ClassLoader Class
  */
 public class PluginClassLoader extends URLClassLoader {
-    private static Set<PluginClassLoader> loaders = new CopyOnWriteArraySet<PluginClassLoader>();
+    private static HashMap<File, PluginClassLoader> loaders = new HashMap<File, PluginClassLoader>();
     private Class<?> defaultClass = null;
-    private File[] files;
+    private File file;
 
     /**
      * Load Classes from URLs
      *
-     * @param files Files
+     * @param file File
      */
-    public PluginClassLoader(File[] files) {
-        super(toSuper(files));
-        this.files = files;
-        loaders.add(this);
+    public static PluginClassLoader get(File file) {
+        return get(null, file);
     }
 
     /**
      * Load Classes from URLs with a parent loader
      *
      * @param parent Parent loader
-     * @param files Files
+     * @param file File
      */
-    public PluginClassLoader(ClassLoader parent, File... files) {
-        super(toSuper(files), parent);
-        this.files = files;
-        loaders.add(this);
+    public static PluginClassLoader get(ClassLoader parent, File file) {
+        if (!loaders.keySet().contains(file)) loaders.put(file, new PluginClassLoader(parent, file));
+        return loaders.get(file);
+    }
+
+    private PluginClassLoader(ClassLoader parent, File file) {
+        super(toSuper(file), parent);
+        this.file = file;
+
+        loaders.put(file, this);
     }
 
     /*
      * Convert File[] to URL[] for Super
      */
-    private static URL[] toSuper(File[] files) {
-        URL[] result = new URL[files.length];
-        for (int i = 0; i < files.length; i++) {
-            try {
-                result[i] = files[i].toURI().toURL();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
+    private static URL[] toSuper(File file) {
+        URL result = null;
+        try {
+            result = file.toURI().toURL();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
         }
-        return result;
+        return (result == null)?new URL[0]:new URL[]{result};
     }
 
     /**
-     * Get the files used by this ClassLoader
+     * Get the file used by this ClassLoader
      *
-     * @return Loaded Files
+     * @return Loaded File
      */
-    public File[] getFiles() {
-        return files.clone();
+    public File getFile() {
+        return file;
     }
 
     /**
@@ -104,7 +106,7 @@ public class PluginClassLoader extends URLClassLoader {
             return super.loadClass(name, resolve);
         } catch (NoClassDefFoundError | ClassNotFoundException e) {
             if (check) {
-                Iterator i = loaders.iterator();
+                Iterator i = new LinkedList<>(loaders.values()).iterator();
 
                 while (true) {
                     PluginClassLoader loader;
