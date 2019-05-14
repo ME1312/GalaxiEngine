@@ -1,5 +1,7 @@
 package net.ME1312.Galaxi.Library.Log;
 
+import net.ME1312.Galaxi.Library.Util;
+
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
@@ -33,8 +35,15 @@ public final class PrimitiveLogHandler extends Handler {
                 stream = log.error;
             }
 
-            if (stream != null)
-                stream.println(record.getMessage());
+            if (stream != null) {
+                String message = record.getMessage();
+                int i = 0;
+                for (Object obj : record.getParameters()) {
+                    message = message.replace("{" + i + "}", Util.getDespiteException(() -> (obj == null)?"null":obj.toString(), ""));
+                    i++;
+                }
+                stream.println(message);
+            }
         }
     }
 

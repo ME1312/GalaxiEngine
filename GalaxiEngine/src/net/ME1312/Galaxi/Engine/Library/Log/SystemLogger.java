@@ -50,7 +50,7 @@ public final class SystemLogger extends OutputStream {
     public void write(int c) throws IOException {
         int i = 0;
         String origin = java.lang.System.class.getCanonicalName();
-        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+        for (StackTraceElement element : new Exception().getStackTrace()) {
             if (i > 1 && getKnownClasses().contains(element.getClassName())) {
                 origin = element.getClassName().replaceAll("\\$([^.$\\d]+)", ".$1").replaceAll("\\$[\\d]+", "");
                 break;
