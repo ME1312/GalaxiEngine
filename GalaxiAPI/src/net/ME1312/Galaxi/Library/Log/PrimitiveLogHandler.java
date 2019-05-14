@@ -38,7 +38,7 @@ public final class PrimitiveLogHandler extends Handler {
             if (stream != null) {
                 String message = record.getMessage();
                 int i = 0;
-                for (Object obj : record.getParameters()) {
+                if (record.getParameters() != null) for (Object obj : record.getParameters()) {
                     message = message.replace("{" + i + "}", Util.getDespiteException(() -> (obj == null)?"null":obj.toString(), ""));
                     i++;
                 }
