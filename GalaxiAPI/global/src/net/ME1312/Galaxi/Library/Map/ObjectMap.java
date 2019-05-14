@@ -91,9 +91,9 @@ public class ObjectMap<K> {
         if (value == null) {
             return null;
         } else if (value instanceof Map) {
-            List<String> list = new ArrayList<String>();
-            list.addAll(((Map<String, Object>) value).keySet());
-            for (String key : list) ((Map<String, Object>) value).put(key, convert(((Map<String, Object>) value).get(key)));
+            List<Object> list = new ArrayList<Object>();
+            list.addAll(((Map<Object, Object>) value).keySet());
+            for (Object key : list) ((Map<Object, Object>) value).put(key, convert(((Map<Object, Object>) value).get(key)));
             return value;
         } else if (value instanceof ObjectMap) {
             ((ObjectMap) value).up = this;
