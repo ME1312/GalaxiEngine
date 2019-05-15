@@ -97,9 +97,9 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Get or register PluginInfo for objects tagged with @Plugin
+     * Get or register PluginInfo for objects tagged with @App/@Plugin
      *
-     * @param main Class tagged with @Plugin
+     * @param main Class tagged with @App/@Plugin
      * @return PluginInfo
      * @throws InvocationTargetException
      */
@@ -108,32 +108,51 @@ public class PluginInfo implements ExtraDataHandler {
         if (!pluginMap.keySet().contains(mainClass)) {
 
             try {
-                String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
-                String display = (mainClass.getAnnotation(Plugin.class).display().length() > 0)?mainClass.getAnnotation(Plugin.class).display():mainClass.getAnnotation(Plugin.class).name();
-                Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
-                Version signature = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).signature()):null;
-                List<String> authors = Arrays.asList(mainClass.getAnnotation(Plugin.class).authors());
-                String description = (mainClass.getAnnotation(Plugin.class).description().length() > 0)?mainClass.getAnnotation(Plugin.class).description():null;
-                URL website = (mainClass.getAnnotation(Plugin.class).website().length() > 0)?new URL(mainClass.getAnnotation(Plugin.class).website()):null;
-                List<String> loadBefore = Arrays.asList(mainClass.getAnnotation(Plugin.class).loadBefore());
-                List<Dependency> dependencies = new LinkedList<Dependency>();
-                for (net.ME1312.Galaxi.Plugin.Dependency dependency : mainClass.getAnnotation(Plugin.class).dependencies()) {
-                    String dname = dependency.name().replaceAll(ID_PATTERN, "$1");
-                    Version dminversion = (dependency.minVersion().length() > 0)?Version.fromString(dependency.minVersion()):null;
-                    Version dmaxversion = (dependency.maxVersion().length() > 0)?Version.fromString(dependency.maxVersion()):null;
-                    boolean drequired = dependency.required();
+                if (mainClass.isAnnotationPresent(Plugin.class)) {
+                    String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
+                    String display = (mainClass.getAnnotation(Plugin.class).display().length() > 0)?mainClass.getAnnotation(Plugin.class).display():mainClass.getAnnotation(Plugin.class).name();
+                    Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
+                    Version signature = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).signature()):null;
+                    List<String> authors = Arrays.asList(mainClass.getAnnotation(Plugin.class).authors());
+                    String description = (mainClass.getAnnotation(Plugin.class).description().length() > 0)?mainClass.getAnnotation(Plugin.class).description():null;
+                    URL website = (mainClass.getAnnotation(Plugin.class).website().length() > 0)?new URL(mainClass.getAnnotation(Plugin.class).website()):null;
+                    List<String> loadBefore = Arrays.asList(mainClass.getAnnotation(Plugin.class).loadBefore());
+                    List<Dependency> dependencies = new LinkedList<Dependency>();
+                    for (net.ME1312.Galaxi.Plugin.Dependency dependency : mainClass.getAnnotation(Plugin.class).dependencies()) {
+                        String dname = dependency.name().replaceAll(ID_PATTERN, "$1");
+                        Version dminversion = (dependency.minVersion().length() > 0)?Version.fromString(dependency.minVersion()):null;
+                        Version dmaxversion = (dependency.maxVersion().length() > 0)?Version.fromString(dependency.maxVersion()):null;
+                        boolean drequired = dependency.required();
 
-                    if (dname.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty dependency name");
-                    if (dminversion != null && dmaxversion != null && dminversion.equals(dmaxversion)) throw new IllegalArgumentException("Cannot use the same dependency version for min and max");
-                    dependencies.add(new Dependency(dname, dminversion, dmaxversion, drequired));
+                        if (dname.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty dependency name");
+                        if (dminversion != null && dmaxversion != null && dminversion.equals(dmaxversion)) throw new IllegalArgumentException("Cannot use the same dependency version for min and max");
+                        dependencies.add(new Dependency(dname, dminversion, dmaxversion, drequired));
+                    }
+
+                    PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependencies);
+                    plugin.setDisplayName(display);
+                    plugin.setSignature(signature);
+
+                    pluginMap.put(mainClass, plugin);
+                    usedNames.add(name.toLowerCase());
+                } else if (mainClass.isAnnotationPresent(App.class)) {
+                    String name = mainClass.getAnnotation(App.class).name().replaceAll(ID_PATTERN, "$1");
+                    String display = (mainClass.getAnnotation(App.class).display().length() > 0)?mainClass.getAnnotation(App.class).display():mainClass.getAnnotation(App.class).name();
+                    Version version = Version.fromString(mainClass.getAnnotation(App.class).version());
+                    Version signature = (mainClass.getAnnotation(App.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(App.class).signature()):null;
+                    List<String> authors = Arrays.asList(mainClass.getAnnotation(App.class).authors());
+                    String description = (mainClass.getAnnotation(App.class).description().length() > 0)?mainClass.getAnnotation(App.class).description():null;
+                    URL website = (mainClass.getAnnotation(App.class).website().length() > 0)?new URL(mainClass.getAnnotation(App.class).website()):null;
+
+                    PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, Collections.emptyList(), Collections.emptyList());
+                    plugin.setDisplayName(display);
+                    plugin.setSignature(signature);
+
+                    pluginMap.put(mainClass, plugin);
+                    usedNames.add(name.toLowerCase());
+                } else {
+                    throw new IllegalStateException("Class not annotated by @App or @Plugin: " + mainClass.getCanonicalName());
                 }
-
-                PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependencies);
-                plugin.setDisplayName(display);
-                plugin.setSignature(signature);
-
-                pluginMap.put(mainClass, plugin);
-                usedNames.add(name.toLowerCase());
             } catch (Throwable e) {
                 throw new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main);
             }
@@ -141,7 +160,19 @@ public class PluginInfo implements ExtraDataHandler {
         return pluginMap.get(mainClass);
     }
 
-    private PluginInfo(Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<Dependency> dependencies) {
+    /**
+     * Generate PluginInfo
+     *
+     * @param plugin Plugin Object
+     * @param name Plugin Name
+     * @param version Plugin Version
+     * @param authors Authors List
+     * @param description Plugin Description
+     * @param website Author's Website
+     * @param loadBefore Load Before List
+     * @param dependencies Dependencies List
+     */
+    protected PluginInfo(Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<Dependency> dependencies) {
         if (Util.isNull(plugin, name, version, authors)) throw new NullPointerException();
         if (name.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty name");
         if (version.toString().length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty version");

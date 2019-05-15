@@ -14,6 +14,7 @@ import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
+import net.ME1312.Galaxi.Plugin.App;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import org.fusesource.jansi.AnsiConsole;
@@ -36,7 +37,7 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_DEBUG_MESSAGES;
 /**
  * Galaxi Engine Main Class
  */
-@Plugin(name = "GalaxiEngine", version = "3.2.0c", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@App(name = "GalaxiEngine", version = "3.2.0c", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
@@ -53,8 +54,9 @@ public class GalaxiEngine extends Galaxi {
     /**
      * Initialize the Galaxi Engine
      *
+     * @see App @App
      * @see Plugin @Plugin
-     * @param app Main class object of the app (annotated with @Plugin)
+     * @param app Main class object of the app (annotated with @App/@Plugin)
      * @return The GalaxiEngine
      */
     public static GalaxiEngine init(Object app) throws Exception {
