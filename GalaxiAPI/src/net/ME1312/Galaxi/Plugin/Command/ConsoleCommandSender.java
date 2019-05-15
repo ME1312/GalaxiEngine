@@ -9,8 +9,8 @@ import net.ME1312.Galaxi.TextElement;
 /**
  * Console Command Sender Class
  */
-public final class ConsoleCommandSender implements CommandSender {
-    private static ConsoleCommandSender instance;
+public class ConsoleCommandSender implements CommandSender {
+    protected static ConsoleCommandSender instance;
     private ObjectMap<String> extra = new ObjectMap<String>();
 
     /**
@@ -22,7 +22,7 @@ public final class ConsoleCommandSender implements CommandSender {
         if (instance == null) instance = new ConsoleCommandSender();
         return instance;
     }
-    private ConsoleCommandSender() {}
+    protected ConsoleCommandSender() {}
 
     @Override
     public String getName() {
