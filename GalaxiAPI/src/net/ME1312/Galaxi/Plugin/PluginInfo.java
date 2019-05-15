@@ -51,7 +51,15 @@ public class PluginInfo implements ExtraDataHandler {
         private Version minversion, maxversion;
         private boolean required;
 
-        private Dependency(String name, Version minversion, Version maxversion, boolean required) {
+        /**
+         * Generate Plugin DependencyInfo
+         *
+         * @param name Dependency Name
+         * @param minversion Minimum Version
+         * @param maxversion Maximum Version
+         * @param required Required Status
+         */
+        protected Dependency(String name, Version minversion, Version maxversion, boolean required) {
             if (Util.isNull(name, required)) throw new NullPointerException();
             this.name = name;
             this.minversion = minversion;
