@@ -103,7 +103,6 @@ public class GalaxiEngine extends Galaxi {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
-        getPluginManager().findClasses(Launch.class);
 
         if (!((SHOW_DEBUG_MESSAGES.usr().length() > 0 && SHOW_DEBUG_MESSAGES.def()) || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.get())))
             Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
