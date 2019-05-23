@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Engine.Standalone;
 
+import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.Library.Log.HTMLogger;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
@@ -439,18 +440,18 @@ public final class ConsoleWindow extends OutputStream {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (input.getText().length() > 0 && !input.getText().equals(">")) {
-                    final String command = (input.getText().startsWith(">"))?input.getText().substring(1):input.getText();
-                    new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Command") {
+                    final String line = (input.getText().startsWith(">"))?input.getText().substring(1):input.getText();
+                    new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Input") {
                         @Override
                         public void run() {
                             try {
-                                ConsoleCommandSender.get().command(command);
+                                Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getDeclaredMethod("input", String.class), reader, line);
                             } catch (Exception e) {
                                 Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
                             }
                         }
                     }.start();
-                    popup.commands.add(command);
+                    popup.commands.add(line);
                     input.setText("");
                 }
             }

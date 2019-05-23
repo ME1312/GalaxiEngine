@@ -3,7 +3,8 @@ package net.ME1312.Galaxi.Engine.Library;
 import jline.console.completer.Completer;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
-import net.ME1312.Galaxi.Event.ConsoleCommandEvent;
+import net.ME1312.Galaxi.Event.CommandEvent;
+import net.ME1312.Galaxi.Event.ConsoleInputEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Library.Container;
@@ -135,20 +136,35 @@ public class ConsoleReader extends Thread implements Completer {
             String line;
             while (running.get() && (line = jline.readLine(">")) != null) {
                 if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
-                if (chat != null && !line.startsWith("/")) {
-                    try {
-                        ConsoleChatEvent event = new ConsoleChatEvent(engine, Util.unescapeJavaString(line));
-                        engine.getPluginManager().executeEvent(event);
-                        if (!event.isCancelled()) chat.run(event.getMessage());
-                    } catch (Exception e) {
-                        engine.getAppInfo().getLogger().error.print(e);
-                    }
-                } else {
-                    runCommand(ConsoleCommandSender.get(), line);
+                input(line);
+
+                try {
+                    jline.getOutput().write("\b \b");
+                } catch (Exception e) {
+                    engine.getAppInfo().getLogger().error.print(e);
                 }
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
+        }
+    }
+    private void input(String line) {
+        if (Util.isNull(line)) throw new NullPointerException();
+
+        ConsoleInputEvent ie = new ConsoleInputEvent(engine, line);
+        engine.getPluginManager().executeEvent(ie);
+        if (!ie.isCancelled()) {
+            if (chat != null && !line.startsWith("/")) {
+                try {
+                    ConsoleChatEvent event = new ConsoleChatEvent(engine, Util.unescapeJavaString(line));
+                    engine.getPluginManager().executeEvent(event);
+                    if (!event.isCancelled()) chat.run(event.getMessage());
+                } catch (Exception e) {
+                    engine.getAppInfo().getLogger().error.print(e);
+                }
+            } else {
+                runCommand(ConsoleCommandSender.get(), line);
+            }
         }
     }
 
@@ -161,15 +177,17 @@ public class ConsoleReader extends Thread implements Completer {
     @SuppressWarnings("unchecked")
     public void runCommand(CommandSender sender, String command) {
         if (Util.isNull(sender, command)) throw new NullPointerException();
-        ConsoleCommandEvent event = new ConsoleCommandEvent(engine, command);
+        if (command.startsWith("/")) command = command.substring(1);
+
+        LinkedList<String> arguments = new LinkedList<String>();
+        arguments.addAll(unescapeCommand(command, false));
+        String label = arguments.getFirst();
+        arguments.remove(0);
+        String[] args = arguments.toArray(new String[0]);
+
+        CommandEvent event = new CommandEvent(engine, sender, command, label, args);
         engine.getPluginManager().executeEvent(event);
         if (!event.isCancelled()) {
-            String line = event.getCommand();
-            LinkedList<String> args = new LinkedList<String>();
-            args.addAll(unescapeCommand(line, false));
-            String cmd = args.getFirst();
-            args.remove(0);
-            if (cmd.startsWith("/")) cmd = cmd.substring(1);
 
             TreeMap<String, Command> commands;
             try {
@@ -179,24 +197,18 @@ public class ConsoleReader extends Thread implements Completer {
                 commands = new TreeMap<String, Command>();
             }
 
-            if (commands.keySet().contains(cmd.toLowerCase())) {
+            if (commands.keySet().contains(label.toLowerCase())) {
                 try {
-                    commands.get(cmd.toLowerCase()).command(sender, cmd, args.toArray(new String[args.size()]));
+                    commands.get(label.toLowerCase()).command(sender, label, args);
                 } catch (Exception e) {
                     engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Uncaught exception while running command"));
                 }
             } else {
-                String s = escapeCommand(cmd);
-                for (String arg : args) {
-                    s += ' ' + arg;
+                String s = escapeCommand(label);
+                for (String arg : arguments) {
+                    s += ' ' + escapeCommand(arg);
                 }
                 engine.getAppInfo().getLogger().message.println("Unknown Command - " + s);
-            }
-
-            try {
-                jline.getOutput().write("\b \b");
-            } catch (Exception e) {
-                engine.getAppInfo().getLogger().error.print(e);
             }
         }
     }

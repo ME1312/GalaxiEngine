@@ -28,11 +28,11 @@ public final class LogStream {
             public void write(int b) throws IOException {
                 pending.write(b);
                 if (b == '\n') {
-                    print(pending.toString("UTF-8").replace("\r\n", "\n"));
+                    print(pending.toString("UTF-8").replace("\r", ""));
                     pending.reset();
                 }
             }
-        }, true, "UTF-8"), null);
+        }, false, "UTF-8"), null);
     }
 
     /**
