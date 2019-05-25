@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -37,20 +38,34 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
     public String[] findClasses(Class<?> clazz) throws IOException {
         LinkedList<String> classes = new LinkedList<String>();
         try {
-            JarFile jarFile = new JarFile(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
-            Enumeration<JarEntry> entries = jarFile.entries();
+            URL source = clazz.getProtectionDomain().getCodeSource().getLocation();
+            if (source != null && source.getProtocol().equals("file")) {
+                File file = new File(source.toURI());
 
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    String e = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
-                    if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());
-                    if (!classes.contains(e)) classes.add(e);
+                if (file.isDirectory()) {
+                    for (String entry : Util.<List<String>>getDespiteException(() -> Util.reflect(Util.class.getDeclaredMethod("zipsearch", File.class, File.class), null, file, file), null)) {
+                        if (!(new File(file.getAbsolutePath() + File.separator + entry).isDirectory()) && entry.endsWith(".class")) {
+                            String e = entry.substring(0, entry.length() - 6).replace(File.separatorChar, '.');
+                            if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());
+                            if (!classes.contains(e)) classes.add(e);
+                        }
+                    }
+                }
+                if (file.isFile()) {
+                    JarFile jarFile = new JarFile(file);
+                    Enumeration<JarEntry> entries = jarFile.entries();
+
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                            String e = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
+                            if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());
+                            if (!classes.contains(e)) classes.add(e);
+                        }
+                    }
                 }
             }
-        } catch (URISyntaxException e) {
-            engine.getAppInfo().getLogger().error.println(e);
-        }
+        } catch (URISyntaxException e) {}
         return classes.toArray(new String[0]);
     }
 
