@@ -41,6 +41,13 @@ public @interface Plugin {
     String signature() default "";
 
     /**
+     * The State of the Plugin
+     *
+     * @return Plugin State
+     */
+    String state() default "";
+
+    /**
      * The Authors of this Plugin
      *
      * @return Authors List

@@ -74,9 +74,9 @@ public class DefaultCommands {
                         if (args.length > 0) {
                             PluginInfo plugin = engine.getPluginManager().getPlugin(args[0].toLowerCase());
                             for (PluginInfo info : searchDependencies(plugin)) {
-                                sender.sendMessage("  " + info.getDisplayName() + " v" + info.getVersion().toExtendedString() + ((info.getSignature() != null)?" (" + info.getSignature() + ')':"") + ',');
+                                sender.sendMessage("  " + info.getDisplayName() + " v" + info.getVersion().toExtendedString() + ((info.getSignature() != null)?" (" + info.getSignature() + ')':"") + ((info.getState() != null)?" [" + info.getState() + ']':"") + ',');
                             }
-                            String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"");
+                            String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"");
                             String subtitle = "    by ";
                             int i = 0;
                             for (String author : plugin.getAuthors()) {

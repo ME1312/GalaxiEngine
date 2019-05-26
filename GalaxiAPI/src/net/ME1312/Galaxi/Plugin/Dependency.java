@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Plugin;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -11,7 +10,7 @@ import java.lang.annotation.Target;
  * @see Plugin
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.ANNOTATION_TYPE)
+@Target({})
 public @interface Dependency {
     /**
      * Name of the Dependency

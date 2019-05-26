@@ -246,6 +246,7 @@ public class GalaxiEngine extends Galaxi {
         }
 
         Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
+        AnsiConsole.system_out.println();
 
         System.exit(code);
     }

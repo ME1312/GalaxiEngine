@@ -23,6 +23,7 @@ import java.util.List;
  *
  * @see Plugin
  */
+@Plugin(name = "sauce", version = "xd", authors = "lmao", dependencies = @Dependency(name = "sauce"))
 public class PluginInfo implements ExtraDataHandler {
     private static final String ID_PATTERN = ".*?([A-Za-z0-9!#$&+\\-_. ]*).*?";
     private static ArrayList<String> usedNames = new ArrayList<String>();
@@ -34,6 +35,7 @@ public class PluginInfo implements ExtraDataHandler {
     private String display;
     private Version version;
     private Version signature;
+    private String state;
     private List<String> authors;
     private String desc;
     private URL website;
@@ -121,6 +123,7 @@ public class PluginInfo implements ExtraDataHandler {
                     String display = (mainClass.getAnnotation(Plugin.class).display().length() > 0)?mainClass.getAnnotation(Plugin.class).display():mainClass.getAnnotation(Plugin.class).name();
                     Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
                     Version signature = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).signature()):null;
+                    String state = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?mainClass.getAnnotation(Plugin.class).state():null;
                     List<String> authors = Arrays.asList(mainClass.getAnnotation(Plugin.class).authors());
                     String description = (mainClass.getAnnotation(Plugin.class).description().length() > 0)?mainClass.getAnnotation(Plugin.class).description():null;
                     URL website = (mainClass.getAnnotation(Plugin.class).website().length() > 0)?new URL(mainClass.getAnnotation(Plugin.class).website()):null;
@@ -140,6 +143,7 @@ public class PluginInfo implements ExtraDataHandler {
                     PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependencies);
                     plugin.setDisplayName(display);
                     plugin.setSignature(signature);
+                    plugin.setState(state);
 
                     pluginMap.put(mainClass, plugin);
                     usedNames.add(name.toLowerCase());
@@ -148,6 +152,7 @@ public class PluginInfo implements ExtraDataHandler {
                     String display = (mainClass.getAnnotation(App.class).display().length() > 0)?mainClass.getAnnotation(App.class).display():mainClass.getAnnotation(App.class).name();
                     Version version = Version.fromString(mainClass.getAnnotation(App.class).version());
                     Version signature = (mainClass.getAnnotation(App.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(App.class).signature()):null;
+                    String state = (mainClass.getAnnotation(App.class).signature().length() > 0)?mainClass.getAnnotation(App.class).state():null;
                     List<String> authors = Arrays.asList(mainClass.getAnnotation(App.class).authors());
                     String description = (mainClass.getAnnotation(App.class).description().length() > 0)?mainClass.getAnnotation(App.class).description():null;
                     URL website = (mainClass.getAnnotation(App.class).website().length() > 0)?new URL(mainClass.getAnnotation(App.class).website()):null;
@@ -155,6 +160,7 @@ public class PluginInfo implements ExtraDataHandler {
                     PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, Collections.emptyList(), Collections.emptyList());
                     plugin.setDisplayName(display);
                     plugin.setSignature(signature);
+                    plugin.setState(state);
 
                     pluginMap.put(mainClass, plugin);
                     usedNames.add(name.toLowerCase());
@@ -290,6 +296,24 @@ public class PluginInfo implements ExtraDataHandler {
         if (signature == null) {
             signature = value;
         }
+    }
+
+    /**
+     * Get the Plugin's State
+     *
+     * @return Plugin State
+     */
+    public String getState() {
+        return this.state;
+    }
+
+    /**
+     * Set the Plugin's State
+     *
+     * @param value Plugin State
+     */
+    public void setState(String value) {
+        state = value;
     }
 
     /**

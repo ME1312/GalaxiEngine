@@ -21,7 +21,7 @@ public @interface App {
     String name();
 
     /**
-     * The Display Name of the APp
+     * The Display Name of the App
      *
      * @return App Display Name
      */
@@ -40,6 +40,13 @@ public @interface App {
      * @return Build Signature
      */
     String signature() default "";
+
+    /**
+     * The State of the App
+     *
+     * @return App State
+     */
+    String state() default "";
 
     /**
      * The Authors of the App
