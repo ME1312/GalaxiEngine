@@ -8,6 +8,7 @@ import net.ME1312.Galaxi.Library.Util;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
@@ -19,8 +20,8 @@ import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
  * Logger Class
  */
 public final class Logger {
-    private static final Container<OutputStream[]> pso = new Container<OutputStream[]>(null);
-    private static final Container<OutputStream[]> pse = new Container<OutputStream[]>(null);
+    private static final Container<PrintStream> pso = new Container<PrintStream>(null);
+    private static final Container<PrintStream> pse = new Container<PrintStream>(null);
     private static boolean running = true;
     static final LinkedList<NamedContainer<LogStream, String>> messages = new LinkedList<NamedContainer<LogStream, String>>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
@@ -171,30 +172,30 @@ public final class Logger {
 
                             if (response == null || response == Boolean.TRUE) {
                                 if (terminated || last != stream) {
-                                    if (!terminated) stream.writer.write('\n');
-                                    stream.writer.write(prefix);
+                                    if (!terminated) stream.stream.get().print('\n');
+                                    stream.stream.get().write(prefix.getBytes(StandardCharsets.UTF_8));
                                 }
                                 last = stream;
                                 logged = true;
                                 terminated = false;
-                                stream.writer.write(message);
+                                stream.stream.get().write(message.getBytes(StandardCharsets.UTF_8));
 
                                 if (i < messages.size()) {
                                     terminated = true;
-                                    stream.writer.write('\n');
+                                    stream.stream.get().print('\n');
                                 }
                             }
                         }
                         if (logged && terminate) {
                             terminated = true;
-                            stream.writer.write('\n');
+                            stream.stream.get().print('\n');
                         }
 
                     }
                     Util.isException(() -> Logger.messages.remove(0));
                 } catch (Throwable e) {
                     Util.isException(() -> Logger.messages.remove(0));
-                    e.printStackTrace(Util.getDespiteException(() -> (PrintStream) Class.forName("org.fusesource.jansi.AnsiConsole").getField("system_err").get(null), null));
+                    if (pse.get() != null) e.printStackTrace(pse.get());
                 }
                 Util.isException(() -> Thread.sleep(32));
             }

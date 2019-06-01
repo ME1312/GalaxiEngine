@@ -15,12 +15,12 @@ public final class LogStream {
     private Logger logger;
     private LogLevel level;
     private PrintStream primitive;
-    LogStreamWriter writer;
+    Container<PrintStream> stream;
 
-    LogStream(Logger logger, LogLevel level, Container<OutputStream[]> stream) {
+    LogStream(Logger logger, LogLevel level, Container<PrintStream> stream) {
         this.logger = logger;
         this.level = level;
-        this.writer = new LogStreamWriter(stream);
+        this.stream = stream;
         this.primitive = Util.getDespiteException(() -> new PrintStream(new OutputStream() {
             ByteArrayOutputStream pending = new ByteArrayOutputStream();
 

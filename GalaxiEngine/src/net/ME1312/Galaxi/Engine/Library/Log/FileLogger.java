@@ -21,8 +21,10 @@ public final class FileLogger extends OutputStream {
     private static OutputStream writer = null;
     private static File file = null;
     private static File tmp = null;
+    private OutputStream origin;
 
-    FileLogger() throws IOException {
+    FileLogger(OutputStream origin) throws IOException {
+        this.origin = origin;
         if (tmpwriter == null) {
             File dir = LOG_DIRECTORY.get();
             int i = 1;
@@ -58,6 +60,7 @@ public final class FileLogger extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
+        origin.write(b);
         if (writer != null) {
             writer.write(b);
             writer.flush();
