@@ -33,8 +33,11 @@ public final class SystemLogger extends OutputStream {
     private static void start(PrintStream out, PrintStream err, ConsoleReader in) throws Exception {
         if (Util.isNull(out, err)) throw new NullPointerException();
 
-        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, out)), false, "UTF-8"));
-        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pse"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, err)), false, "UTF-8"));
+        FileLogger file = new FileLogger();
+        ConsoleStream console = new ConsoleStream();
+
+        Util.<Container<OutputStream[]>>reflect(Logger.class.getDeclaredField("pso"), null).set(new OutputStream[]{ file, console, new TerminalWrapper(in, out) });
+        Util.<Container<OutputStream[]>>reflect(Logger.class.getDeclaredField("pse"), null).set(new OutputStream[]{ file, console, new TerminalWrapper(in, err) });
         Util.reflect(Logger.class.getDeclaredMethod("log"), null);
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));

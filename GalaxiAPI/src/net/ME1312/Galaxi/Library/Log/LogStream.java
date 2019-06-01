@@ -15,12 +15,12 @@ public final class LogStream {
     private Logger logger;
     private LogLevel level;
     private PrintStream primitive;
-    Container<PrintStream> stream;
+    LogStreamWriter writer;
 
-    LogStream(Logger logger, LogLevel level, Container<PrintStream> stream) {
+    LogStream(Logger logger, LogLevel level, Container<OutputStream[]> stream) {
         this.logger = logger;
         this.level = level;
-        this.stream = stream;
+        this.writer = new LogStreamWriter(stream);
         this.primitive = Util.getDespiteException(() -> new PrintStream(new OutputStream() {
             ByteArrayOutputStream pending = new ByteArrayOutputStream();
 
@@ -71,12 +71,7 @@ public final class LogStream {
         return level;
     }
 
-    /**
-     * Write to the PrintStream
-     *
-     * @param str String
-     */
-    private void write(String str) {
+    private void submit(String str) {
         Logger.messages.add(new NamedContainer<LogStream, String>(this, str));
     }
 
@@ -166,9 +161,9 @@ public final class LogStream {
      */
     public void print(TextElement element) {
         if (element == null) {
-            write("null");
+            submit("null");
         } else {
-            write(convert(element));
+            submit(convert(element));
         }
     }
 
@@ -179,9 +174,9 @@ public final class LogStream {
      */
     public void print(String str) {
         if (str == null) {
-            write("null");
+            submit("null");
         } else {
-            write(str);
+            submit(str);
         }
     }
 
@@ -249,7 +244,7 @@ public final class LogStream {
      */
     public void println(TextElement... element) {
         for (TextElement ELEMENT : element) {
-            write(convert(ELEMENT) + '\n');
+            submit(convert(ELEMENT) + '\n');
         }
     }
 

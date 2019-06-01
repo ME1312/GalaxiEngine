@@ -23,7 +23,6 @@ import java.util.List;
  *
  * @see Plugin
  */
-@Plugin(name = "sauce", version = "xd", authors = "lmao", dependencies = @Dependency(name = "sauce"))
 public class PluginInfo implements ExtraDataHandler {
     private static final String ID_PATTERN = ".*?([A-Za-z0-9!#$&+\\-_. ]*).*?";
     private static ArrayList<String> usedNames = new ArrayList<String>();

@@ -1,5 +1,7 @@
 package net.ME1312.Galaxi.Engine;
 
+import net.ME1312.Galaxi.Library.Callback.ExceptionCallback;
+import net.ME1312.Galaxi.Library.Callback.ExceptionReturnCallback;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Util;
@@ -20,6 +22,8 @@ public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<Boolean> PARSE_CONSOLE_VARIABLES = new GalaxiOption<>("galaxi.console.parse_vars", usr -> usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> SHOW_CONSOLE_WINDOW = new GalaxiOption<>("galaxi.console", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> SHOW_DEBUG_MESSAGES = new GalaxiOption<>("galaxi.log.debug", usr -> usr.equalsIgnoreCase("true"));
+    public static final GalaxiOption<Boolean> USE_ANSI = new GalaxiOption<>("galaxi.terminal.ansi", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
+    public static final GalaxiOption<Boolean> USE_JLINE = new GalaxiOption<>("galaxi.terminal.jline", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> USE_LOG_FILE = new GalaxiOption<>("galaxi.log", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> USE_RAW_LOG = new GalaxiOption<>("galaxi.log.raw", usr -> usr.equalsIgnoreCase("true") || (usr.length() == 0 && GraphicsEnvironment.isHeadless()));
 
@@ -29,13 +33,10 @@ public final class GalaxiOption<T> extends Container<T> {
     private GalaxiOption(ExceptionReturnRunnable<T> def) {
         this(null, usr -> def.run());
     }
-    private GalaxiOption(String usr, OptionConstructor<T> def) {
+    private GalaxiOption(String usr, ExceptionReturnCallback<String, T> def) {
         super(Util.getDespiteException(() -> def.run((usr == null)?"":System.getProperty(usr, "")), null));
         this.usr = (usr == null)?null:System.getProperty(usr, "");
         this.def = get();
-    }
-    private interface OptionConstructor<T> {
-        T run(String usr) throws Throwable;
     }
 
     @Override

@@ -21,10 +21,8 @@ public final class FileLogger extends OutputStream {
     private static OutputStream writer = null;
     private static File file = null;
     private static File tmp = null;
-    private OutputStream origin;
 
-    FileLogger(OutputStream origin) throws IOException {
-        this.origin = origin;
+    FileLogger() throws IOException {
         if (tmpwriter == null) {
             File dir = LOG_DIRECTORY.get();
             int i = 1;
@@ -39,9 +37,9 @@ public final class FileLogger extends OutputStream {
             tmp.deleteOnExit();
             tmpwriter = new FileOutputStream(tmp);
 
-            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || USE_LOG_FILE.get()) {
+            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || (USE_LOG_FILE.usr().length() <= 0 && USE_LOG_FILE.get())) {
                 dir.mkdirs();
-                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || USE_RAW_LOG.get()) {
+                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || (USE_RAW_LOG.usr().length() <= 0 && USE_RAW_LOG.get())) {
                     file = new File(dir, name + ".log.txt");
 
                     writer = iwriter = new FileOutputStream(file);
@@ -60,7 +58,6 @@ public final class FileLogger extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        origin.write(b);
         if (writer != null) {
             writer.write(b);
             writer.flush();

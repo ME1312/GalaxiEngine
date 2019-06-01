@@ -23,6 +23,7 @@ import java.util.List;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.PARSE_CONSOLE_VARIABLES;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_CONSOLE_WINDOW;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_JLINE;
 
 /**
  * Console Reader Class
@@ -47,14 +48,14 @@ public class ConsoleReader extends Thread implements Completer {
         this.jline = jline;
         this.running = status;
         try {
-            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || SHOW_CONSOLE_WINDOW.get() && System.console() == null) {
+            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.get() && System.console() == null)) {
                 openConsoleWindow(true);
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
 
-        jline.addCompleter(this);
+        if (USE_JLINE.def()) jline.addCompleter(this);
     }
 
     /**
@@ -134,15 +135,15 @@ public class ConsoleReader extends Thread implements Completer {
     public void run() {
         try {
             String line;
-            while (running.get() && (line = jline.readLine(">")) != null) {
+            while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
                 if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
                 input(line);
-
-                try {
-                    jline.getOutput().write("\b \b");
+                /*
+                if (USE_JLINE.def()) try { // Prevent duplicates
+                    jline.getOutput().write("\b \b"); // Not sure if necessary :/
                 } catch (Exception e) {
                     engine.getAppInfo().getLogger().error.print(e);
-                }
+                } */
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
@@ -262,7 +263,8 @@ public class ConsoleReader extends Thread implements Completer {
                             break;
                         case '$':
                             int varEnd;
-                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
+                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                                    && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
                                 String var = str.substring(i + 1, varEnd);
                                 String replacement;
                                 if (System.getProperty(var) != null) {
@@ -275,7 +277,8 @@ public class ConsoleReader extends Thread implements Completer {
                             } else part.appendCodePoint(ch);
                             break;
                         case '%':
-                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || PARSE_CONSOLE_VARIABLES.get()) && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
+                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                                    && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
                                 String var = str.substring(i + 1, varEnd);
                                 String replacement;
                                 if (System.getenv(var) != null) {
