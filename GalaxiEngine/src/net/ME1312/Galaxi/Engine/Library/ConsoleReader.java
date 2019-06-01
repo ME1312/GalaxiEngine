@@ -138,12 +138,12 @@ public class ConsoleReader extends Thread implements Completer {
             while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
                 if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
                 input(line);
-                /*
+
                 if (USE_JLINE.def()) try { // Prevent duplicates
-                    jline.getOutput().write("\b \b"); // Not sure if necessary :/
+                    jline.getOutput().write("\b \b");
                 } catch (Exception e) {
                     engine.getAppInfo().getLogger().error.print(e);
-                } */
+                }
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
