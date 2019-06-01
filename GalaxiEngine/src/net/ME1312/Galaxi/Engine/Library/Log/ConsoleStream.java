@@ -39,11 +39,11 @@ public class ConsoleStream extends OutputStream {
                 byte[] buffer = this.buffer.toByteArray();
                 this.buffer = new ByteArrayOutputStream();
                 OutputStream window = getWindow();
+                hide();
                 if (window != null) {
                     window.write(buffer);
                     window.write(i);
                 }
-                hide();
                 if (USE_ANSI.def()) {
                     original.write(new String(buffer, StandardCharsets.UTF_8).getBytes(Charset.defaultCharset()));
                     original.write(Ansi.ansi().a(Ansi.Attribute.RESET).toString().getBytes(Charset.defaultCharset()));
