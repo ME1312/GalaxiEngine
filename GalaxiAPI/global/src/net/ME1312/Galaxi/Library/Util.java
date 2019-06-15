@@ -280,7 +280,7 @@ public final class Util {
             }
         } else {
             try {
-                Files.copy(from.toPath(), to.toPath(), LinkOption.NOFOLLOW_LINKS);
+                if (!to.exists()) Files.copy(from.toPath(), to.toPath(), LinkOption.NOFOLLOW_LINKS);
             } catch (Exception e) {
                 e.printStackTrace();
             }

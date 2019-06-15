@@ -52,6 +52,8 @@ public final class PrimitiveLogger extends Handler {
 
                     if (message.contains("{" + i + "}")) { // Write Parameters
                         message = message.replace("{" + i + "}", value);
+                    } else if (message.contains("{}")) {
+                        message = message.replaceFirst("\\{}", value);
                     } else {
                         message += "\n" + value;
                     }
