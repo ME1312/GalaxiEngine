@@ -9,6 +9,12 @@
     <version>-PLACEHOLDER</version>
     <packaging>jar</packaging>
 
+    <scm>
+        <connection>scm:git:git://github.com/ME1312/GalaxiEngine.git</connection>
+        <developerConnection>scm:git:git@github.com:ME1312/GalaxiEngine.git</developerConnection>
+        <url>https://github.com/ME1312/GalaxiEngine</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.json</groupId>
