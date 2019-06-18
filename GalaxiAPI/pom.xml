@@ -8,13 +8,7 @@
     <artifactId>GalaxiAPI</artifactId>
     <version>-PLACEHOLDER</version>
     <packaging>jar</packaging>
-
-    <distributionManagement>
-        <site>
-            <id>github</id>
-            <url>gitsite:git@github.com/ME1312/GalaxiEngine.git</url>
-        </site>
-    </distributionManagement>
+    <url>https://github.com/ME1312/GalaxiEngine</url>
 
     <dependencies>
         <dependency>
