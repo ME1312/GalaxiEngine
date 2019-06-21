@@ -86,7 +86,7 @@ public abstract class PluginManager {
      * @param listeners Listeners
      */
     @SuppressWarnings("unchecked")
-    public void registerListener(PluginInfo plugin, Object... listeners) {
+    public void registerListeners(PluginInfo plugin, Object... listeners) {
         for (Object listener : listeners) {
             if (Util.isNull(plugin, listener)) throw new NullPointerException();
             for (Method method : Arrays.asList(listener.getClass().getMethods())) {
@@ -172,7 +172,7 @@ public abstract class PluginManager {
      * @param plugin PluginInfo
      * @param listeners Listeners
      */
-    public void unregisterListener(PluginInfo plugin, Object... listeners) {
+    public void unregisterListeners(PluginInfo plugin, Object... listeners) {
         for (Object listener : listeners) {
             if (Util.isNull(plugin, listener)) throw new NullPointerException();
             TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>> map = new TreeMap<Short, HashMap<Class<? extends Event>, HashMap<PluginInfo, HashMap<Object, List<Method>>>>>(this.listeners);

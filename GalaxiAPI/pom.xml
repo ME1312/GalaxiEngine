@@ -8,7 +8,6 @@
     <artifactId>GalaxiAPI</artifactId>
     <version>-PLACEHOLDER</version>
     <packaging>jar</packaging>
-    <url>https://github.com/ME1312/GalaxiEngine</url>
 
     <dependencies>
         <dependency>

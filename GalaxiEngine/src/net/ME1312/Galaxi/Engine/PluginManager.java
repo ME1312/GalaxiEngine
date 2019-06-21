@@ -283,7 +283,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                         if (load) try {
                             plugin.removeExtra("galaxi.plugin.loadafter");
                             plugin.setEnabled(true);
-                            registerListener(plugin, plugin.get());
+                            registerListeners(plugin, plugin.get());
                             this.plugins.put(plugin.getName().toLowerCase(), plugin);
                             loaded.add(plugin.getName().toLowerCase());
                             String a = "";

@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * Event Listener Method Annotation<br>
  * Methods annotated by this and registered will be called when the event is run
  *
- * @see net.ME1312.Galaxi.Plugin.PluginManager#registerListener(PluginInfo, Object...)
+ * @see net.ME1312.Galaxi.Plugin.PluginManager#registerListeners(PluginInfo, Object...)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
