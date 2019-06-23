@@ -14,7 +14,8 @@ import java.util.LinkedList;
 public class PluginClassLoader extends URLClassLoader {
     private static HashMap<File, PluginClassLoader> loaders = new HashMap<File, PluginClassLoader>();
     private Class<?> defaultClass = null;
-    private File file;
+    private final ClassLoader parent;
+    private final File file;
 
     /**
      * Load Classes from URLs
@@ -37,7 +38,8 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     private PluginClassLoader(ClassLoader parent, File file) {
-        super(toSuper(file), parent);
+        super(toSuper(file), null);
+        this.parent = parent;
         this.file = file;
 
         loaders.put(file, this);
@@ -97,14 +99,19 @@ public class PluginClassLoader extends URLClassLoader {
         }
     }
 
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        return this.loadClass(name, resolve, true);
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
+        return this.loadClass(name, (byte) 1);
     }
 
-    private Class<?> loadClass(String name, boolean resolve, boolean check) throws ClassNotFoundException {
+    private Class<?> loadClass(String name, byte level) throws ClassNotFoundException {
+        boolean check = level > 0;
         try {
-            return super.loadClass(name, resolve);
+            return super.loadClass(name);
         } catch (NoClassDefFoundError | ClassNotFoundException e) {
+            if (parent != null) try {
+                return parent.loadClass(name);
+            } catch (NoClassDefFoundError | ClassNotFoundException e2) {}
+
             if (check) {
                 Iterator i = new LinkedList<>(loaders.values()).iterator();
 
@@ -118,8 +125,8 @@ public class PluginClassLoader extends URLClassLoader {
                     } while (loader == this);
 
                     try {
-                        return loader.loadClass(name, resolve, false);
-                    } catch (NoClassDefFoundError | ClassNotFoundException ex) {}
+                        return loader.loadClass(name, (byte) 0);
+                    } catch (NoClassDefFoundError | ClassNotFoundException e3) {}
                 }
             } else {
                 throw new ClassNotFoundException(name);

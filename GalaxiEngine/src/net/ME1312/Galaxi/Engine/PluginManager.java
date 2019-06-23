@@ -115,7 +115,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                                     isplugin = true;
                                 }
                             } catch (Throwable e) {
-                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load class: " + cname));
+                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load class: " + cname + " (" + file.getName() + ')'));
                             }
                         }
                     }
