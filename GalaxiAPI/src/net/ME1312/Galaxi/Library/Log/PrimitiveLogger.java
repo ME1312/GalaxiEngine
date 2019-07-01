@@ -47,7 +47,7 @@ public final class PrimitiveLogger extends Handler {
                         ((Throwable) obj).printStackTrace(new PrintWriter(sw));
                         value = sw.toString();
                     } else {
-                        value = Util.getDespiteException(() -> (obj == null)?"null":obj.toString(), "");
+                        value = Util.getDespiteException(() -> (obj == null)?"null":obj.toString(), "err");
                     }
 
                     if (message.contains("{" + i + "}")) { // Write Parameters

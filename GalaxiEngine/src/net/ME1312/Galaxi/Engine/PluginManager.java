@@ -96,7 +96,6 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                     JarFile jar = new JarFile(file);
                     Enumeration<JarEntry> entries = jar.entries();
                     PluginClassLoader loader = PluginClassLoader.get(this.getClass().getClassLoader(), file);
-                    //List<String> contents = new ArrayList<String>();
 
                     loader.setDefaultClass(ClassNotFoundException.class);
                     boolean isplugin = false;
@@ -109,7 +108,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                                 Class<?> clazz = loader.loadClass(cname);
                                 if (clazz.isAnnotationPresent(Plugin.class)) {
                                     NamedContainer<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.keySet().contains(loader))?classes.get(loader):new NamedContainer<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
-                                    for (Dependency dependancy : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.name().add(dependancy.name());
+                                    for (Dependency dependency : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.name().add(dependency.name());
                                     jarmap.get().put(clazz.getAnnotation(Plugin.class).name(), cname);
                                     classes.put(loader, jarmap);
                                     isplugin = true;

@@ -38,6 +38,7 @@ public final class ConsoleWindow extends OutputStream {
     private Class<?> READER;
     private Object reader;
     private JFrame window;
+    private double scale = 1.0;
     private JPanel panel;
     private JTextField input;
     private boolean ifocus = false;
@@ -136,6 +137,24 @@ public final class ConsoleWindow extends OutputStream {
                             findO = 0;
                         }
                         break;
+                    case KeyEvent.VK_F:
+                        if (kpressed[KeyEvent.VK_SHIFT] == Boolean.TRUE) {
+                            boolean open = false;
+                            if (ifocus) {
+                                findT.setText(input.getSelectedText());
+                                open = true;
+                            } else if (log.hasFocus()) {
+                                findT.setText(log.getSelectedText());
+                                open = true;
+                            }
+                            if (open) {
+                                findI = 0;
+                                findO = 0;
+                                ConsoleWindow.this.find.setVisible(true);
+                                ConsoleWindow.this.find(true);
+                            }
+                        }
+                        break;
                     case KeyEvent.VK_ENTER:
                         if (find.isVisible() && !ifocus)
                             ConsoleWindow.this.find(kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE);
@@ -187,6 +206,12 @@ public final class ConsoleWindow extends OutputStream {
         }, true)) throw new ClassCastException(reader.getClass().getCanonicalName() + " is not a valid ConsoleReader");
         this.reader = reader;
         this.window = new JFrame();
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        if (screen.getWidth() < screen.getHeight()) {
+            if (screen.getWidth() > 1920) scale = screen.getWidth() / 1920;
+        } else {
+            if (screen.getHeight() > 1080) scale = screen.getHeight() / 1080;
+        }
 
         JMenuBar jMenu = new JMenuBar();
         JMenu menu = new JMenu("\u00A0Log\u00A0");
@@ -295,8 +320,8 @@ public final class ConsoleWindow extends OutputStream {
             @Override
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                fontSize = 12;
-                doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
+                fontSize = (int) (12 * scale);
+                doc.getStyleSheet().addRule("body {font-size: " + ((int) (fontSize * scale)) + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
         });
@@ -307,8 +332,8 @@ public final class ConsoleWindow extends OutputStream {
             @Override
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                fontSize += 2;
-                doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
+                fontSize += 2 * scale;
+                doc.getStyleSheet().addRule("body {font-size: " + ((int) (fontSize * scale)) + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
         });
@@ -319,8 +344,8 @@ public final class ConsoleWindow extends OutputStream {
             @Override
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                fontSize -= 2;
-                doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
+                fontSize -= 2 * scale;
+                doc.getStyleSheet().addRule("body {font-size: " + ((int) (fontSize * scale)) + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
         });
@@ -337,11 +362,11 @@ public final class ConsoleWindow extends OutputStream {
             }
         });
         window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName());
-        window.setSize(1024, 576);
-        Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (int) ((dimension.getWidth() - window.getWidth()) / 2);
-        int y = (int) ((dimension.getHeight() - window.getHeight()) / 2);
-        window.setLocation(x, y);
+        window.setSize((int) (1024 * scale), (int) (576 * scale));
+        window.setLocation(
+                (int) ((screen.getWidth() - window.getWidth()) / 2),
+                (int) ((screen.getHeight() - window.getHeight()) / 2)
+        );
         window.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         window.addWindowListener(new WindowAdapter() {
             @Override
@@ -353,7 +378,7 @@ public final class ConsoleWindow extends OutputStream {
                             if (exit) {
                                 Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("stop").invoke(Galaxi.getInstance());
                             } else {
-                                Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getDeclaredField("window"),
+                                Util.reflect(READER.getDeclaredField("window"),
                                         Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null);
                                 close();
                             }
@@ -380,11 +405,11 @@ public final class ConsoleWindow extends OutputStream {
             Font f = Font.createFont(Font.TRUETYPE_FONT, ConsoleWindow.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Library/Files/GalaxiFont.ttf"));
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(f);
             font = f.getFontName();
-            input.setFont(f.deriveFont(14f));
+            input.setFont(f.deriveFont((float) (14 * scale)));
         } catch (Exception e) {
             font = "Courier";
         }
-        style.addRule("body {color: #dcdcdc; font-family: " + font + "; font-size: 12;}\n");
+        style.addRule("body {color: #dcdcdc; font-family: " + font + "; font-size: " + ((int) (12 * scale)) + ";}\n");
         log.setDocument(new HTMLDocument(style));
         log.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45)));
         new TextFieldPopup(log, false);
@@ -435,7 +460,8 @@ public final class ConsoleWindow extends OutputStream {
 
 
         popup = new TextFieldPopup(input, true);
-        input.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45), 4));
+        input.getPreferredSize().setSize(input.getPreferredSize().getWidth(), input.getPreferredSize().getHeight() * scale);
+        input.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45), (int) (4 * scale)));
         input.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -445,7 +471,7 @@ public final class ConsoleWindow extends OutputStream {
                         @Override
                         public void run() {
                             try {
-                                Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader").getDeclaredMethod("input", String.class), reader, line);
+                                Util.reflect(READER.getDeclaredMethod("input", String.class), reader, line);
                             } catch (Exception e) {
                                 Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
                             }
@@ -544,7 +570,8 @@ public final class ConsoleWindow extends OutputStream {
         });
 
         new TextFieldPopup(findT, false);
-        findT.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45), 4));
+        findT.getPreferredSize().setSize(input.getPreferredSize().getWidth(), input.getPreferredSize().getHeight() * scale);
+        findT.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45), (int) (4 * scale)));
         ((AbstractDocument) findT.getDocument()).setDocumentFilter(new DocumentFilter() {
             @Override
             public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
@@ -574,7 +601,7 @@ public final class ConsoleWindow extends OutputStream {
                 else findP.setBackground(new Color(69, 73, 74));
             }
         });
-        findP.setBorder(new ButtonBorder(40, 44, 45, 4));
+        findP.setBorder(new ButtonBorder(40, 44, 45, (int) (4 * scale)));
         findP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -588,7 +615,7 @@ public final class ConsoleWindow extends OutputStream {
                 else findN.setBackground(new Color(69, 73, 74));
             }
         });
-        findN.setBorder(new ButtonBorder(40, 44, 45, 4));
+        findN.setBorder(new ButtonBorder(40, 44, 45, (int) (4 * scale)));
         findN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -602,7 +629,7 @@ public final class ConsoleWindow extends OutputStream {
                 else findD.setBackground(new Color(69, 73, 74));
             }
         });
-        findD.setBorder(new ButtonBorder(40, 44, 45, 4));
+        findD.setBorder(new ButtonBorder(40, 44, 45, (int) (4 * scale)));
         findD.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
