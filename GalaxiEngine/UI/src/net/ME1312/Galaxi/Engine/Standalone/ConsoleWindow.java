@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.List;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.MAX_CONSOLE_WINDOW_SCROLLBACK;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.CONSOLE_WINDOW_SIZE;
 
 public final class ConsoleWindow extends OutputStream {
     private static final int MAX_SCROLLBACK = (Util.getDespiteException(new ExceptionReturnRunnable<Integer>() {
@@ -34,6 +35,12 @@ public final class ConsoleWindow extends OutputStream {
             return Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr());
         }
     }, 0) > 0)?Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr()):MAX_CONSOLE_WINDOW_SCROLLBACK.get();
+    private static final Double USER_WINDOW_SIZE = (Util.getDespiteException(new ExceptionReturnRunnable<Double>() {
+        @Override
+        public Double run() throws Throwable {
+            return Double.parseDouble(CONSOLE_WINDOW_SIZE.usr());
+        }
+    }, 0D) > 0)?Double.parseDouble(CONSOLE_WINDOW_SIZE.usr()):null;
     private static final String RESET_VALUE = "\n\u00A0\n\u00A0";
     private Class<?> READER;
     private Object reader;
@@ -59,7 +66,7 @@ public final class ConsoleWindow extends OutputStream {
     private int findI = 0;
     private boolean open = false;
     private boolean first = true;
-    private int fontSize = 12;
+    private int fontSize;
     private List<Runnable> spost = new LinkedList<Runnable>();
     private ByteArrayOutputStream scache = new ByteArrayOutputStream();
     private AnsiUIOutputStream stream = HTMLogger.wrap(new OutputStream() {
@@ -206,11 +213,16 @@ public final class ConsoleWindow extends OutputStream {
         }, true)) throw new ClassCastException(reader.getClass().getCanonicalName() + " is not a valid ConsoleReader");
         this.reader = reader;
         this.window = new JFrame();
+
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        if (screen.getWidth() < screen.getHeight()) {
-            if (screen.getWidth() > 1920) scale = screen.getWidth() / 1920;
-        } else {
-            if (screen.getHeight() > 1080) scale = screen.getHeight() / 1080;
+        if (USER_WINDOW_SIZE != null) {
+            scale = USER_WINDOW_SIZE;
+        } else if (Float.parseFloat(System.getProperty("java.class.version")) < 53.0) { // Automatic scaling for Java 8
+            if (screen.getWidth() < screen.getHeight()) {
+                if (screen.getWidth() > 1920) scale = screen.getWidth() / 1920;
+            } else {
+                if (screen.getHeight() > 1080) scale = screen.getHeight() / 1080;
+            }
         }
 
         JMenuBar jMenu = new JMenuBar();
@@ -321,7 +333,7 @@ public final class ConsoleWindow extends OutputStream {
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
                 fontSize = (int) (12 * scale);
-                doc.getStyleSheet().addRule("body {font-size: " + ((int) (fontSize * scale)) + ";}\n");
+                doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
         });
@@ -333,7 +345,7 @@ public final class ConsoleWindow extends OutputStream {
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
                 fontSize += 2 * scale;
-                doc.getStyleSheet().addRule("body {font-size: " + ((int) (fontSize * scale)) + ";}\n");
+                doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
         });
@@ -345,7 +357,7 @@ public final class ConsoleWindow extends OutputStream {
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
                 fontSize -= 2 * scale;
-                doc.getStyleSheet().addRule("body {font-size: " + ((int) (fontSize * scale)) + ";}\n");
+                doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
         });
@@ -400,16 +412,17 @@ public final class ConsoleWindow extends OutputStream {
         log.setContentType("text/html");
         log.setEditorKit(new HTMLEditorKit());
         StyleSheet style = new StyleSheet();
+        fontSize = (int) (12 * scale);
         String font;
         try {
             Font f = Font.createFont(Font.TRUETYPE_FONT, ConsoleWindow.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Library/Files/GalaxiFont.ttf"));
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(f);
             font = f.getFontName();
-            input.setFont(f.deriveFont((float) (14 * scale)));
+            input.setFont(f);
         } catch (Exception e) {
             font = "Courier";
         }
-        style.addRule("body {color: #dcdcdc; font-family: " + font + "; font-size: " + ((int) (12 * scale)) + ";}\n");
+        style.addRule("body {color: #dcdcdc; font-family: " + font + "; font-size: " + fontSize + ";}\n");
         log.setDocument(new HTMLDocument(style));
         log.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45)));
         new TextFieldPopup(log, false);
@@ -460,6 +473,7 @@ public final class ConsoleWindow extends OutputStream {
 
 
         popup = new TextFieldPopup(input, true);
+        input.setFont(input.getFont().deriveFont((float) (14 * scale)));
         input.getPreferredSize().setSize(input.getPreferredSize().getWidth(), input.getPreferredSize().getHeight() * scale);
         input.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45), (int) (4 * scale)));
         input.addActionListener(new ActionListener() {
@@ -570,7 +584,8 @@ public final class ConsoleWindow extends OutputStream {
         });
 
         new TextFieldPopup(findT, false);
-        findT.getPreferredSize().setSize(input.getPreferredSize().getWidth(), input.getPreferredSize().getHeight() * scale);
+        findT.setFont(findT.getFont().deriveFont((float) (findT.getFont().getSize() * scale)));
+        findT.getPreferredSize().setSize(findT.getPreferredSize().getWidth(), findT.getPreferredSize().getHeight() * scale);
         findT.setBorder(BorderFactory.createLineBorder(new Color(40, 44, 45), (int) (4 * scale)));
         ((AbstractDocument) findT.getDocument()).setDocumentFilter(new DocumentFilter() {
             @Override
@@ -594,6 +609,7 @@ public final class ConsoleWindow extends OutputStream {
                 findO = 0;
             }
         });
+        findP.setFont(findP.getFont().deriveFont((float) (findP.getFont().getSize() * scale)));
         findP.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -608,6 +624,7 @@ public final class ConsoleWindow extends OutputStream {
                 ConsoleWindow.this.find(false);
             }
         });
+        findN.setFont(findN.getFont().deriveFont((float) (findN.getFont().getSize() * scale)));
         findN.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -622,6 +639,7 @@ public final class ConsoleWindow extends OutputStream {
                 ConsoleWindow.this.find(true);
             }
         });
+        findD.setFont(findD.getFont().deriveFont((float) (findD.getFont().getSize() * scale)));
         findD.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {

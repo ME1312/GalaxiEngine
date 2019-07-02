@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Engine;
 
-import net.ME1312.Galaxi.Library.Callback.ExceptionCallback;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnCallback;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Container;
@@ -16,6 +15,7 @@ import java.io.File;
  */
 public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<File> APPLICATION_DIRECTORY = new GalaxiOption<>("user.dir", File::new);
+    public static final GalaxiOption<Double> CONSOLE_WINDOW_SIZE = new GalaxiOption<>("galaxi.console.scaling", usr -> (Util.getDespiteException(() -> Double.parseDouble(usr), 0D) > 0)?Double.parseDouble(usr):1);
     public static final GalaxiOption<Boolean> ENABLE_RELOAD = new GalaxiOption<>(() -> false);
     public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(() -> new File(APPLICATION_DIRECTORY.get(), "Logs"));
     public static final GalaxiOption<Integer> MAX_CONSOLE_WINDOW_SCROLLBACK = new GalaxiOption<Integer>("galaxi.console.max_scrollback", usr -> (Util.getDespiteException(() -> Integer.parseInt(usr), 0) > 0)?Integer.parseInt(usr):15000);
