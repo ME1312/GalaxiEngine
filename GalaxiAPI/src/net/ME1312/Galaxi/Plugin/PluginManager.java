@@ -120,7 +120,7 @@ public abstract class PluginManager {
      * @param <T> Event Type
      */
     @SafeVarargs
-    public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Listener<T>... listeners) {
+    public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Listener<? extends T>... listeners) {
         registerListener(plugin, event, null, listeners);
     }
 
@@ -136,7 +136,7 @@ public abstract class PluginManager {
      * @param <T> Event Type
      */
     @SafeVarargs
-    public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<T>... listeners) {
+    public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<? extends T>... listeners) {
         for (Listener listener : listeners) {
             if (Util.isNull(plugin, event, listener)) throw new NullPointerException();
             try {

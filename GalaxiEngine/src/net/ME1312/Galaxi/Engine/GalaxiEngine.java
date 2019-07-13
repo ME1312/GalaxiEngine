@@ -83,11 +83,12 @@ public class GalaxiEngine extends Galaxi {
     }
 
     /**
-     * Get the GalaxiEngine (null before initialization)
+     * Get the GalaxiEngine
      *
      * @return The GalaxiEngine
      */
     public static GalaxiEngine getInstance() {
+        if (instance == null) throw new IllegalStateException("Illegal call to getInstance() before engine initialization");
         return instance;
     }
 
@@ -117,17 +118,6 @@ public class GalaxiEngine extends Galaxi {
         Util.reflect(SystemLogger.class.getDeclaredMethod("start", PrintStream.class, PrintStream.class, jline.console.ConsoleReader.class), null, AnsiConsole.out(), AnsiConsole.err(), jline);
 
         this.app.getLogger().info.println("Loading " + engine.getName() + " v" + engine.getVersion().toString() + " Libraries");
-        for (PluginInfo.Dependency depend : this.app.getDependancies()) {
-            if (engine.getName().equalsIgnoreCase(depend.getName())) {
-                if (depend.getMinVersion() == null || engine.getVersion().compareTo(depend.getMinVersion()) >= 0) {
-                    if (!(depend.getMaxVersion() == null || engine.getVersion().compareTo(depend.getMaxVersion()) < 0)) {
-                        throw new IllegalStateException("Engine version is too new for this app: " + depend.getName() + " v" + engine.getVersion().toString() + " (should be below " + depend.getMaxVersion() + ")");
-                    }
-                } else {
-                    throw new IllegalStateException("Engine version is too old for this app: " + depend.getName() + " v" + engine.getVersion().toString() + " (should be at or above " + depend.getMinVersion() + ")");
-                }
-            }
-        }
         if (app == null) this.app.getLogger().warn.println("GalaxiEngine is running in standalone mode");
         else if (engine.getName().equalsIgnoreCase(this.app.getName())) throw new IllegalStateException("App name cannot be the same as the Engine's name");
 

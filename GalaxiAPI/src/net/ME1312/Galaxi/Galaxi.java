@@ -21,7 +21,9 @@ public abstract class Galaxi {
      * @return GalaxiEngine API
      */
     public static Galaxi getInstance() {
-        return (Galaxi) Util.getDespiteException(() -> Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getDeclaredMethod("getInstance").invoke(null), null);
+        Galaxi instance = Util.getDespiteException(() -> (Galaxi) Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getDeclaredMethod("getInstance").invoke(null), null);
+        if (instance == null) throw new IllegalStateException("Illegal call to getInstance() before engine initialization");
+        return instance;
     }
 
     /**

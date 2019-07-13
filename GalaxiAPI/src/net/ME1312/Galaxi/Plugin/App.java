@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Plugin;
 
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,7 +27,7 @@ public @interface App {
     String display() default "";
 
     /**
-     * The Version of this Plugin
+     * The Version of this App
      *
      * @return App Version
      */
@@ -58,7 +57,7 @@ public @interface App {
     /**
      * The Description of the App
      *
-     * @return Plugin Description
+     * @return App Description
      */
     String description() default "";
 

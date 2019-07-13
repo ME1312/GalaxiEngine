@@ -27,7 +27,7 @@ public class StandaloneMode {
 
     private static void start() {
         try {
-            if (GalaxiEngine.getInstance() == null) {
+            if (Util.isException(GalaxiEngine::getInstance)) {
                 GalaxiEngine engine = Util.reflect(GalaxiEngine.class.getDeclaredConstructor(PluginInfo.class), (Object) null);
                 Logger log = engine.getAppInfo().getLogger();
 
