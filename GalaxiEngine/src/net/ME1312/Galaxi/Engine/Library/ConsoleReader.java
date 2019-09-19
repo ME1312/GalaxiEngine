@@ -1,7 +1,7 @@
 package net.ME1312.Galaxi.Engine.Library;
 
-import jline.console.completer.Completer;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
+import net.ME1312.Galaxi.Engine.Library.Log.SystemLogger;
 import net.ME1312.Galaxi.Event.ConsoleChatEvent;
 import net.ME1312.Galaxi.Event.CommandEvent;
 import net.ME1312.Galaxi.Event.ConsoleInputEvent;
@@ -14,23 +14,25 @@ import net.ME1312.Galaxi.Plugin.Command.CommandSender;
 import net.ME1312.Galaxi.Plugin.Command.CompletionHandler;
 import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
 import net.ME1312.Galaxi.Plugin.PluginManager;
+import org.jline.reader.*;
+import org.jline.terminal.TerminalBuilder;
 
 import java.awt.*;
+import java.io.IOError;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 
-import static net.ME1312.Galaxi.Engine.GalaxiOption.PARSE_CONSOLE_VARIABLES;
-import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_CONSOLE_WINDOW;
-import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_JLINE;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 /**
  * Console Reader Class
  */
-public class ConsoleReader extends Thread implements Completer {
+public class ConsoleReader extends Thread {
     private Container<Boolean> running;
-    private jline.console.ConsoleReader jline;
+    private LineReader jline;
     private OutputStream window;
     private Callback<String> chat = null;
     private GalaxiEngine engine;
@@ -39,14 +41,23 @@ public class ConsoleReader extends Thread implements Completer {
      * Create a ConsoleReader
      *
      * @param engine GalaxiEngine
-     * @param jline JLine Reader
      * @param status Status Container
      */
-    public ConsoleReader(GalaxiEngine engine, jline.console.ConsoleReader jline, Container<Boolean> status) {
+    public ConsoleReader(GalaxiEngine engine, Container<Boolean> status) throws Exception {
         super(Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         this.engine = engine;
-        this.jline = jline;
         this.running = status;
+
+        TerminalBuilder jtb = TerminalBuilder.builder();
+        if (!USE_JLINE.def()) jtb.dumb(true);
+        if (!USE_ANSI.def()) jtb.jansi(false);
+        this.jline = LineReaderBuilder.builder()
+                .appName(engine.getAppInfo().getName())
+                .terminal(jtb.build())
+                .completer((reader, line, list) -> {
+                    for (String s : ConsoleReader.this.complete(line.line())) list.add(new Candidate(s));
+                }).build();
+        Util.reflect(SystemLogger.class.getDeclaredMethod("start", LineReader.class), null, jline);
         try {
             if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.get() && System.console() == null)) {
                 openConsoleWindow(true);
@@ -54,8 +65,6 @@ public class ConsoleReader extends Thread implements Completer {
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
-
-        if (USE_JLINE.def()) jline.addCompleter(this);
     }
 
     /**
@@ -85,12 +94,11 @@ public class ConsoleReader extends Thread implements Completer {
         window = null;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public int complete(String full, int cursor, List<CharSequence> candidates) {
-        if (full != null && full.length() > 0 && (chat == null || full.startsWith("/"))) {
+    private List<String> complete(String command, boolean full) {
+        LinkedList<String> candidates = new LinkedList<String>();
+        if (command != null && command.length() > 0 && (chat == null || command.startsWith("/"))) {
             LinkedList<Map.Entry<String, String>> args = new LinkedList<Map.Entry<String, String>>();
-            args.addAll(translateCommand(full, true).entrySet());
+            args.addAll(translateCommand(command, true).entrySet());
             Map.Entry<String, String> cmd = args.getFirst();
             args.removeFirst();
 
@@ -114,7 +122,7 @@ public class ConsoleReader extends Thread implements Completer {
                 if (cmd.getValue().length() > 0)
                     for (String handle : commands.keySet())
                         if (handle.startsWith(cmd.getValue().toLowerCase()))
-                            candidates.add(((full.startsWith("/"))?"/":"") + escapeCommand(handle));
+                            candidates.add(((command.startsWith("/"))?"/":"") + escapeCommand(handle));
             } else if (commands.keySet().contains(cmd.getValue().toLowerCase())) {
                 CompletionHandler autocompletor = commands.get(cmd.getValue().toLowerCase()).autocomplete();
                 String beginning = before.toString();
@@ -123,10 +131,30 @@ public class ConsoleReader extends Thread implements Completer {
                 if (autocompletor != null)
                     for (String autocomplete : autocompletor.complete(ConsoleCommandSender.get(), cmd.getValue(), arguments))
                         if (!Util.isNull(autocomplete) && autocomplete.length() > 0)
-                            candidates.add(beginning + ' ' + escapeCommand(autocomplete));
+                            candidates.add(((full)?beginning+' ':"") + escapeCommand(autocomplete));
             }
         }
-        return candidates.isEmpty()?-1:0;
+        return candidates;
+    }
+
+    /**
+     * Complete a command
+     *
+     * @param command Command
+     * @return Auto Completions (as Single Arguments)
+     */
+    public List<String> complete(String command) {
+        return complete(command, false);
+    }
+
+    /**
+     * Complete a command
+     *
+     * @param command Command
+     * @return Auto Completions (as Full Lines)
+     */
+    public List<String> completeLine(String command) {
+        return complete(command, true);
     }
 
     /**
@@ -138,13 +166,8 @@ public class ConsoleReader extends Thread implements Completer {
             while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
                 if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
                 input(line);
-
-                if (USE_JLINE.def()) try { // Prevent duplicates
-                    jline.getOutput().write("\b \b");
-                } catch (Exception e) {
-                    engine.getAppInfo().getLogger().error.print(e);
-                }
             }
+        } catch (IOError e) {
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }

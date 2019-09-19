@@ -1,23 +1,21 @@
 package net.ME1312.Galaxi.Engine.Library.Log;
 
-import jline.console.ConsoleReader;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Log.LogStream;
 import net.ME1312.Galaxi.Library.Log.Logger;
-import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
+import org.jline.reader.LineReader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static net.ME1312.Galaxi.Engine.GalaxiOption.COLOR_LOG_LEVELS;
 
 /**
  * System.out and System.err Override Class
@@ -30,12 +28,11 @@ public final class SystemLogger extends OutputStream {
         this.error = level;
     }
 
-    private static void start(PrintStream out, PrintStream err, ConsoleReader in) throws Exception {
-        if (Util.isNull(out, err)) throw new NullPointerException();
+    private static void start(LineReader jline) throws Exception {
+        if (Util.isNull(jline)) throw new NullPointerException();
 
-        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, out)), false, "UTF-8"));
-        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pse"), null).set(new PrintStream(new FileLogger(new ConsoleStream(in, err)), false, "UTF-8"));
-        Util.reflect(Logger.class.getDeclaredMethod("log"), null);
+        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new PrintStream(new FileLogger(new ConsoleStream(jline)), false, "UTF-8"));
+        Util.reflect(Logger.class.getDeclaredMethod("log", boolean.class), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.get()));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
         System.setErr(new PrintStream(new SystemLogger(true), false, "UTF-8"));

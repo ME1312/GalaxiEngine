@@ -15,6 +15,7 @@ import java.io.File;
  */
 public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<File> APPLICATION_DIRECTORY = new GalaxiOption<>("user.dir", File::new);
+    public static final GalaxiOption<Boolean> COLOR_LOG_LEVELS = new GalaxiOption<>("galaxi.log.color_levels", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Double> CONSOLE_WINDOW_SIZE = new GalaxiOption<>("galaxi.console.scaling", usr -> (Util.getDespiteException(() -> Double.parseDouble(usr), 0D) > 0)?Double.parseDouble(usr):1);
     public static final GalaxiOption<Boolean> ENABLE_RELOAD = new GalaxiOption<>(() -> false);
     public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(() -> new File(APPLICATION_DIRECTORY.get(), "Logs"));

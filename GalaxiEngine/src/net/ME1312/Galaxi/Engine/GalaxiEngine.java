@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Engine;
 
-import jline.TerminalFactory;
 import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
 import net.ME1312.Galaxi.Engine.Library.DefaultCommands;
 import net.ME1312.Galaxi.Engine.Library.Log.SystemLogger;
@@ -18,13 +17,12 @@ import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.App;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
-import org.fusesource.jansi.AnsiConsole;
+import org.jline.reader.LineReader;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.nio.charset.Charset;
@@ -33,9 +31,7 @@ import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;
 
-import static net.ME1312.Galaxi.Engine.GalaxiOption.APPLICATION_DIRECTORY;
-import static net.ME1312.Galaxi.Engine.GalaxiOption.SHOW_DEBUG_MESSAGES;
-import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_JLINE;
+import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 /**
  * Galaxi Engine Main Class
@@ -112,18 +108,13 @@ public class GalaxiEngine extends Galaxi {
 
         if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.get())))
             Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
-        if (!USE_JLINE.def()) TerminalFactory.configure(TerminalFactory.NONE);
-        jline.console.ConsoleReader jline = new jline.console.ConsoleReader(System.in, AnsiConsole.out);
-        jline.setPrompt("");
-        Util.reflect(SystemLogger.class.getDeclaredMethod("start", PrintStream.class, PrintStream.class, jline.console.ConsoleReader.class), null, AnsiConsole.out(), AnsiConsole.err(), jline);
+        this.console = new ConsoleReader(this, running);
 
         this.app.getLogger().info.println("Loading " + engine.getName() + " v" + engine.getVersion().toString() + " Libraries");
         if (app == null) this.app.getLogger().warn.println("GalaxiEngine is running in standalone mode");
         else if (engine.getName().equalsIgnoreCase(this.app.getName())) throw new IllegalStateException("App name cannot be the same as the Engine's name");
 
-        console = new ConsoleReader(this, jline, running);
         DefaultCommands.load(this);
-
         URL.setURLStreamHandlerFactory(protocol -> {
             HashMap<String, URLStreamHandler> protocols;
             try {
@@ -233,7 +224,7 @@ public class GalaxiEngine extends Galaxi {
     private boolean stopping = false;
     private void exit(int code) {
         running.set(false);
-        Util.isException(() -> Util.<jline.console.ConsoleReader>reflect(ConsoleReader.class.getDeclaredField("jline"), console).setPrompt(""));
+        //Util.isException(() -> Util.<LineReader>reflect(ConsoleReader.class.getDeclaredField("jline"), console).(""));
 
         if (onStop != null) try {
             onStop.run();

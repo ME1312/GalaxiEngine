@@ -56,6 +56,16 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Change the Key type of this map
+     *
+     * @param <T> Key Type
+     * @return Object Map
+     */
+    public <T> ObjectMap<T> key() {
+        return (ObjectMap<T>) this;
+    }
+
+    /**
      * Get the Keys
      *
      * @return KeySet

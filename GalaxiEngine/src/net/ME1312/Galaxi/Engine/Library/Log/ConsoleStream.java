@@ -1,17 +1,16 @@
 package net.ME1312.Galaxi.Engine.Library.Log;
 
-import jline.console.CursorBuffer;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
+import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Util;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiString;
+import org.jline.reader.LineReader;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_ANSI;
@@ -20,16 +19,13 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_ANSI;
  * Console Log Stream Class
  */
 public class ConsoleStream extends OutputStream {
-    private jline.console.ConsoleReader jline;
-    private OutputStream original;
+    private LineReader jline;
     private ByteArrayOutputStream buffer;
-    private CursorBuffer hidden;
 
 
-    ConsoleStream(jline.console.ConsoleReader jline, PrintStream original) {
+    ConsoleStream(LineReader jline) {
         this.jline = jline;
         this.buffer = new ByteArrayOutputStream();
-        this.original = original;
     }
 
     @Override
@@ -37,19 +33,23 @@ public class ConsoleStream extends OutputStream {
         try {
             if (i == '\n') {
                 byte[] buffer = this.buffer.toByteArray();
-                this.buffer = new ByteArrayOutputStream();
+                this.buffer.reset();
                 OutputStream window = getWindow();
-                hide();
                 if (window != null) {
                     window.write(buffer);
                     window.write(i);
                 }
+                Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
+                if (running.get() && GalaxiEngine.getInstance().getConsoleReader().isAlive()) jline.callWidget(LineReader.CLEAR);
                 if (USE_ANSI.def()) {
-                    original.write(new String(buffer, StandardCharsets.UTF_8).getBytes(Charset.defaultCharset()));
-                    original.write(Ansi.ansi().a(Ansi.Attribute.RESET).toString().getBytes(Charset.defaultCharset()));
-                } else original.write(((String) new AnsiString(new String(buffer, StandardCharsets.UTF_8)).getPlain()).getBytes(Charset.defaultCharset()));
-                original.write(i);
-                show();
+                    jline.getTerminal().writer().print(new String(buffer, StandardCharsets.UTF_8));
+                    jline.getTerminal().writer().println(Ansi.ansi().a(Ansi.Attribute.RESET).toString());
+                } else jline.getTerminal().writer().println((String) new AnsiString(new String(buffer, StandardCharsets.UTF_8)).getPlain());
+                if (running.get() && GalaxiEngine.getInstance().getConsoleReader().isAlive()) {
+                    jline.callWidget(LineReader.REDRAW_LINE);
+                    jline.callWidget(LineReader.REDISPLAY);
+                }
+                jline.getTerminal().flush();
             } else {
                 buffer.write(i);
             }
@@ -68,20 +68,5 @@ public class ConsoleStream extends OutputStream {
             f.setAccessible(false);
         } catch (Exception e) {}
         return window;
-    }
-
-    private void hide() {
-        hidden = jline.getCursorBuffer().copy();
-        try {
-            jline.getOutput().write("\u001b[1G\u001b[K");
-            jline.flush();
-        } catch (IOException e) {}
-    }
-
-    private void show() {
-        try {
-            jline.resetPromptLine(jline.getPrompt(), hidden.toString(), hidden.cursor);
-            jline.flush();
-        } catch (IOException e) {}
     }
 }

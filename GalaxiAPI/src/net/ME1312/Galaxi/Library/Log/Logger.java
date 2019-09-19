@@ -4,9 +4,9 @@ import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
+import org.fusesource.jansi.Ansi;
 
 import java.io.File;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -21,7 +21,6 @@ import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
  */
 public final class Logger {
     private static final Container<PrintStream> pso = new Container<PrintStream>(null);
-    private static final Container<PrintStream> pse = new Container<PrintStream>(null);
     private static boolean running = true;
     static final LinkedList<NamedContainer<LogStream, String>> messages = new LinkedList<NamedContainer<LogStream, String>>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
@@ -41,13 +40,14 @@ public final class Logger {
         debug = new LogStream(this, DEBUG, pso);
         message = new LogStream(this, MESSAGE, pso);
         info = new LogStream(this, INFO, pso);
+        success = new LogStream(this, SUCCESS, pso);
         warn = new LogStream(this, WARN, pso);
-        error = new LogStream(this, ERROR, pse);
-        severe = new LogStream(this, SEVERE, pse);
+        error = new LogStream(this, ERROR, pso);
+        severe = new LogStream(this, SEVERE, pso);
 
         primitive = java.util.logging.Logger.getAnonymousLogger();
         primitive.setUseParentHandlers(false);
-        primitive.addHandler(new PrimitiveLogger(this));
+        primitive.addHandler(new LogTranslator(this));
 
         this.prefix = prefix;
     }
@@ -55,9 +55,37 @@ public final class Logger {
     public final LogStream debug;
     public final LogStream message;
     public final LogStream info;
+    public final LogStream success;
     public final LogStream warn;
     public final LogStream error;
     public final LogStream severe;
+
+    /**
+     * Get the stream by Log Level
+     *
+     * @param level Log Level
+     * @return Log Stream
+     */
+    public LogStream get(LogLevel level) {
+        switch (level) {
+            case DEBUG:
+                return debug;
+            case MESSAGE:
+                return message;
+            case INFO:
+                return info;
+            case SUCCESS:
+                return success;
+            case WARN:
+                return warn;
+            case ERROR:
+                return error;
+            case SEVERE:
+                return severe;
+            default:
+                return null;
+        }
+    }
 
     /**
      * Get this logger as a standard Java Logger
@@ -116,7 +144,7 @@ public final class Logger {
         gFilters.remove(filter);
     }
 
-    private static void log() {
+    private static void log(boolean COLOR_LEVELS) {
         (thread = new Thread(() -> {
             LogStream last = null;
             boolean terminated = true;
@@ -125,7 +153,7 @@ public final class Logger {
                     NamedContainer<LogStream, String> container = Util.getDespiteException(() -> messages.get(0), null);
                     if (container != null) {
                         LogStream stream = container.name();
-                        String prefix = '[' + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + "] [" + stream.getLogger().getPrefix() + File.separator + stream.getLevel() + "] > ";
+                        String prefix = '[' + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + "] [" + stream.getLogger().getPrefix() + File.separator + stream.getLevel().getName() + "] > ";
                         LinkedList<String> messages = new LinkedList<String>();
                         boolean terminate = false;
                         if (container.get().length() > 0) {
@@ -173,7 +201,9 @@ public final class Logger {
                             if (response == null || response == Boolean.TRUE) {
                                 if (terminated || last != stream) {
                                     if (!terminated) stream.stream.get().print('\n');
+                                    if (COLOR_LEVELS && stream.getLevel().getColor() != null) stream.stream.get().write(stream.getLevel().getColor().toString().getBytes(StandardCharsets.UTF_8));
                                     stream.stream.get().write(prefix.getBytes(StandardCharsets.UTF_8));
+                                    if (COLOR_LEVELS && stream.getLevel().getColor() != null) stream.stream.get().write(Ansi.ansi().reset().toString().getBytes(StandardCharsets.UTF_8));
                                 }
                                 last = stream;
                                 logged = true;
@@ -195,7 +225,7 @@ public final class Logger {
                     Util.isException(() -> Logger.messages.remove(0));
                 } catch (Throwable e) {
                     Util.isException(() -> Logger.messages.remove(0));
-                    if (pse.get() != null) e.printStackTrace(pse.get());
+                    if (pso.get() != null) e.printStackTrace(pso.get());
                 }
                 Util.isException(() -> Thread.sleep(32));
             }

@@ -174,7 +174,7 @@ public final class ConsoleWindow extends OutputStream {
                             List<CharSequence> candidates = new LinkedList<CharSequence>();
                             if (icache == null || iauto == Boolean.FALSE) {
                                 candidates.add((input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
-                                READER.getMethod("complete", String.class, int.class, List.class).invoke(reader, (input.getText().startsWith(">"))?input.getText().substring(1):input.getText(), position, candidates);
+                                candidates.addAll((List) READER.getMethod("completeLine", String.class).invoke(reader, (input.getText().startsWith(">"))?input.getText().substring(1):input.getText()));
                                 icache = new NamedContainer<>(position, candidates);
                                 iautopos = (kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE)?candidates.size() - 1:1;
                             } else {
