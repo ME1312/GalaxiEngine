@@ -174,7 +174,14 @@ public final class Logger {
                                         terminate_with_prefix = true;
                                         break;
                                     default:
-                                        message.appendCodePoint(c);
+                                        switch (c) {
+                                            case '\t':
+                                                message.append("    ");
+                                                break;
+                                            default:
+                                                message.appendCodePoint(c);
+                                                break;
+                                        }
                                         terminate = false;
                                         terminate_with_prefix = false;
                                         break;
