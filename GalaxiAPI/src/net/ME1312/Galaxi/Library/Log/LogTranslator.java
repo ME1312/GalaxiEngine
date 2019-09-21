@@ -12,10 +12,15 @@ import static java.util.logging.Level.*;
 /**
  * Primitive Log Handler Class
  */
-public final class LogTranslator extends Handler {
+public class LogTranslator extends Handler {
     private final Logger log;
     private boolean open = true;
 
+    /**
+     * Create a Log Translator
+     *
+     * @param log Logger to output to
+     */
     public LogTranslator(Logger log) {
         this.log = log;
     }
