@@ -232,7 +232,7 @@ public class ConsoleReader extends Thread {
                 for (String arg : arguments) {
                     s += ' ' + escapeCommand(arg);
                 }
-                engine.getAppInfo().getLogger().message.println("Unknown Command - " + s);
+                engine.getAppInfo().getLogger().message.println("Unknown Command: /" + s);
             }
         }
     }
