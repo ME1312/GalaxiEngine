@@ -34,18 +34,19 @@ public class ConsoleStream extends OutputStream {
             if (i == '\n') {
                 byte[] buffer = this.buffer.toByteArray();
                 this.buffer.reset();
-                OutputStream window = getWindow();
+                getWindow();
                 if (window != null) {
                     window.write(buffer);
                     window.write(i);
                 }
+                getThread();
                 Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
-                if (running.get() && GalaxiEngine.getInstance().getConsoleReader().isAlive()) jline.callWidget(LineReader.CLEAR);
+                if (running.get() && thread.isAlive()) jline.callWidget(LineReader.CLEAR);
                 if (USE_ANSI.def()) {
                     jline.getTerminal().writer().print(new String(buffer, StandardCharsets.UTF_8));
                     jline.getTerminal().writer().println(Ansi.ansi().a(Ansi.Attribute.RESET).toString());
                 } else jline.getTerminal().writer().println((String) new AnsiString(new String(buffer, StandardCharsets.UTF_8)).getPlain());
-                if (running.get() && GalaxiEngine.getInstance().getConsoleReader().isAlive()) {
+                if (running.get() && thread.isAlive()) {
                     jline.callWidget(LineReader.REDRAW_LINE);
                     jline.callWidget(LineReader.REDISPLAY);
                 }
@@ -56,17 +57,35 @@ public class ConsoleStream extends OutputStream {
         } catch (Exception e) {}
     }
 
-    private OutputStream getWindow() {
-        ConsoleReader reader = GalaxiEngine.getInstance().getConsoleReader();
-        OutputStream window = null;
-        if (reader != null) try {
-            Field f = ConsoleReader.class.getDeclaredField("window");
-            f.setAccessible(true);
-            if (f.get(reader) != null) {
-                window = (OutputStream) f.get(reader);
-            }
-            f.setAccessible(false);
-        } catch (Exception e) {}
+    private static Thread thread;
+    private static Thread getThread() {
+        if (thread == null) {
+            ConsoleReader reader = GalaxiEngine.getInstance().getConsoleReader();
+            if (reader != null) try {
+                Field f = ConsoleReader.class.getDeclaredField("thread");
+                f.setAccessible(true);
+                if (f.get(reader) != null) {
+                    thread = (Thread) f.get(reader);
+                }
+                f.setAccessible(false);
+            } catch (Exception e) {}
+        }
+        return thread;
+    }
+
+    private static OutputStream window;
+    private static OutputStream getWindow() {
+        if (window == null || Util.isException(window::flush)) {
+            ConsoleReader reader = GalaxiEngine.getInstance().getConsoleReader();
+            if (reader != null) try {
+                Field f = ConsoleReader.class.getDeclaredField("window");
+                f.setAccessible(true);
+                if (f.get(reader) != null) {
+                    window = (OutputStream) f.get(reader);
+                }
+                f.setAccessible(false);
+            } catch (Exception e) {}
+        }
         return window;
     }
 }

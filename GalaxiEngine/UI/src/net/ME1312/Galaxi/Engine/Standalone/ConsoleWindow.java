@@ -1,6 +1,7 @@
 package net.ME1312.Galaxi.Engine.Standalone;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
+import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
 import net.ME1312.Galaxi.Engine.Library.Log.HTMLogger;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
@@ -42,8 +43,7 @@ public final class ConsoleWindow extends OutputStream {
         }
     }, 0D) > 0)?Double.parseDouble(CONSOLE_WINDOW_SIZE.usr()):null;
     private static final String RESET_VALUE = "\n\u00A0\n\u00A0";
-    private Class<?> READER;
-    private Object reader;
+    private ConsoleReader reader;
     private JFrame window;
     private double scale = 1.0;
     private JPanel panel;
@@ -145,7 +145,7 @@ public final class ConsoleWindow extends OutputStream {
                         }
                         break;
                     case KeyEvent.VK_F:
-                        if (kpressed[KeyEvent.VK_SHIFT] == Boolean.TRUE) {
+                        if ((event.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK && kpressed[KeyEvent.VK_SHIFT] == Boolean.TRUE) {
                             boolean open = false;
                             if (ifocus) {
                                 findT.setText(input.getSelectedText());
@@ -173,8 +173,10 @@ public final class ConsoleWindow extends OutputStream {
                             int position = input.getCaretPosition();
                             List<CharSequence> candidates = new LinkedList<CharSequence>();
                             if (icache == null || iauto == Boolean.FALSE) {
-                                candidates.add((input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
-                                candidates.addAll((List) READER.getMethod("completeLine", String.class).invoke(reader, (input.getText().startsWith(">"))?input.getText().substring(1):input.getText()));
+                                ConsoleReader.ParsedCommand command = reader.parseCommand((input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
+                                candidates.add(command.line());
+                                for (String candidate : reader.complete(ConsoleCommandSender.get(), command))
+                                    candidates.add(command.line().substring(0, command.line().length() - command.rawWordLength()) + command.escape(candidate, true));
                                 icache = new NamedContainer<>(position, candidates);
                                 iautopos = (kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE)?candidates.size() - 1:1;
                             } else {
@@ -204,13 +206,7 @@ public final class ConsoleWindow extends OutputStream {
         }
     };
 
-    public ConsoleWindow(final Object reader, final boolean exit) {
-        if (Util.getDespiteException(new ExceptionReturnRunnable<Boolean>() {
-            @Override
-            public Boolean run() throws Throwable {
-                return !(READER = Class.forName("net.ME1312.Galaxi.Engine.Library.ConsoleReader")).isInstance(reader);
-            }
-        }, true)) throw new ClassCastException(reader.getClass().getCanonicalName() + " is not a valid ConsoleReader");
+    public ConsoleWindow(final ConsoleReader reader, final boolean exit) {
         this.reader = reader;
         this.window = new JFrame();
 
@@ -390,7 +386,7 @@ public final class ConsoleWindow extends OutputStream {
                             if (exit) {
                                 Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("stop").invoke(Galaxi.getInstance());
                             } else {
-                                Util.reflect(READER.getDeclaredField("window"),
+                                Util.reflect(ConsoleReader.class.getDeclaredField("window"),
                                         Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null);
                                 close();
                             }
@@ -485,7 +481,7 @@ public final class ConsoleWindow extends OutputStream {
                         @Override
                         public void run() {
                             try {
-                                Util.reflect(READER.getDeclaredMethod("input", String.class), reader, line);
+                                Util.reflect(ConsoleReader.class.getDeclaredMethod("input", String.class), reader, line);
                             } catch (Exception e) {
                                 Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
                             }
@@ -697,6 +693,11 @@ public final class ConsoleWindow extends OutputStream {
         } catch (IOException e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
         }
+    }
+
+    @Override
+    public void flush() {
+        if (!open) throw new IllegalStateException();
     }
 
     private void clear() {

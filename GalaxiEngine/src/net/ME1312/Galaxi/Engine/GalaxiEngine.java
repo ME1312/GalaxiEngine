@@ -170,7 +170,7 @@ public class GalaxiEngine extends Galaxi {
             try {
                 onStop = callback;
                 running.set(true);
-                console.start();
+                Util.isException(() -> Util.<Thread>reflect(ConsoleReader.class.getDeclaredField("thread"), console).start());
                 pluginManager.executeEvent(new GalaxiStartEvent(this));
             } catch (Exception e) {}
 
@@ -224,7 +224,6 @@ public class GalaxiEngine extends Galaxi {
     private boolean stopping = false;
     private void exit(int code) {
         running.set(false);
-        //Util.isException(() -> Util.<LineReader>reflect(ConsoleReader.class.getDeclaredField("jline"), console).(""));
 
         if (onStop != null) try {
             onStop.run();

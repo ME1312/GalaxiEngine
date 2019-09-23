@@ -19,7 +19,6 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.awt.*;
 import java.io.IOError;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -30,9 +29,11 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 /**
  * Console Reader Class
  */
-public class ConsoleReader extends Thread {
+public class ConsoleReader {
     private Container<Boolean> running;
     private LineReader jline;
+    private Parser parser;
+    private Thread thread;
     private OutputStream window;
     private Callback<String> chat = null;
     private GalaxiEngine engine;
@@ -44,7 +45,6 @@ public class ConsoleReader extends Thread {
      * @param status Status Container
      */
     public ConsoleReader(GalaxiEngine engine, Container<Boolean> status) throws Exception {
-        super(Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         this.engine = engine;
         this.running = status;
 
@@ -54,9 +54,14 @@ public class ConsoleReader extends Thread {
         this.jline = LineReaderBuilder.builder()
                 .appName(engine.getAppInfo().getName())
                 .terminal(jtb.build())
+                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                .option(LineReader.Option.AUTO_PARAM_SLASH, false)
+                .option(LineReader.Option.AUTO_REMOVE_SLASH, false)
+                .parser(this.parser = new Parser())
                 .completer((reader, line, list) -> {
-                    for (String s : ConsoleReader.this.complete(line.line())) list.add(new Candidate(s));
+                    for (String s : ConsoleReader.this.complete(ConsoleCommandSender.get(), (ParsedCommand) line)) list.add(new Candidate(s));
                 }).build();
+        thread = new Thread(this::read, Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         Util.reflect(SystemLogger.class.getDeclaredMethod("start", LineReader.class), null, jline);
         try {
             if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.get() && System.console() == null)) {
@@ -83,7 +88,7 @@ public class ConsoleReader extends Thread {
      */
     public void openConsoleWindow(boolean exit) {
         if (!GraphicsEnvironment.isHeadless())
-            window = Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(Object.class, boolean.class).newInstance(this, exit), null);
+            window = Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(ConsoleReader.class, boolean.class).newInstance(this, exit), null);
     }
 
     /**
@@ -94,21 +99,32 @@ public class ConsoleReader extends Thread {
         window = null;
     }
 
-    private List<String> complete(String command, boolean full) {
-        LinkedList<String> candidates = new LinkedList<String>();
-        if (command != null && command.length() > 0 && (chat == null || command.startsWith("/"))) {
-            LinkedList<Map.Entry<String, String>> args = new LinkedList<Map.Entry<String, String>>();
-            args.addAll(translateCommand(command, true).entrySet());
-            Map.Entry<String, String> cmd = args.getFirst();
-            args.removeFirst();
+    /**
+     * Complete a command
+     *
+     * @param command Command
+     * @return Auto Completions
+     */
+    public List<String> complete(CommandSender sender, String command) {
+        if (Util.isNull(sender, command)) throw new NullPointerException();
+        return complete(sender, parser.parse(command, (int) command.codePoints().count(), null));
+    }
 
-            StringBuilder before = new StringBuilder();
-            before.append(cmd.getKey());
-            for (Map.Entry<String, String> entry : args) if (entry != args.getLast()) {
-                before.append(' ');
-                before.append(entry.getKey());
-            }
-            if (cmd.getValue().startsWith("/")) cmd.setValue(cmd.getValue().substring(1));
+    /**
+     * Complete a command
+     *
+     * @param command Parsed Command
+     * @return Auto Completions
+     */
+    public List<String> complete(CommandSender sender, ParsedCommand command) {
+        if (Util.isNull(sender, command)) throw new NullPointerException();
+
+        LinkedList<String> candidates = new LinkedList<String>();
+        if (command != null && command.line().codePoints().count() > 0 && (chat == null || command.isCommand())) {
+            LinkedList<String> arguments = command.words();
+            String label = arguments.getFirst();
+            arguments.removeFirst();
+            String[] args = arguments.toArray(new String[0]);
 
             TreeMap<String, Command> commands;
             try {
@@ -118,49 +134,23 @@ public class ConsoleReader extends Thread {
                 commands = new TreeMap<String, Command>();
             }
 
-            if (args.size() == 0) {
-                if (cmd.getValue().length() > 0)
+            if (command.wordIndex() <= 0) {
+                if (label.length() > 0)
                     for (String handle : commands.keySet())
-                        if (handle.startsWith(cmd.getValue().toLowerCase()))
-                            candidates.add(((command.startsWith("/"))?"/":"") + escapeCommand(handle));
-            } else if (commands.keySet().contains(cmd.getValue().toLowerCase())) {
-                CompletionHandler autocompletor = commands.get(cmd.getValue().toLowerCase()).autocomplete();
-                String beginning = before.toString();
-                String[] arguments = new String[args.size()];
-                for (int i = 0; i < args.size(); i++) arguments[i] = args.get(i).getValue();
+                        if (handle.startsWith(label.toLowerCase()))
+                            candidates.add(handle);
+            } else if (commands.keySet().contains(label.toLowerCase())) {
+                CompletionHandler autocompletor = commands.get(label.toLowerCase()).autocomplete();
                 if (autocompletor != null)
-                    for (String autocomplete : autocompletor.complete(ConsoleCommandSender.get(), cmd.getValue(), arguments))
+                    for (String autocomplete : autocompletor.complete(sender, label, args))
                         if (!Util.isNull(autocomplete) && autocomplete.length() > 0)
-                            candidates.add(((full)?beginning+' ':"") + escapeCommand(autocomplete));
+                            candidates.add(autocomplete);
             }
         }
         return candidates;
     }
 
-    /**
-     * Complete a command
-     *
-     * @param command Command
-     * @return Auto Completions (as Single Arguments)
-     */
-    public List<String> complete(String command) {
-        return complete(command, false);
-    }
-
-    /**
-     * Complete a command
-     *
-     * @param command Command
-     * @return Auto Completions (as Full Lines)
-     */
-    public List<String> completeLine(String command) {
-        return complete(command, true);
-    }
-
-    /**
-     * Start the ConsoleReader loop
-     */
-    public void run() {
+    private void read() {
         try {
             String line;
             while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
@@ -179,16 +169,27 @@ public class ConsoleReader extends Thread {
         engine.getPluginManager().executeEvent(ie);
         if (!ie.isCancelled()) {
             if (chat != null && !line.startsWith("/")) {
-                try {
-                    ConsoleChatEvent event = new ConsoleChatEvent(engine, Util.unescapeJavaString(line));
-                    engine.getPluginManager().executeEvent(event);
-                    if (!event.isCancelled()) chat.run(event.getMessage());
-                } catch (Exception e) {
-                    engine.getAppInfo().getLogger().error.print(e);
-                }
+                chat(Util.unescapeJavaString(line));
             } else {
                 runCommand(ConsoleCommandSender.get(), line);
             }
+        }
+    }
+
+    /**
+     * Send a chat message as Console
+     *
+     * @param message Message
+     */
+    public void chat(String message) {
+        if (Util.isNull(message)) throw new NullPointerException();
+        if (Util.isNull(chat)) throw new IllegalStateException("No handler available for console chat messages");
+        try {
+            ConsoleChatEvent event = new ConsoleChatEvent(engine, message);
+            engine.getPluginManager().executeEvent(event);
+            if (!event.isCancelled()) chat.run(event.getMessage());
+        } catch (Exception e) {
+            engine.getAppInfo().getLogger().error.print(e);
         }
     }
 
@@ -198,21 +199,30 @@ public class ConsoleReader extends Thread {
      * @param sender Command Sender
      * @param command Command
      */
-    @SuppressWarnings("unchecked")
     public void runCommand(CommandSender sender, String command) {
         if (Util.isNull(sender, command)) throw new NullPointerException();
-        if (command.startsWith("/")) command = command.substring(1);
+        runCommand(sender, parser.parse(command, (int) command.codePoints().count(), null));
+    }
 
-        LinkedList<String> arguments = new LinkedList<String>();
-        arguments.addAll(unescapeCommand(command, false));
+    /**
+     * Run a command
+     *
+     * @param sender Command Sender
+     * @param command Parsed Command
+     */
+    @SuppressWarnings("unchecked")
+    public void runCommand(CommandSender sender, ParsedCommand command) {
+        if (Util.isNull(sender, command)) throw new NullPointerException();
+
+        LinkedList<String> arguments = command.words();
         String label = arguments.getFirst();
-        arguments.remove(0);
+        arguments.removeFirst();
+        if (command.rawWordLength() <= 0) arguments.removeLast();
         String[] args = arguments.toArray(new String[0]);
 
-        CommandEvent event = new CommandEvent(engine, sender, command, label, args);
+        CommandEvent event = new CommandEvent(engine, sender, (!command.line().startsWith("/"))?command.line():command.line().substring(1), label, args);
         engine.getPluginManager().executeEvent(event);
         if (!event.isCancelled()) {
-
             TreeMap<String, Command> commands;
             try {
                 commands = Util.reflect(PluginManager.class.getDeclaredField("commands"), engine.getPluginManager());
@@ -228,11 +238,7 @@ public class ConsoleReader extends Thread {
                     engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Uncaught exception while running command"));
                 }
             } else {
-                String s = escapeCommand(label);
-                for (String arg : arguments) {
-                    s += ' ' + escapeCommand(arg);
-                }
-                engine.getAppInfo().getLogger().message.println("Unknown Command: /" + s);
+                engine.getAppInfo().getLogger().message.println("Unknown Command: " + escapeCommand(label, args));
             }
         }
     }
@@ -240,189 +246,455 @@ public class ConsoleReader extends Thread {
     /**
      * Escapes a command
      *
-     * @param str String
-     * @return Escaped String
+     * @param label Command Label
+     * @param args Command Arguments
+     * @return Escaped Command
      */
-    private String escapeCommand(String str) {
-        return str.replace("\\", "\\\\").replace("\n", "\\n").replace("\'", "\\\'").replace("\"", "\\\"").replace("$", "\\$").replace("%", "\\%").replace(" ", "\\ ");
+    public String escapeCommand(String label, String... args) {
+        return escapeCommand(label, args, false, false);
     }
 
     /**
-     * Parse Escapes in a command
+     * Escapes some arguments
      *
-     * @param str String
-     * @return Escape translations
+     * @param args Command Arguments
+     * @return Escaped Arguments
      */
-    private Map<String, String> translateCommand(String str, boolean includeFinal) {
-        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
-        StringBuilder part = new StringBuilder();
-        int start = 0;
+    public String escapeArguments(String... args) {
+        return escapeArguments(args, false, false);
+    }
 
-        boolean between = true;
-        boolean literal = false;
-        boolean whitespaced = false;
-        for (int i = 0; i < str.length(); i++) {
-            int ch = str.codePointAt(i);
-            if (ch == '\'') {
-                if (literal && i + 1 < str.length() && str.codePointAt(i + 1) == '\'') part.appendCodePoint(ch);
-                literal = !literal;
-            } else if (literal) {
-                part.appendCodePoint(ch);
-                between = false;
-            } else {
-                if (!whitespaced && ch == ' ') {
-                    if (!between) {
-                        map.put(str.substring(start, i), part.toString());
-                        part = new StringBuilder(str.length());
-                    }
-                    start = i + 1;
-                    between = true;
+    /**
+     * Escapes a command
+     *
+     * @param label Command Label
+     * @param args Command Arguments
+     * @param literal Literal String Escape Mode (using Single Quotes)
+     * @param whitespaced Whitespaced String Escape Mode (using Double Quotes)
+     * @return Escaped Command
+     */
+    public String escapeCommand(String label, String[] args, boolean literal, boolean whitespaced) {
+        if (Util.isNull(label, args)) throw new NullPointerException();
+
+        StringBuilder builder = new StringBuilder();
+        builder.append('/');
+        builder.append(escapeArguments(new String[]{ label }, literal, whitespaced));
+        if (args.length > 0) {
+            builder.append(' ');
+            builder.append(escapeArguments(args, literal, whitespaced));
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Escapes some arguments
+     *
+     * @param args Command Arguments
+     * @param literal Literal String Escape Mode (using Single Quotes)
+     * @param whitespaced Whitespaced String Escape Mode (using Double Quotes)
+     * @return Escaped Arguments
+     */
+    public String escapeArguments(String[] args, boolean literal, boolean whitespaced) {
+        if (Util.isNull((Object) args)) throw new NullPointerException();
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) builder.append(' ');
+            builder.append(escapeArgument(null, args[i], literal, whitespaced, true));
+        }
+        return builder.toString();
+    }
+
+    private String escapeArgument(Map.Entry<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
+        if (Util.isNull((Object) arg)) throw new NullPointerException();
+        boolean append = start != null && arg.startsWith(start.getValue());
+        if (append) arg = arg.substring(start.getValue().length());
+
+        if (literal) {
+            if (!append)
+                arg = arg + '\'';
+            arg = arg.replace("\'", "\'\\\'\'");
+            if (complete) {
+                arg += '\'';
+                if (whitespaced)
+                    arg += '\"';
+            }
+        } else {
+            arg = arg.replace("\\", "\\\\").replace("\n", "\\n").replace("\'", "\\\'").replace("\"", "\\\"");
+            if (PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                arg = arg.replace("$", "\\$").replace("%", "\\%");
+            if (!whitespaced) {
+                if (append || arg.length() > 0) {
+                    arg = arg.replace(" ", "\\ ");
                 } else {
-                    between = false;
-                    switch (ch) {
-                        case '\"':
-                            if (whitespaced && i + 1 < str.length() && str.codePointAt(i + 1) == '\"') part.appendCodePoint(ch);
-                            whitespaced = !whitespaced;
-                            break;
-                        case '$':
-                            int varEnd;
-                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
-                                    && i + 1 <= str.length() && (varEnd = str.indexOf('$', i+1)) > i) {
-                                String var = str.substring(i + 1, varEnd);
-                                String replacement;
-                                if (System.getProperty(var) != null) {
-                                    replacement = System.getProperty(var);
-                                } else {
-                                    replacement = "null";
-                                }
-                                part.append(replacement);
-                                i = varEnd;
-                            } else part.appendCodePoint(ch);
-                            break;
-                        case '%':
-                            if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
-                                    && i + 1 <= str.length() && (varEnd = str.indexOf('%', i+1)) > i) {
-                                String var = str.substring(i + 1, varEnd);
-                                String replacement;
-                                if (System.getenv(var) != null) {
-                                    replacement = System.getenv(var);
-                                } else {
-                                    replacement = "null";
-                                }
-                                part.append(replacement);
-                                i = varEnd;
-                            } else part.appendCodePoint(ch);
-                            break;
-                        case '\\':
-                            int nextChar = (i == str.length() - 1) ? '\\' : str
-                                    .codePointAt(i + 1);
-                            // Octal escape?
-                            if (nextChar >= '0' && nextChar <= '7') {
-                                StringBuilder code = new StringBuilder();
-                                code.appendCodePoint(nextChar);
-                                i++;
-                                if ((i < str.length() - 1) && str.codePointAt(i + 1) >= '0'
-                                        && str.codePointAt(i + 1) <= '7') {
-                                    code.appendCodePoint(str.codePointAt(i + 1));
-                                    i++;
-                                    if ((i < str.length() - 1) && str.codePointAt(i + 1) >= '0'
-                                            && str.codePointAt(i + 1) <= '7') {
-                                        code.appendCodePoint(str.codePointAt(i + 1));
-                                        i++;
-                                    }
-                                }
-                                part.append((char) Integer.parseInt(code.toString(), 8));
-                                continue;
+                    arg = "\"\"";
+                }
+            } else if (complete) {
+                arg += '\"';
+            }
+        }
+        if (append) arg = start.getKey() + arg;
+        else if (whitespaced) arg = '\"' + arg;
+        return arg;
+    }
+
+    /**
+     * Parses a command
+     *
+     * @param command Command
+     * @return Parsed Command
+     */
+    public ParsedCommand parseCommand(String command) {
+        if (Util.isNull(command)) throw new NullPointerException();
+        return parser.parse(command, (int) command.codePoints().count(), null);
+    }
+
+    private class Parser implements org.jline.reader.Parser {
+        @Override
+        public ParsedCommand parse(final String LINE, final int CURSOR, final ParseContext CONTEXT) throws SyntaxError {
+            final LinkedHashMap<String, String> MAP = new LinkedHashMap<String, String>();
+
+            StringBuilder part = new StringBuilder();
+            int wcursor = 0;
+            int rwcursor = 0;
+            int start = 0;
+
+            boolean command = false;
+            boolean between = true;
+            boolean literal = false;
+            boolean whitespaced = false;
+            for (int i = 0; i < LINE.length(); i++) {
+                int ch = LINE.codePointAt(i);
+                if (CURSOR > i) rwcursor++;
+                if (i == 0 && ch == '/') {
+                    command = true; // This is defined as a command
+                } else if (i == 0 && chat != null) {
+                    break; // This must be a chat message, stop parsing
+                } else {
+                    if (ch == '\'') {
+                        if (literal && i + 1 < LINE.length() && LINE.codePointAt(i + 1) == '\'') part.appendCodePoint(ch);
+                        literal = !literal;
+                    } else if (literal) {
+                        if (CURSOR > i) wcursor++;
+                        part.appendCodePoint(ch);
+                        between = false;
+                    } else {
+                        if (!whitespaced && ch == ' ') {
+                            if (!between) {
+                                MAP.put(LINE.substring(start, i), part.toString());
+                                part = new StringBuilder(LINE.length());
                             }
-                            switch (nextChar) {
-                                case '\\':
-                                    ch = '\\';
-                                    break;
-                                case ' ':
-                                    ch = ' ';
+                            start = i + 1;
+                            wcursor = 0;
+                            rwcursor = 0;
+                            between = true;
+                        } else {
+                            between = false;
+                            switch (ch) {
+                                case '\"':
+                                    if (whitespaced && i + 1 < LINE.length() && LINE.codePointAt(i + 1) == '\"') part.appendCodePoint(ch);
+                                    whitespaced = !whitespaced;
                                     break;
                                 case '$':
-                                    ch = '$';
+                                    int varEnd;
+                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                                            && i + 1 <= LINE.length() && (varEnd = LINE.indexOf('$', i+1)) > i) {
+                                        String var = LINE.substring(i + 1, varEnd);
+                                        String replacement;
+                                        if (System.getProperty(var) != null) {
+                                            replacement = System.getProperty(var);
+                                        } else {
+                                            replacement = "null";
+                                        }
+                                        part.append(replacement);
+
+                                        int offset = varEnd - i;
+                                        if (CURSOR > varEnd) wcursor += replacement.codePoints().count();
+                                        for (int x = 0; x < offset; x++) {
+                                            i++;
+                                            if (CURSOR > i) rwcursor++;
+                                        }
+                                    } else {
+                                        if (CURSOR > i) wcursor++;
+                                        part.appendCodePoint(ch);
+                                    }
                                     break;
                                 case '%':
-                                    ch = '%';
-                                    break;
-                                case 'b':
-                                    ch = '\b';
-                                    break;
-                                case 'f':
-                                    ch = '\f';
-                                    break;
-                                case 'n':
-                                    ch = '\n';
-                                    break;
-                                case 'r':
-                                    ch = '\r';
-                                    break;
-                                case 't':
-                                    ch = '\t';
-                                    break;
-                                case '\"':
-                                    ch = '\"';
-                                    break;
-                                case '\'':
-                                    ch = '\'';
-                                    break;
-                                // Hex Unicode Char: u????
-                                // Hex Unicode Codepoint: u{??????}
-                                case 'u':
-                                    try {
-                                        if (i >= str.length() - 4) throw new IllegalStateException();
-                                        StringBuilder escape = new StringBuilder();
-                                        int offset = 2;
-
-                                        if (str.codePointAt(i + 2) != '{') {
-                                            if (i >= str.length() - 5) throw new IllegalStateException();
-                                            while (offset <= 5) {
-                                                Integer.toString(str.codePointAt(i + offset), 16);
-                                                escape.appendCodePoint(str.codePointAt(i + offset));
-                                                offset++;
-                                            }
-                                            offset--;
+                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                                            && i + 1 <= LINE.length() && (varEnd = LINE.indexOf('%', i+1)) > i) {
+                                        String var = LINE.substring(i + 1, varEnd);
+                                        String replacement;
+                                        if (System.getenv(var) != null) {
+                                            replacement = System.getenv(var);
                                         } else {
-                                            offset++;
-                                            while (str.codePointAt(i + offset) != '}') {
-                                                Integer.toString(str.codePointAt(i + offset), 16);
-                                                escape.appendCodePoint(str.codePointAt(i + offset));
-                                                offset++;
+                                            replacement = "null";
+                                        }
+                                        part.append(replacement);
+
+                                        int offset = varEnd - i;
+                                        if (CURSOR > varEnd) wcursor += replacement.codePoints().count();
+                                        for (int x = 0; x < offset; x++) {
+                                            i++;
+                                            if (CURSOR > i) rwcursor++;
+                                        }
+                                    } else {
+                                        if (CURSOR > i) wcursor++;
+                                        part.appendCodePoint(ch);
+                                    }
+                                    break;
+                                case '\\':
+                                    int nextChar = (i == LINE.length() - 1) ? '\\' : LINE
+                                            .codePointAt(i + 1);
+                                    // Octal escape?
+                                    if (nextChar >= '0' && nextChar <= '7') {
+                                        StringBuilder code = new StringBuilder();
+                                        code.appendCodePoint(nextChar);
+                                        i++;
+                                        if (CURSOR > i) rwcursor++;
+                                        if ((i < LINE.length() - 1) && LINE.codePointAt(i + 1) >= '0'
+                                                && LINE.codePointAt(i + 1) <= '7') {
+                                            code.appendCodePoint(LINE.codePointAt(i + 1));
+                                            i++;
+                                            if (CURSOR > i) rwcursor++;
+                                            if ((i < LINE.length() - 1) && LINE.codePointAt(i + 1) >= '0'
+                                                    && LINE.codePointAt(i + 1) <= '7') {
+                                                code.appendCodePoint(LINE.codePointAt(i + 1));
+                                                i++;
+                                                if (CURSOR > i) rwcursor++;
                                             }
                                         }
-                                        part.append(new String(new int[]{
-                                                Integer.parseInt(escape.toString(), 16)
-                                        }, 0, 1));
-
-                                        i += offset;
+                                        part.append((char) Integer.parseInt(code.toString(), 8));
+                                        if (CURSOR > i) wcursor++;
                                         continue;
-                                    } catch (Throwable e) {
-                                        ch = 'u';
-                                        break;
                                     }
+                                    switch (nextChar) {
+                                        case '\\':
+                                            ch = '\\';
+                                            break;
+                                        case ' ':
+                                            ch = ' ';
+                                            break;
+                                        case '$':
+                                            ch = '$';
+                                            break;
+                                        case '%':
+                                            ch = '%';
+                                            break;
+                                        case 'b':
+                                            ch = '\b';
+                                            break;
+                                        case 'f':
+                                            ch = '\f';
+                                            break;
+                                        case 'n':
+                                            ch = '\n';
+                                            break;
+                                        case 'r':
+                                            ch = '\r';
+                                            break;
+                                        case 't':
+                                            ch = '\t';
+                                            break;
+                                        case '\"':
+                                            ch = '\"';
+                                            break;
+                                        case '\'':
+                                            ch = '\'';
+                                            break;
+                                        // Hex Unicode Char: u????
+                                        // Hex Unicode Codepoint: u{??????}
+                                        case 'u':
+                                            try {
+                                                if (i >= LINE.length() - 4) throw new IllegalStateException();
+                                                StringBuilder escape = new StringBuilder();
+                                                int offset = 2;
+
+                                                if (LINE.codePointAt(i + 2) != '{') {
+                                                    if (i >= LINE.length() - 5) throw new IllegalStateException();
+                                                    while (offset <= 5) {
+                                                        Integer.toString(LINE.codePointAt(i + offset), 16);
+                                                        escape.appendCodePoint(LINE.codePointAt(i + offset));
+                                                        offset++;
+                                                    }
+                                                    offset--;
+                                                } else {
+                                                    offset++;
+                                                    while (LINE.codePointAt(i + offset) != '}') {
+                                                        Integer.toString(LINE.codePointAt(i + offset), 16);
+                                                        escape.appendCodePoint(LINE.codePointAt(i + offset));
+                                                        offset++;
+                                                    }
+                                                }
+                                                part.append(new String(new int[]{
+                                                        Integer.parseInt(escape.toString(), 16)
+                                                }, 0, 1));
+
+                                                if (CURSOR > i) wcursor++;
+                                                for (int x = 0; x < offset; x++) {
+                                                    i++;
+                                                    if (CURSOR > i) rwcursor++;
+                                                }
+                                                continue;
+                                            } catch (Throwable e) {
+                                                ch = 'u';
+                                                break;
+                                            }
+                                    }
+                                    i++;
+                                    if (CURSOR > i) rwcursor++;
+                                default:
+                                    if (CURSOR > i) wcursor++;
+                                    part.appendCodePoint(ch);
+                                    break;
                             }
-                            i++;
-                        default:
-                            part.appendCodePoint(ch);
-                            break;
+                        }
                     }
                 }
             }
-        }
 
-        if (includeFinal || !between) map.put(str.substring(start), part.toString());
-        return map;
+            // Construct Data Element
+
+            final String WORD = part.toString();
+            final String RAW_WORD = LINE.substring(start);
+            final int WORD_CURSOR = wcursor;
+            final int RAW_WORD_CURSOR = rwcursor;
+
+            final boolean COMMAND = command;
+            final boolean LITERAL = literal;
+            final boolean WHITESPACED = whitespaced;
+
+            MAP.put(LINE.substring(start), WORD);
+            return new ParsedCommand() {
+                @Override
+                public CharSequence escape(CharSequence argument, boolean complete) {
+                    return escapeArgument(translation(), argument.toString(), LITERAL, WHITESPACED, complete);
+                }
+
+                @Override
+                public boolean isCommand() {
+                    return COMMAND;
+                }
+
+                @Override
+                public String word() {
+                    return WORD;
+                }
+
+                @Override
+                public LinkedList<String> words() {
+                    return new LinkedList<>(MAP.values());
+                }
+
+                @Override
+                public int wordCursor() {
+                    return WORD_CURSOR;
+                }
+
+                @Override
+                public int wordIndex() {
+                    return (MAP.size() <= 0)?0:MAP.size() - 1;
+                }
+
+                @Override
+                public Map.Entry<String, String> translation() {
+                    return (MAP.size() <= 0)?null:translations().getLast();
+                }
+
+                @Override
+                public LinkedList<Map.Entry<String, String>> translations() {
+                    return new LinkedList<>(MAP.entrySet());
+                }
+
+                @Override
+                public Map<String, String> translationMap() {
+                    return new LinkedHashMap<>(MAP);
+                }
+
+                @Override
+                public String rawWord() {
+                    return RAW_WORD;
+                }
+
+                @Override
+                public LinkedList<String> rawWords() {
+                    return new LinkedList<>(MAP.keySet());
+                }
+
+                @Override
+                public int rawWordCursor() {
+                    return RAW_WORD_CURSOR;
+                }
+
+                @Override
+                public int rawWordLength() {
+                    return RAW_WORD.length();
+                }
+
+                @Override
+                public String line() {
+                    return LINE;
+                }
+
+                @Override
+                public int cursor() {
+                    return CURSOR;
+                }
+            };
+        }
     }
 
     /**
-     * Unescapes a command
-     *
-     * @param str String
-     * @return Unescaped String
+     * Parsed Command Results Class
      */
-    private Collection<String> unescapeCommand(String str, boolean includeFinal) {
-        return translateCommand(str, includeFinal).values();
+    public interface ParsedCommand extends CompletingParsedLine {
+        /**
+         * Get the Word List
+         *
+         * @return Word List
+         */
+        @Override
+        LinkedList<String> words();
+
+        /**
+         * Get the Word Translation
+         *
+         * @return Word Translation
+         */
+        Map.Entry<String, String> translation();
+
+        /**
+         * Get the Word Translation List
+         *
+         * @return Word Translation List
+         */
+        LinkedList<Map.Entry<String, String>> translations();
+
+        /**
+         * Get the Word Translation Map
+         *
+         * @return Word Translation Map
+         */
+        Map<String, String> translationMap();
+
+        /**
+         * Get the Raw Word
+         *
+         * @return Raw Word
+         */
+        String rawWord();
+
+        /**
+         * Get the Raw Word List
+         *
+         * @return Raw Word List
+         */
+        LinkedList<String> rawWords();
+
+        /**
+         * Get if this was defined as a command
+         *
+         * @return Command Status
+         */
+        boolean isCommand();
     }
 }

@@ -6,6 +6,7 @@ import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import org.fusesource.jansi.Ansi;
 
+import java.awt.*;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.PrimitiveIterator;
+import java.util.concurrent.TimeUnit;
 
 import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
 
@@ -145,6 +147,10 @@ public final class Logger {
     }
 
     private static void log(boolean COLOR_LEVELS) {
+        long refresh = TimeUnit.SECONDS.toNanos(1) / Util.getDespiteException(() -> GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate(), 30);
+        long refreshMillis = (long) Math.floor(refresh / 1000000d);
+        int refreshNanos = (int) (refresh - (refreshMillis * 1000000));
+
         (thread = new Thread(() -> {
             LogStream last = null;
             boolean terminated = true;
@@ -234,7 +240,7 @@ public final class Logger {
                     Util.isException(() -> Logger.messages.remove(0));
                     if (pso.get() != null) e.printStackTrace(pso.get());
                 }
-                Util.isException(() -> Thread.sleep(32));
+                Util.isException(() -> Thread.sleep(refreshMillis, refreshNanos));
             }
         }, Galaxi.getInstance().getEngineInfo().getName() + "::Log_Spooler")).start();
     }
