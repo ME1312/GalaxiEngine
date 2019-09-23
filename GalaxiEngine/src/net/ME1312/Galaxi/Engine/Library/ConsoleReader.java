@@ -107,7 +107,7 @@ public class ConsoleReader {
      */
     public List<String> complete(CommandSender sender, String command) {
         if (Util.isNull(sender, command)) throw new NullPointerException();
-        return complete(sender, parser.parse(command, (int) command.codePoints().count(), null));
+        return complete(sender, parseCommand(command));
     }
 
     /**
@@ -201,7 +201,7 @@ public class ConsoleReader {
      */
     public void runCommand(CommandSender sender, String command) {
         if (Util.isNull(sender, command)) throw new NullPointerException();
-        runCommand(sender, parser.parse(command, (int) command.codePoints().count(), null));
+        runCommand(sender, parseCommand(command));
     }
 
     /**
@@ -346,12 +346,22 @@ public class ConsoleReader {
      */
     public ParsedCommand parseCommand(String command) {
         if (Util.isNull(command)) throw new NullPointerException();
-        return parser.parse(command, (int) command.codePoints().count(), null);
+        return parser.parse(command, (int) command.codePoints().count(), true);
+    }
+
+    private ParsedCommand parse(String command) {
+        if (Util.isNull(command)) throw new NullPointerException();
+        return parser.parse(command, (int) command.codePoints().count(), false);
     }
 
     private class Parser implements org.jline.reader.Parser {
         @Override
-        public ParsedCommand parse(final String LINE, final int CURSOR, final ParseContext CONTEXT) throws SyntaxError {
+        public ParsedCommand parse(final String LINE, final int CURSOR, ParseContext ctx) throws SyntaxError {
+            return parse(LINE, CURSOR, false);
+        }
+
+        public ParsedCommand parse(final String LINE, final int CURSOR, boolean command) throws SyntaxError {
+            if (!command) command = chat == null;
             final LinkedHashMap<String, String> MAP = new LinkedHashMap<String, String>();
 
             StringBuilder part = new StringBuilder();
@@ -359,28 +369,30 @@ public class ConsoleReader {
             int rwcursor = 0;
             int start = 0;
 
-            boolean command = false;
             boolean between = true;
             boolean literal = false;
             boolean whitespaced = false;
-            for (int i = 0; i < LINE.length(); i++) {
+            for (int i = 0; i < LINE.codePoints().count(); i++) {
                 int ch = LINE.codePointAt(i);
                 if (CURSOR > i) rwcursor++;
-                if (i == 0 && ch == '/') {
-                    command = true; // This is defined as a command
-                } else if (i == 0 && chat != null) {
-                    break; // This must be a chat message, stop parsing
+                if (i == 0 && ch == '/') { // This has been defined as a command
+                    command = true;
+                } else if (!command && i <= 0) { // This must be a chat message, stop parsing
+                    wcursor = CURSOR;
+                    rwcursor = CURSOR;
+                    part.append(LINE);
+                    break;
                 } else {
-                    if (ch == '\'') {
-                        if (literal && i + 1 < LINE.length() && LINE.codePointAt(i + 1) == '\'') part.appendCodePoint(ch);
+                    if (ch == '\'') { // Begin, end, or skip a literal block
+                        if (literal && i + 1 < LINE.codePoints().count() && LINE.codePointAt(i + 1) == '\'') part.appendCodePoint(ch);
                         literal = !literal;
-                    } else if (literal) {
+                    } else if (literal) { // Accept characters literally
                         if (CURSOR > i) wcursor++;
                         part.appendCodePoint(ch);
                         between = false;
                     } else {
                         if (!whitespaced && ch == ' ') {
-                            if (!between) {
+                            if (!between) { // Ends the current word
                                 MAP.put(LINE.substring(start, i), part.toString());
                                 part = new StringBuilder(LINE.length());
                             }
@@ -391,14 +403,14 @@ public class ConsoleReader {
                         } else {
                             between = false;
                             switch (ch) {
-                                case '\"':
-                                    if (whitespaced && i + 1 < LINE.length() && LINE.codePointAt(i + 1) == '\"') part.appendCodePoint(ch);
+                                case '\"': // Begin, end, or skip a whitespaced block
+                                    if (whitespaced && i + 1 < LINE.codePoints().count() && LINE.codePointAt(i + 1) == '\"') part.appendCodePoint(ch);
                                     whitespaced = !whitespaced;
-                                    break;
-                                case '$':
+                                    continue;
+                                case '$': // Replace java system variables
                                     int varEnd;
                                     if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
-                                            && i + 1 <= LINE.length() && (varEnd = LINE.indexOf('$', i+1)) > i) {
+                                            && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('$', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
                                         if (System.getProperty(var) != null) {
@@ -418,10 +430,10 @@ public class ConsoleReader {
                                         if (CURSOR > i) wcursor++;
                                         part.appendCodePoint(ch);
                                     }
-                                    break;
-                                case '%':
+                                    continue;
+                                case '%': // Replace environment variables
                                     if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
-                                            && i + 1 <= LINE.length() && (varEnd = LINE.indexOf('%', i+1)) > i) {
+                                            && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('%', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
                                         if (System.getenv(var) != null) {
@@ -441,22 +453,22 @@ public class ConsoleReader {
                                         if (CURSOR > i) wcursor++;
                                         part.appendCodePoint(ch);
                                     }
-                                    break;
-                                case '\\':
-                                    int nextChar = (i == LINE.length() - 1) ? '\\' : LINE
+                                    continue;
+                                case '\\': // Parse escape sequences
+                                    int nextChar = (i == LINE.codePoints().count() - 1) ? '\\' : LINE
                                             .codePointAt(i + 1);
-                                    // Octal escape?
+                                    // Octal Escape: 000
                                     if (nextChar >= '0' && nextChar <= '7') {
                                         StringBuilder code = new StringBuilder();
                                         code.appendCodePoint(nextChar);
                                         i++;
                                         if (CURSOR > i) rwcursor++;
-                                        if ((i < LINE.length() - 1) && LINE.codePointAt(i + 1) >= '0'
+                                        if ((i < LINE.codePoints().count() - 1) && LINE.codePointAt(i + 1) >= '0'
                                                 && LINE.codePointAt(i + 1) <= '7') {
                                             code.appendCodePoint(LINE.codePointAt(i + 1));
                                             i++;
                                             if (CURSOR > i) rwcursor++;
-                                            if ((i < LINE.length() - 1) && LINE.codePointAt(i + 1) >= '0'
+                                            if ((i < LINE.codePoints().count() - 1) && LINE.codePointAt(i + 1) >= '0'
                                                     && LINE.codePointAt(i + 1) <= '7') {
                                                 code.appendCodePoint(LINE.codePointAt(i + 1));
                                                 i++;
@@ -466,8 +478,7 @@ public class ConsoleReader {
                                         part.append((char) Integer.parseInt(code.toString(), 8));
                                         if (CURSOR > i) wcursor++;
                                         continue;
-                                    }
-                                    switch (nextChar) {
+                                    } else switch (nextChar) {
                                         case '\\':
                                             ch = '\\';
                                             break;
@@ -501,16 +512,16 @@ public class ConsoleReader {
                                         case '\'':
                                             ch = '\'';
                                             break;
-                                        // Hex Unicode Char: u????
-                                        // Hex Unicode Codepoint: u{??????}
+                                        // Unicode Java Escape: u0000
+                                        // Unicode ES-6 Escape: u{000000}
                                         case 'u':
                                             try {
-                                                if (i >= LINE.length() - 4) throw new IllegalStateException();
+                                                if (i >= LINE.codePoints().count() - 4) throw new IllegalStateException();
                                                 StringBuilder escape = new StringBuilder();
                                                 int offset = 2;
 
                                                 if (LINE.codePointAt(i + 2) != '{') {
-                                                    if (i >= LINE.length() - 5) throw new IllegalStateException();
+                                                    if (i >= LINE.codePoints().count() - 5) throw new IllegalStateException();
                                                     while (offset <= 5) {
                                                         Integer.toString(LINE.codePointAt(i + offset), 16);
                                                         escape.appendCodePoint(LINE.codePointAt(i + offset));
@@ -525,27 +536,23 @@ public class ConsoleReader {
                                                         offset++;
                                                     }
                                                 }
-                                                part.append(new String(new int[]{
-                                                        Integer.parseInt(escape.toString(), 16)
-                                                }, 0, 1));
+                                                ch = Integer.parseInt(escape.toString(), 16);
 
-                                                if (CURSOR > i) wcursor++;
-                                                for (int x = 0; x < offset; x++) {
+                                                for (int x = 0; x < offset - 1; x++) {
                                                     i++;
                                                     if (CURSOR > i) rwcursor++;
                                                 }
-                                                continue;
                                             } catch (Throwable e) {
                                                 ch = 'u';
-                                                break;
                                             }
+                                            break;
                                     }
                                     i++;
                                     if (CURSOR > i) rwcursor++;
                                 default:
                                     if (CURSOR > i) wcursor++;
                                     part.appendCodePoint(ch);
-                                    break;
+                                //  continue;
                             }
                         }
                     }

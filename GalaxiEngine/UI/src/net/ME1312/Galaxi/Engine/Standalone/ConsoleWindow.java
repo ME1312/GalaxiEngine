@@ -173,7 +173,7 @@ public final class ConsoleWindow extends OutputStream {
                             int position = input.getCaretPosition();
                             List<CharSequence> candidates = new LinkedList<CharSequence>();
                             if (icache == null || iauto == Boolean.FALSE) {
-                                ConsoleReader.ParsedCommand command = reader.parseCommand((input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
+                                ConsoleReader.ParsedCommand command = Util.reflect(ConsoleReader.class.getDeclaredMethod("parse", String.class), reader, (input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
                                 candidates.add(command.line());
                                 for (String candidate : reader.complete(ConsoleCommandSender.get(), command))
                                     candidates.add(command.line().substring(0, command.line().length() - command.rawWordLength()) + command.escape(candidate, true));
