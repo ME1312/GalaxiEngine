@@ -17,7 +17,6 @@ import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.App;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
-import org.jline.reader.LineReader;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -102,7 +101,7 @@ public class GalaxiEngine extends Galaxi {
             engine.setSignature(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
         engine.setIcon(GalaxiEngine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Library/Files/GalaxiIcon.png"));
 
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        Util.isException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
 

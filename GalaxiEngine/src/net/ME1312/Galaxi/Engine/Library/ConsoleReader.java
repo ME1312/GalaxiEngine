@@ -354,7 +354,7 @@ public class ConsoleReader {
         return parser.parse(command, (int) command.codePoints().count(), false);
     }
 
-    private class Parser implements org.jline.reader.Parser {
+    private final class Parser implements org.jline.reader.Parser {
         @Override
         public ParsedCommand parse(final String LINE, final int CURSOR, ParseContext ctx) throws SyntaxError {
             return parse(LINE, CURSOR, false);
@@ -384,7 +384,10 @@ public class ConsoleReader {
                     break;
                 } else {
                     if (ch == '\'') { // Begin, end, or skip a literal block
-                        if (literal && i + 1 < LINE.codePoints().count() && LINE.codePointAt(i + 1) == '\'') part.appendCodePoint(ch);
+                        if (literal && i + 1 < LINE.codePoints().count() && LINE.codePointAt(i + 1) == '\'') {
+                            part.appendCodePoint(ch);
+                            if (CURSOR > i) wcursor++;
+                        }
                         literal = !literal;
                     } else if (literal) { // Accept characters literally
                         if (CURSOR > i) wcursor++;
@@ -404,7 +407,10 @@ public class ConsoleReader {
                             between = false;
                             switch (ch) {
                                 case '\"': // Begin, end, or skip a whitespaced block
-                                    if (whitespaced && i + 1 < LINE.codePoints().count() && LINE.codePointAt(i + 1) == '\"') part.appendCodePoint(ch);
+                                    if (whitespaced && i + 1 < LINE.codePoints().count() && LINE.codePointAt(i + 1) == '\"') {
+                                        part.appendCodePoint(ch);
+                                        if (CURSOR > i) wcursor++;
+                                    }
                                     whitespaced = !whitespaced;
                                     continue;
                                 case '$': // Replace java system variables
@@ -427,8 +433,8 @@ public class ConsoleReader {
                                             if (CURSOR > i) rwcursor++;
                                         }
                                     } else {
-                                        if (CURSOR > i) wcursor++;
                                         part.appendCodePoint(ch);
+                                        if (CURSOR > i) wcursor++;
                                     }
                                     continue;
                                 case '%': // Replace environment variables
@@ -450,8 +456,8 @@ public class ConsoleReader {
                                             if (CURSOR > i) rwcursor++;
                                         }
                                     } else {
-                                        if (CURSOR > i) wcursor++;
                                         part.appendCodePoint(ch);
+                                        if (CURSOR > i) wcursor++;
                                     }
                                     continue;
                                 case '\\': // Parse escape sequences
