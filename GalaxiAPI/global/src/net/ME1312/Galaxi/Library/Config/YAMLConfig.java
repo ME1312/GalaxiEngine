@@ -104,6 +104,7 @@ public class YAMLConfig {
         DumperOptions options = new DumperOptions();
         options.setAllowUnicode(false);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        options.setSplitLines(false);
         options.setIndent(2);
 
         return options;
