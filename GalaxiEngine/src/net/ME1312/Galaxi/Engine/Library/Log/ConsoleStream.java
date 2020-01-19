@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Engine.Library.Log;
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
 import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Log.StringOutputStream;
 import net.ME1312.Galaxi.Library.Util;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiString;
@@ -18,42 +19,32 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_ANSI;
 /**
  * Console Log Stream Class
  */
-public class ConsoleStream extends OutputStream {
+public class ConsoleStream extends StringOutputStream {
     private LineReader jline;
-    private ByteArrayOutputStream buffer;
 
 
     ConsoleStream(LineReader jline) {
         this.jline = jline;
-        this.buffer = new ByteArrayOutputStream();
     }
 
     @Override
-    public void write(int i) {
+    public void write(String s) {
         try {
-            if (i == '\n') {
-                byte[] buffer = this.buffer.toByteArray();
-                this.buffer.reset();
-                getWindow();
-                if (window != null) {
-                    window.write(buffer);
-                    window.write(i);
-                }
-                getThread();
-                Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
-                if (running.get() && thread.isAlive()) jline.callWidget(LineReader.CLEAR);
-                if (USE_ANSI.def()) {
-                    jline.getTerminal().writer().print(new String(buffer, StandardCharsets.UTF_8));
-                    jline.getTerminal().writer().println(Ansi.ansi().a(Ansi.Attribute.RESET).toString());
-                } else jline.getTerminal().writer().println((String) new AnsiString(new String(buffer, StandardCharsets.UTF_8)).getPlain());
-                if (running.get() && thread.isAlive()) {
-                    jline.callWidget(LineReader.REDRAW_LINE);
-                    jline.callWidget(LineReader.REDISPLAY);
-                }
-                jline.getTerminal().flush();
-            } else {
-                buffer.write(i);
+            getWindow();
+            if (window != null) {
+                window.write(s.getBytes(StandardCharsets.UTF_8));
             }
+            getThread();
+            Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
+            if (running.get() && thread.isAlive()) jline.callWidget(LineReader.CLEAR);
+            if (USE_ANSI.def()) {
+                jline.getTerminal().writer().print(s.replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
+            } else jline.getTerminal().writer().println((String) new AnsiString(s).getPlain());
+            if (running.get() && thread.isAlive()) {
+                jline.callWidget(LineReader.REDRAW_LINE);
+                jline.callWidget(LineReader.REDISPLAY);
+            }
+            jline.getTerminal().flush();
         } catch (Exception e) {}
     }
 

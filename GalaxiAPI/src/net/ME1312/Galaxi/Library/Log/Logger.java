@@ -8,7 +8,6 @@ import org.fusesource.jansi.Ansi;
 
 import java.awt.*;
 import java.io.File;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -22,7 +21,7 @@ import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
  * Logger Class
  */
 public final class Logger {
-    private static final Container<PrintStream> pso = new Container<PrintStream>(null);
+    private static final Container<StringOutputStream> pso = new Container<StringOutputStream>(null);
     private static boolean running = true;
     static final LinkedList<NamedContainer<LogStream, String>> messages = new LinkedList<NamedContainer<LogStream, String>>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
@@ -160,6 +159,8 @@ public final class Logger {
                     if (container != null) {
                         LogStream stream = container.name();
                         String prefix = '[' + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + "] [" + stream.getLogger().getPrefix() + File.separator + stream.getLevel().getName() + "] > ";
+                        StringBuilder result = new StringBuilder();
+
                         LinkedList<String> messages = new LinkedList<String>();
                         boolean terminate = false;
                         if (container.get().length() > 0) {
@@ -213,32 +214,34 @@ public final class Logger {
 
                             if (response == null || response == Boolean.TRUE) {
                                 if (terminated || last != stream) {
-                                    if (!terminated) stream.stream.get().print('\n');
-                                    if (COLOR_LEVELS && stream.getLevel().getColor() != null) stream.stream.get().write(stream.getLevel().getColor().toString().getBytes(StandardCharsets.UTF_8));
-                                    stream.stream.get().write(prefix.getBytes(StandardCharsets.UTF_8));
-                                    if (COLOR_LEVELS && stream.getLevel().getColor() != null) stream.stream.get().write(Ansi.ansi().reset().toString().getBytes(StandardCharsets.UTF_8));
+                                    if (!terminated) result.append('\n');
+                                    if (COLOR_LEVELS && stream.getLevel().getColor() != null) result.append(stream.getLevel().getColor().toString());
+                                    result.append(prefix);
+                                    if (COLOR_LEVELS && stream.getLevel().getColor() != null) result.append(Ansi.ansi().reset().toString());
                                 }
                                 last = stream;
                                 logged = true;
                                 terminated = false;
-                                stream.stream.get().write(message.getBytes(StandardCharsets.UTF_8));
+                                result.append(message);
 
                                 if (i < messages.size()) {
                                     terminated = true;
-                                    stream.stream.get().print('\n');
+                                    result.append('\n');
                                 }
                             }
                         }
                         if (logged && terminate) {
                             terminated = true;
-                            stream.stream.get().print('\n');
+                            result.append('\n');
                         }
 
+                        if (result.length() > 0)
+                            stream.stream.get().write(result.toString());
                     }
                     Util.isException(() -> Logger.messages.remove(0));
                 } catch (Throwable e) {
                     Util.isException(() -> Logger.messages.remove(0));
-                    if (pso.get() != null) e.printStackTrace(pso.get());
+                    //if (pso.get() != null) e.printStackTrace(pso.get());
                 }
                 Util.isException(() -> Thread.sleep(refreshMillis, refreshNanos));
             }

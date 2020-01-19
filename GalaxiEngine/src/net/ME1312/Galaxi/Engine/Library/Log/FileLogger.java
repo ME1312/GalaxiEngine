@@ -1,9 +1,11 @@
 package net.ME1312.Galaxi.Engine.Library.Log;
 
 import net.ME1312.Galaxi.Galaxi;
+import net.ME1312.Galaxi.Library.Log.StringOutputStream;
 import net.ME1312.Galaxi.Library.Util;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.regex.Pattern;
@@ -15,15 +17,15 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_RAW_LOG;
 /**
  * Log File Writer Class
  */
-public final class FileLogger extends OutputStream {
+public final class FileLogger extends StringOutputStream {
     private static FileOutputStream iwriter = null;
     private static FileOutputStream tmpwriter = null;
     private static OutputStream writer = null;
     private static File file = null;
     private static File tmp = null;
-    private OutputStream origin;
+    private StringOutputStream origin;
 
-    FileLogger(OutputStream origin) throws IOException {
+    FileLogger(StringOutputStream origin) throws IOException {
         this.origin = origin;
         if (tmpwriter == null) {
             File dir = LOG_DIRECTORY.get();
@@ -59,14 +61,14 @@ public final class FileLogger extends OutputStream {
     }
 
     @Override
-    public void write(int b) throws IOException {
-        origin.write(b);
+    public void write(String s) throws IOException {
+        origin.write(s);
         if (writer != null) {
-            writer.write(b);
+            writer.write(s.getBytes(StandardCharsets.UTF_8));
             writer.flush();
         }
         if (tmpwriter != null) {
-            tmpwriter.write(b);
+            tmpwriter.write(s.getBytes(StandardCharsets.UTF_8));
             tmpwriter.flush();
         }
     }

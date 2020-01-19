@@ -15,9 +15,9 @@ public final class LogStream {
     private Logger logger;
     private LogLevel level;
     private PrintStream primitive;
-    Container<PrintStream> stream;
+    Container<StringOutputStream> stream;
 
-    LogStream(Logger logger, LogLevel level, Container<PrintStream> stream) {
+    LogStream(Logger logger, LogLevel level, Container<StringOutputStream> stream) {
         this.logger = logger;
         this.level = level;
         this.stream = stream;

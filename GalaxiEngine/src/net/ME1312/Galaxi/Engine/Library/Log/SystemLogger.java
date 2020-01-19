@@ -5,6 +5,7 @@ import net.ME1312.Galaxi.Engine.PluginManager;
 import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Log.LogStream;
 import net.ME1312.Galaxi.Library.Log.Logger;
+import net.ME1312.Galaxi.Library.Log.StringOutputStream;
 import net.ME1312.Galaxi.Library.Util;
 import org.jline.reader.LineReader;
 
@@ -31,7 +32,7 @@ public final class SystemLogger extends OutputStream {
     private static void start(LineReader jline) throws Exception {
         if (Util.isNull(jline)) throw new NullPointerException();
 
-        Util.<Container<PrintStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new PrintStream(new FileLogger(new ConsoleStream(jline)), false, "UTF-8"));
+        Util.<Container<StringOutputStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new FileLogger(new ConsoleStream(jline)));
         Util.reflect(Logger.class.getDeclaredMethod("log", boolean.class), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.get()));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
