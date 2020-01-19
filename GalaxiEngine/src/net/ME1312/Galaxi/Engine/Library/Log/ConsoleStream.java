@@ -21,10 +21,12 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_ANSI;
  */
 public class ConsoleStream extends StringOutputStream {
     private LineReader jline;
+    private StringBuilder buffer;
 
 
     ConsoleStream(LineReader jline) {
         this.jline = jline;
+        this.buffer = new StringBuilder();
     }
 
     @Override
@@ -34,17 +36,34 @@ public class ConsoleStream extends StringOutputStream {
             if (window != null) {
                 window.write(s.getBytes(StandardCharsets.UTF_8));
             }
-            getThread();
-            Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
-            if (running.get() && thread.isAlive()) jline.callWidget(LineReader.CLEAR);
-            if (USE_ANSI.def()) {
-                jline.getTerminal().writer().print(s.replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
-            } else jline.getTerminal().writer().println((String) new AnsiString(s).getPlain());
-            if (running.get() && thread.isAlive()) {
-                jline.callWidget(LineReader.REDRAW_LINE);
-                jline.callWidget(LineReader.REDISPLAY);
+
+            if (s.contains("\n")) {
+                StringBuilder buffer = this.buffer;
+                this.buffer = new StringBuilder();
+                int i = s.lastIndexOf("\n") + 1;
+                if (i < s.length()) {
+                    buffer.append(s, 0, i);
+                    this.buffer.append(s.substring(i));
+                } else {
+                    buffer.append(s);
+                }
+
+                getThread();
+                Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
+                if (running.get() && thread.isAlive()) jline.callWidget(LineReader.CLEAR);
+
+                if (USE_ANSI.def()) {
+                    jline.getTerminal().writer().print(buffer.toString().replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
+                } else jline.getTerminal().writer().println((String) new AnsiString(buffer.toString()).getPlain());
+                if (running.get() && thread.isAlive()) {
+                    jline.callWidget(LineReader.REDRAW_LINE);
+                    jline.callWidget(LineReader.REDISPLAY);
+                }
+
+                jline.getTerminal().flush();
+            } else {
+                buffer.append(s);
             }
-            jline.getTerminal().flush();
         } catch (Exception e) {}
     }
 
