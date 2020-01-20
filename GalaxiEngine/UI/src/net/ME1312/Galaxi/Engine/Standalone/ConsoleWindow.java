@@ -67,6 +67,7 @@ public final class ConsoleWindow extends OutputStream {
     private boolean open = false;
     private boolean first = true;
     private int fontSize;
+    private long sknownLines = Long.MIN_VALUE;
     private List<Runnable> spost = new LinkedList<Runnable>();
     private ByteArrayOutputStream scache = new ByteArrayOutputStream();
     private AnsiUIOutputStream stream = HTMLogger.wrap(new OutputStream() {
@@ -94,9 +95,9 @@ public final class ConsoleWindow extends OutputStream {
                 } catch (Exception e) {} try {
                     int lines;
                     String content;
-                    if (log.getSelectionStart() == log.getSelectionEnd() && (lines = countLines(content = log.getDocument().getText(0, log.getDocument().getLength()))) > MAX_SCROLLBACK + 2) {
+                    if (log.getSelectionStart() == log.getSelectionEnd() && (lines = countLines(content = log.getDocument().getText(0, log.getDocument().getLength()))) > MAX_SCROLLBACK + 2 + 1) {
                         int lineBreak = 1;
-                        for (lines -= MAX_SCROLLBACK; lines > 0; lines--) lineBreak = content.indexOf('\n', lineBreak + 1);
+                        for (lines -= (MAX_SCROLLBACK - 1); lines > 0; lines--) lineBreak = content.indexOf('\n', lineBreak + 1);
                         if (lineBreak <= log.getDocument().getLength() - 2 && log.getSelectionStart() == log.getSelectionEnd()) {
                             log.getDocument().remove(0, lineBreak);
                         }
@@ -669,9 +670,13 @@ public final class ConsoleWindow extends OutputStream {
 
     private void loadContent() {
         try (FileInputStream reader = new FileInputStream((File) Class.forName("net.ME1312.Galaxi.Engine.Library.Log.FileLogger").getMethod("getFile").invoke(null))) {
+            long sknownLines = (this.sknownLines <= MAX_SCROLLBACK + 1 + Long.MIN_VALUE)?Long.MIN_VALUE:this.sknownLines - (MAX_SCROLLBACK + 1);
+            this.sknownLines = Long.MIN_VALUE;
+
             int b;
             while ((b = reader.read()) != -1) {
-                write(b);
+                if (sknownLines <= this.sknownLines) write(b);
+                else if (b == '\n') this.sknownLines++;
             }
         } catch (Exception e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
@@ -689,7 +694,10 @@ public final class ConsoleWindow extends OutputStream {
 
             if (b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
             stream.write(b);
-            if (b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
+            if (b == '\n') {
+                sknownLines++;
+                stream.write("\u00A0".getBytes("UTF-8"));
+            }
         } catch (IOException e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
         }
