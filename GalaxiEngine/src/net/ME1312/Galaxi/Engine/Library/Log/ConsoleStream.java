@@ -54,7 +54,7 @@ public class ConsoleStream extends StringOutputStream {
 
                 if (USE_ANSI.def()) {
                     jline.getTerminal().writer().print(buffer.toString().replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
-                } else jline.getTerminal().writer().println((String) new AnsiString(buffer.toString()).getPlain());
+                } else jline.getTerminal().writer().print((String) new AnsiString(buffer.toString()).getPlain());
                 if (running.get() && thread.isAlive()) {
                     jline.callWidget(LineReader.REDRAW_LINE);
                     jline.callWidget(LineReader.REDISPLAY);
