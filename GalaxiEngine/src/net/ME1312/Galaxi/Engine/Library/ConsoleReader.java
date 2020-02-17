@@ -219,7 +219,6 @@ public class ConsoleReader {
         if (Util.isNull(sender, command)) throw new NullPointerException();
 
         LinkedList<String> arguments = command.words();
-        System.out.println(arguments);
         String label = arguments.getFirst();
         arguments.removeFirst();
         if (command.rawWordLength() <= 0) arguments.removeLast();
