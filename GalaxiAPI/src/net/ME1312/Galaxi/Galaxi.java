@@ -74,6 +74,7 @@ public abstract class Galaxi {
             if (builder.delay() > 0) {
                 schedule.get(sid).schedule(task, builder.delay());
             } else {
+                schedule.remove(sid);
                 new Thread(task, name).start();
             }
         }

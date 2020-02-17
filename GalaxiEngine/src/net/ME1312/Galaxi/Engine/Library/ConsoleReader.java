@@ -8,6 +8,7 @@ import net.ME1312.Galaxi.Event.ConsoleInputEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
@@ -158,6 +159,9 @@ public class ConsoleReader {
                 input(line);
             }
         } catch (IOError e) {
+        } catch (UserInterruptException e) {
+            engine.getAppInfo().getLogger().warn.println("Interrupt Received");
+            engine.stop();
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
@@ -215,6 +219,7 @@ public class ConsoleReader {
         if (Util.isNull(sender, command)) throw new NullPointerException();
 
         LinkedList<String> arguments = command.words();
+        System.out.println(arguments);
         String label = arguments.getFirst();
         arguments.removeFirst();
         if (command.rawWordLength() <= 0) arguments.removeLast();
@@ -305,10 +310,10 @@ public class ConsoleReader {
         return builder.toString();
     }
 
-    private String escapeArgument(Map.Entry<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
+    private String escapeArgument(NamedContainer<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
         if (Util.isNull((Object) arg)) throw new NullPointerException();
-        boolean append = start != null && arg.startsWith(start.getValue());
-        if (append) arg = arg.substring(start.getValue().length());
+        boolean append = start != null && arg.startsWith(start.get());
+        if (append) arg = arg.substring(start.get().length());
 
         if (literal) {
             if (!append)
@@ -333,7 +338,7 @@ public class ConsoleReader {
                 arg += '\"';
             }
         }
-        if (append) arg = start.getKey() + arg;
+        if (append) arg = start.name() + arg;
         else if (whitespaced) arg = '\"' + arg;
         return arg;
     }
@@ -362,7 +367,7 @@ public class ConsoleReader {
 
         public ParsedCommand parse(final String LINE, final int CURSOR, boolean command) throws SyntaxError {
             if (!command) command = chat == null;
-            final LinkedHashMap<String, String> MAP = new LinkedHashMap<String, String>();
+            final LinkedList<NamedContainer<String, String>> MAPPINGS = new LinkedList<NamedContainer<String, String>>();
 
             StringBuilder part = new StringBuilder();
             int wcursor = 0;
@@ -396,7 +401,7 @@ public class ConsoleReader {
                     } else {
                         if (!whitespaced && ch == ' ') {
                             if (!between) { // Ends the current word
-                                MAP.put(LINE.substring(start, i), part.toString());
+                                MAPPINGS.add(new NamedContainer<>(LINE.substring(start, i), part.toString()));
                                 part = new StringBuilder(LINE.length());
                             }
                             start = i + 1;
@@ -576,7 +581,7 @@ public class ConsoleReader {
             final boolean LITERAL = literal;
             final boolean WHITESPACED = whitespaced;
 
-            MAP.put(LINE.substring(start), WORD);
+            MAPPINGS.add(new NamedContainer<>(LINE.substring(start), WORD));
             return new ParsedCommand() {
                 @Override
                 public CharSequence escape(CharSequence argument, boolean complete) {
@@ -595,7 +600,9 @@ public class ConsoleReader {
 
                 @Override
                 public LinkedList<String> words() {
-                    return new LinkedList<>(MAP.values());
+                    LinkedList<String> list = new LinkedList<>();
+                    for (NamedContainer<String, String> e : MAPPINGS) list.add(e.get());
+                    return list;
                 }
 
                 @Override
@@ -605,22 +612,17 @@ public class ConsoleReader {
 
                 @Override
                 public int wordIndex() {
-                    return (MAP.size() <= 0)?0:MAP.size() - 1;
+                    return (MAPPINGS.size() <= 0)?0:MAPPINGS.size() - 1;
                 }
 
                 @Override
-                public Map.Entry<String, String> translation() {
-                    return (MAP.size() <= 0)?null:translations().getLast();
+                public NamedContainer<String, String> translation() {
+                    return (MAPPINGS.size() <= 0)?null:MAPPINGS.getLast();
                 }
 
                 @Override
-                public LinkedList<Map.Entry<String, String>> translations() {
-                    return new LinkedList<>(MAP.entrySet());
-                }
-
-                @Override
-                public Map<String, String> translationMap() {
-                    return new LinkedHashMap<>(MAP);
+                public LinkedList<NamedContainer<String, String>> translations() {
+                    return new LinkedList<>(MAPPINGS);
                 }
 
                 @Override
@@ -630,7 +632,9 @@ public class ConsoleReader {
 
                 @Override
                 public LinkedList<String> rawWords() {
-                    return new LinkedList<>(MAP.keySet());
+                    LinkedList<String> list = new LinkedList<>();
+                    for (NamedContainer<String, String> e : MAPPINGS) list.add(e.name());
+                    return list;
                 }
 
                 @Override
@@ -673,21 +677,14 @@ public class ConsoleReader {
          *
          * @return Word Translation
          */
-        Map.Entry<String, String> translation();
+        NamedContainer<String, String> translation();
 
         /**
          * Get the Word Translation List
          *
          * @return Word Translation List
          */
-        LinkedList<Map.Entry<String, String>> translations();
-
-        /**
-         * Get the Word Translation Map
-         *
-         * @return Word Translation Map
-         */
-        Map<String, String> translationMap();
+        LinkedList<NamedContainer<String, String>> translations();
 
         /**
          * Get the Raw Word
