@@ -2,6 +2,7 @@ package net.ME1312.Galaxi.Engine.Standalone;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
+import net.ME1312.Galaxi.Engine.Library.Log.FileLogger;
 import net.ME1312.Galaxi.Engine.Library.Log.HTMLogger;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
@@ -371,7 +372,7 @@ public final class ConsoleWindow extends OutputStream {
             }
         });
         window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName());
-        window.setSize((int) (1024 * scale), (int) (576 * scale));
+        window.setSize((int) (1024 * scale), (int) (575 * scale));
         window.setLocation(
                 (int) ((screen.getWidth() - window.getWidth()) / 2),
                 (int) ((screen.getHeight() - window.getHeight()) / 2)
@@ -385,11 +386,34 @@ public final class ConsoleWindow extends OutputStream {
                     public void run() {
                         try {
                             if (exit) {
-                                Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("stop").invoke(Galaxi.getInstance());
+                                if (Util.<Boolean>reflect(GalaxiEngine.class.getDeclaredField("stopping"), GalaxiEngine.getInstance())) {
+                                    Object[] options = {"Terminate Program", "Run in the Background", "Close This Window"};
+                                    switch (JOptionPane.showOptionDialog(window,
+                                            Galaxi.getInstance().getAppInfo().getDisplayName() + " is shutting down and will close automatically.\n\n" +
+
+                                                    "If this is not happening, for whatever reason,\n" +
+                                                    "you can terminate the program from this screen.\n" +
+                                                    "Terminating a program can cause some undersirable consequences,\n" +
+                                                    "however, such as data loss or corruption.\n\n" +
+
+                                                    "You can also choose to finish running the program in the background,\n" +
+                                                    "but you will not be able to reopen this console window.\n\n" +
+
+                                                    "What would you like to do?\n",
+                                            "End Program",
+                                            JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2])) {
+                                        case JOptionPane.YES_OPTION:
+                                            System.exit(Integer.MAX_VALUE);
+                                            break;
+                                        case JOptionPane.NO_OPTION:
+                                            GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
+                                            break;
+                                    }
+                                } else {
+                                    GalaxiEngine.getInstance().stop();
+                                }
                             } else {
-                                Util.reflect(ConsoleReader.class.getDeclaredField("window"),
-                                        Class.forName("net.ME1312.Galaxi.Engine.GalaxiEngine").getMethod("getConsoleReader").invoke(Galaxi.getInstance()), null);
-                                close();
+                                GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
                             }
                         } catch (Exception ex) {
                             Galaxi.getInstance().getAppInfo().getLogger().error.println(ex);
@@ -521,7 +545,7 @@ public final class ConsoleWindow extends OutputStream {
                 text = text.replace("\n", "\\n");
                 if (offset < 1) {
                     length = Math.max(0, length - 1);
-                    offset = input.getDocument().getLength();
+                    offset = 1;
                     input.setCaretPosition(offset);
                     if (text.startsWith(">")) text = text.substring(1);
                 }
@@ -669,7 +693,7 @@ public final class ConsoleWindow extends OutputStream {
     }
 
     private void loadContent() {
-        try (FileInputStream reader = new FileInputStream((File) Class.forName("net.ME1312.Galaxi.Engine.Library.Log.FileLogger").getMethod("getFile").invoke(null))) {
+        try (FileInputStream reader = new FileInputStream(FileLogger.getFile())) {
             long sknownLines = (this.sknownLines <= MAX_SCROLLBACK + 1 + Long.MIN_VALUE)?Long.MIN_VALUE:this.sknownLines - (MAX_SCROLLBACK + 1);
             this.sknownLines = Long.MIN_VALUE;
 
@@ -776,10 +800,11 @@ public final class ConsoleWindow extends OutputStream {
 
             } catch (BadLocationException e) {
                 findI = -2;
+                boolean type = findO > 0;
                 JOptionPane.showMessageDialog(window,
-                        ((findO > 0)?"There are no more results\nSearch again to start from the " + ((direction)?"top":"bottom"):"Couldn't find \"" + findT.getText() + "\""),
+                        ((type)?"There are no more results.\nSearch again to start from the " + ((direction)?"top":"bottom") + '.':"Couldn't find \"" + findT.getText() + "\"") + '\n',
                         "Find",
-                        JOptionPane.WARNING_MESSAGE);
+                        ((type)?JOptionPane.INFORMATION_MESSAGE:JOptionPane.WARNING_MESSAGE));
             }
         }
     }

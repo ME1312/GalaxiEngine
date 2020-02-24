@@ -66,7 +66,7 @@ public class ConsoleReader {
         Util.reflect(SystemLogger.class.getDeclaredMethod("start", LineReader.class), null, jline);
         try {
             if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.get() && System.console() == null)) {
-                openConsoleWindow(true);
+                openConsoleWindow(!(SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") && System.console() != null));
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);

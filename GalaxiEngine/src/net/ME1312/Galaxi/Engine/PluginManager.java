@@ -84,7 +84,6 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
             }
         }
         if (pljars.size() > 0) {
-            long begin = Calendar.getInstance().getTime().getTime();
 
             /*
              * Load Jars & Find Main Classes
@@ -184,7 +183,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                             } catch (InvocationTargetException e) {
                                 engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e.getTargetException(), "Uncaught exception occurred while loading main class: " + main));
                             } catch (ClassCastException e) {
-                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Main class isn't annotated as a SubPlugin: " + main));
+                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Main class isn't annotated as a Plugin: " + main));
                             } catch (Throwable e) {
                                 engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load main class: " + main));
                             }
@@ -233,10 +232,11 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                         for (PluginInfo.Dependency depend : plugin.getDependancies()) {
                             IllegalStateException e = null;
                             if (plugins.keySet().contains(depend.getName().toLowerCase())) {
-                                if (unstick != ((depend.isRequired())?2:3)) {
+                                int dsv = (depend.isRequired())?2:3;
+                                if (unstick < dsv) {
                                     load = false;
                                     break;
-                                } else {
+                                } else if (unstick == dsv) {
                                     e = new IllegalStateException("Infinite" + ((depend.isRequired())?"":" soft") + " dependency loop: " + plugin.getName() + " -> " + depend.getName());
                                 }
                             } else if (engine.getEngineInfo().getName().equalsIgnoreCase(depend.getName()) || engine.getAppInfo().getName().equalsIgnoreCase(depend.getName()) || this.plugins.keySet().contains(depend.getName().toLowerCase())) {
@@ -271,10 +271,10 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                         }
                         for (String loadafter : plugin.getExtra("galaxi.plugin.loadafter").asRawStringList()) {
                             if (plugins.keySet().contains(loadafter.toLowerCase())) {
-                                if (unstick != 1) {
+                                if (unstick < 1) {
                                     load = false;
                                     break;
-                                } else {
+                                } else if (unstick == 1) {
                                     engine.getAppInfo().getLogger().warn.println(new IllegalStateException("Infinite load before loop: " + loadafter + " -> " + plugin.getName()));
                                 }
                             }
