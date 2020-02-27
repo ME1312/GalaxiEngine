@@ -11,6 +11,7 @@ import net.ME1312.Galaxi.Library.Container;
 import net.ME1312.Galaxi.Library.Log.LogLevel;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
+import net.ME1312.Galaxi.Library.Platform;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
@@ -21,6 +22,7 @@ import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLStreamHandler;
@@ -35,11 +37,12 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 /**
  * Galaxi Engine Main Class
  */
-@App(name = "GalaxiEngine", version = "3.2.0c", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@App(name = "GalaxiEngine", version = "3.3.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
-    private final UniversalFile dir = new UniversalFile(APPLICATION_DIRECTORY.get());
+    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.get());
+    private final UniversalFile idir;
     private final ConsoleReader console;
 
     private final PluginInfo app;
@@ -90,11 +93,15 @@ public class GalaxiEngine extends Galaxi {
     @SuppressWarnings("unchecked")
     private GalaxiEngine(PluginInfo app) throws Exception {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
-        Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
 
         instance = this;
         this.engine = PluginInfo.getPluginInfo(this);
         this.app = (app == null)?engine:app;
+
+        if (APPDATA_DIRECTORY.get() == Platform.getSystem().getAppDataDirectory()) APPDATA_DIRECTORY.set(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
+        Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
+
+        this.idir = new UniversalFile(APPDATA_DIRECTORY.get());
 
         Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
@@ -247,6 +254,11 @@ public class GalaxiEngine extends Galaxi {
     @Override
     public PluginManager getPluginManager() {
         return pluginManager;
+    }
+
+    @Override
+    public UniversalFile getAppDataDirectory() {
+        return idir;
     }
 
     @Override

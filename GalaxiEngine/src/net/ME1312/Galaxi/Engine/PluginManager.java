@@ -229,7 +229,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                 for (PluginInfo plugin : plugins.values()) {
                     try {
                         boolean load = true;
-                        for (PluginInfo.Dependency depend : plugin.getDependancies()) {
+                        for (PluginInfo.Dependency depend : plugin.getDependencies()) {
                             IllegalStateException e = null;
                             if (plugins.keySet().contains(depend.getName().toLowerCase())) {
                                 int dsv = (depend.isRequired())?2:3;

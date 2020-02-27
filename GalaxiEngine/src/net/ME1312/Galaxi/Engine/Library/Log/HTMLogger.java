@@ -20,8 +20,10 @@ public class HTMLogger extends AnsiOutputStream {
     private static final byte[] BYTES_LT = "&lt;".getBytes();
     private static final byte[] BYTES_GT = "&gt;".getBytes();
     private LinkedList<String> closingAttributes = new LinkedList<String>();
+    private LinkedList<String> queue = new LinkedList<String>();
     private OutputStream raw;
     protected boolean ansi = true;
+    protected boolean nbsp = false;
     private boolean underline = false;
     private boolean strikethrough = false;
 
@@ -50,10 +52,19 @@ public class HTMLogger extends AnsiOutputStream {
 
             @Override
             public void write(int data) throws IOException {
+                HTMLogger htm = html.get();
+                if (htm.queue.size() > 0) {
+                    LinkedList<String> queue = htm.queue;
+                    htm.queue = new LinkedList<>();
+                    for (String item : queue) htm.write(item);
+                }
+
                 if (data == 32) {
-                    if (nbsp) raw.write(BYTES_NBSP);
-                    else raw.write(data);
-                    nbsp = !nbsp;
+                    if (htm.nbsp) {
+                        if (nbsp) raw.write(BYTES_NBSP);
+                        else raw.write(data);
+                        nbsp = !nbsp;
+                    } else raw.write(data);
                 } else {
                     nbsp = false;
                     switch(data) {
@@ -92,7 +103,7 @@ public class HTMLogger extends AnsiOutputStream {
     }
 
     private void writeAttribute(String s) throws IOException {
-        write("<" + s + ">");
+        queue.add("<" + s + ">");
         closingAttributes.add(0, s);
     }
 
@@ -101,28 +112,35 @@ public class HTMLogger extends AnsiOutputStream {
         LinkedList<String> closingAttributes = new LinkedList<String>();
         LinkedList<String> unclosedAttributes = new LinkedList<String>();
 
-        closingAttributes.addAll(closingAttributes);
+        int qi = 0, qs = queue.size();
+        closingAttributes.addAll(this.closingAttributes);
         for (String attr : closingAttributes) {
             if (attr.toLowerCase().startsWith(s.toLowerCase())) {
                 for (String a : unclosedAttributes) {
                     closedAttributes.add(0, a);
-                    write("</" + a.split(" ", 2)[0] + ">");
+                    if (qi < qs) queue.removeLast();
+                    else write("</" + a.split(" ", 2)[0] + ">");
                 }
-                closingAttributes.removeFirstOccurrence(attr);
+                this.closingAttributes.removeFirstOccurrence(attr);
                 unclosedAttributes.clear();
-                write("</" + attr.split(" ", 2)[0] + ">");
+                if (qi < qs) queue.removeLast();
+                else write("</" + attr.split(" ", 2)[0] + ">");
             } else {
                 unclosedAttributes.add(attr);
             }
+            ++qi;
         }
         for (String attr : closedAttributes) {
-            write("<" + attr + ">");
+            queue.add("<" + attr + ">");
         }
     }
 
     protected void closeAttributes() throws IOException {
+        int qi = 0, qs = queue.size();
         for (String attr : closingAttributes) {
-            write("</" + attr.split(" ", 2)[0] + ">");
+            if (qi < qs) queue.removeLast();
+            else write("</" + attr.split(" ", 2)[0] + ">");
+            ++qi;
         }
 
         underline = false;
@@ -156,14 +174,14 @@ public class HTMLogger extends AnsiOutputStream {
                 writeAttribute("i");
                 break;
             case 4:
-                closeAttribute("span class=\"ansi-decoration");
+                closeAttribute("span style=\"text-decoration:");
                 underline = true;
-                writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
+                writeAttribute("span style=\"text-decoration: " + parseTextDecoration() + ";\"");
                 break;
             case 9:
-                closeAttribute("span class=\"ansi-decoration");
+                closeAttribute("span style=\"text-decoration:");
                 strikethrough = true;
-                writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
+                writeAttribute("span style=\"text-decoration: " + parseTextDecoration() + ";\"");
                 break;
             case 22:
                 closeAttribute("b");
@@ -172,14 +190,14 @@ public class HTMLogger extends AnsiOutputStream {
                 closeAttribute("i");
                 break;
             case 24:
-                closeAttribute("span class=\"ansi-decoration");
+                closeAttribute("span style=\"text-decoration:");
                 underline = false;
-                writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
+                writeAttribute("span style=\"text-decoration: " + parseTextDecoration() + ";\"");
                 break;
             case 29:
-                closeAttribute("span class=\"ansi-decoration");
+                closeAttribute("span style=\"text-decoration:");
                 strikethrough = false;
-                writeAttribute("span class=\"ansi-decoration\" style=\"text-decoration: " + parseTextDecoration() + ";\"");
+                writeAttribute("span style=\"text-decoration: " + parseTextDecoration() + ";\"");
                 break;
         }
     }
@@ -224,7 +242,7 @@ public class HTMLogger extends AnsiOutputStream {
 
     @Override
     protected void processDefaultTextColor() throws IOException {
-        closeAttribute("span class=\"ansi-foreground");
+        closeAttribute("span style=\"color:");
     }
 
     @Override
@@ -236,7 +254,7 @@ public class HTMLogger extends AnsiOutputStream {
     protected void processSetForegroundColor(int color, boolean bright) throws IOException {
         if (ansi) {
             processDefaultTextColor();
-            writeAttribute("span class=\"ansi-foreground\" style=\"color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+            writeAttribute("span style=\"color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
         }
     }
 
@@ -244,7 +262,7 @@ public class HTMLogger extends AnsiOutputStream {
     protected void processSetForegroundColorExt(int index) throws IOException {
         if (ansi) {
             processDefaultTextColor();
-            writeAttribute("span class=\"ansi-foreground\" style=\"color: #" + parse8BitColor(index) + ";\"");
+            writeAttribute("span style=\"color: #" + parse8BitColor(index) + ";\"");
         }
     }
 
@@ -252,13 +270,13 @@ public class HTMLogger extends AnsiOutputStream {
     protected void processSetForegroundColorExt(int r, int g, int b) throws IOException {
         if (ansi) {
             processDefaultTextColor();
-            writeAttribute("span class=\"ansi-foreground\" style=\"color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+            writeAttribute("span style=\"color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
         }
     }
 
     @Override
     protected void processDefaultBackgroundColor() throws IOException {
-        closeAttribute("span class=\"ansi-background");
+        closeAttribute("span style=\"background-color:");
     }
 
     @Override
@@ -270,7 +288,7 @@ public class HTMLogger extends AnsiOutputStream {
     protected void processSetBackgroundColor(int color, boolean bright) throws IOException {
         if (ansi) {
             processDefaultBackgroundColor();
-            writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+            writeAttribute("span style=\"background-color: #" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
         }
     }
 
@@ -278,7 +296,7 @@ public class HTMLogger extends AnsiOutputStream {
     protected void processSetBackgroundColorExt(int index) throws IOException {
         if (ansi) {
             processDefaultBackgroundColor();
-            writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + parse8BitColor(index) + ";\"");
+            writeAttribute("span style=\"background-color: #" + parse8BitColor(index) + ";\"");
         }
     }
 
@@ -286,7 +304,7 @@ public class HTMLogger extends AnsiOutputStream {
     protected void processSetBackgroundColorExt(int r, int g, int b) throws IOException {
         if (ansi) {
             processDefaultBackgroundColor();
-            writeAttribute("span class=\"ansi-background\" style=\"background-color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+            writeAttribute("span style=\"background-color: #" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
         }
     }
 

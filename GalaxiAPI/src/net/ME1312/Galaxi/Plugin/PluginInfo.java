@@ -1,10 +1,12 @@
 package net.ME1312.Galaxi.Plugin;
 
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Map.ObjectMapValue;
+import net.ME1312.Galaxi.Library.Platform;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
@@ -356,8 +358,63 @@ public class PluginInfo implements ExtraDataHandler {
      *
      * @return Dependencies List
      */
-    public List<Dependency> getDependancies() {
+    public List<Dependency> getDependencies() {
         return this.depend;
+    }
+
+    /**
+     * Scans to create a Full Dependency List (which includes the dependencies of your dependencies)
+     *
+     * @return Full Dependencies List
+     */
+    public List<PluginInfo> scanDependencies() {
+        List<PluginInfo> used = new ArrayList<PluginInfo>();
+        used.add(this);
+        return scanDependencies(this, used);
+    }
+    private List<PluginInfo> scanDependencies(PluginInfo info, List<PluginInfo> used) {
+        LinkedList<PluginInfo> output = new LinkedList<PluginInfo>();
+
+        for (PluginInfo.Dependency depend : info.getDependencies()) {
+            if (Galaxi.getInstance().getPluginManager().getPlugins().get(depend.getName().toLowerCase()) != null) {
+                output.addAll(scanDependencies(Galaxi.getInstance().getPluginManager().getPlugin(depend.getName().toLowerCase()), used));
+            }
+        }
+
+        if (!used.contains(info)) {
+            output.add(info);
+            used.add(info);
+        }
+
+        return output;
+    }
+
+    /**
+     * Builds a stack of relevant platform and versioning information for this plugin (Useful for debugging!)
+     *
+     * @return Platform Information Stack
+     */
+    public List<String> getPlatformStack() {
+        LinkedList<String> stack = new LinkedList<String>();
+
+        PluginInfo engine = Galaxi.getInstance().getEngineInfo();
+        PluginInfo app = Galaxi.getInstance().getAppInfo();
+        stack.addAll(Arrays.asList(
+                Platform.getSystemName() + ' ' + Platform.getSystemVersion() + ((!Platform.getSystemArchitecture().equals("unknown"))?" [" + Platform.getSystemArchitecture() + ']':"") + ",",
+                "Java " + Platform.getJavaVersion() + ((!Platform.getJavaArchitecture().equals("unknown"))?" [" + Platform.getJavaArchitecture() + ']':"") + ",",
+                engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getSignature() != null)?" (" + engine.getSignature() + ')':"") + ((engine == app)?" [Standalone]"+((engine == this)?"":","):",")
+        ));
+
+        if (engine != this) {
+            stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getSignature() != null)?" (" + app.getSignature() + ')':"") + ((app == this)?"":","));
+            if (app != this) {
+                for (PluginInfo plugin : scanDependencies()) {
+                    stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
+                }
+                stack.add(this.getDisplayName() + " v" + this.getVersion().toExtendedString() + ((this.getSignature() != null)?" (" + this.getSignature() + ')':"") + ((this.getState() != null)?" [" + this.getState() + ']':""));
+            }
+        }
+        return stack;
     }
 
     /**

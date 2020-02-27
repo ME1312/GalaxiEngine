@@ -46,6 +46,7 @@ public final class ConsoleWindow extends OutputStream {
     private static final String RESET_VALUE = "\n\u00A0\n\u00A0";
     private ConsoleReader reader;
     private JFrame window;
+    private boolean exit;
     private double scale = 1.0;
     private JPanel panel;
     private JTextField input;
@@ -68,8 +69,9 @@ public final class ConsoleWindow extends OutputStream {
     private boolean open = false;
     private boolean first = true;
     private int fontSize;
-    private long sknownLines = Long.MIN_VALUE;
-    private List<Runnable> spost = new LinkedList<Runnable>();
+    private long sbytes = -Long.MAX_VALUE;
+    private LinkedList<Long> slines = new LinkedList<Long>();
+    private LinkedList<Runnable> spost = new LinkedList<Runnable>();
     private ByteArrayOutputStream scache = new ByteArrayOutputStream();
     private AnsiUIOutputStream stream = HTMLogger.wrap(new OutputStream() {
 
@@ -209,6 +211,7 @@ public final class ConsoleWindow extends OutputStream {
     };
 
     public ConsoleWindow(final ConsoleReader reader, final boolean exit) {
+        this.exit = exit;
         this.reader = reader;
         this.window = new JFrame();
 
@@ -224,8 +227,39 @@ public final class ConsoleWindow extends OutputStream {
         }
 
         JMenuBar jMenu = new JMenuBar();
-        JMenu menu = new JMenu("\u00A0Log\u00A0");
-        JMenuItem item = new JMenuItem("Clear Screen");
+        JMenu menu = new JMenu("\u00A0Application\u00A0");
+        JMenuItem item;
+        if (Galaxi.getInstance().getEngineInfo() != Galaxi.getInstance().getAppInfo()) {
+            item = new JMenuItem("About " + Galaxi.getInstance().getAppInfo().getDisplayName());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent event) {
+                    new AboutWindow(window, Galaxi.getInstance().getAppInfo(), scale).open();
+                }
+            });
+            menu.add(item);
+            item = new JMenuItem("Platform Information");
+        } else item = new JMenuItem("About " + Galaxi.getInstance().getAppInfo().getDisplayName());
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                new PlatformInfoWindow(window, Galaxi.getInstance().getAppInfo(), scale).open();
+            }
+        });
+        menu.add(item);
+        menu.addSeparator();
+        item = new JMenuItem("Shutdown");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                shutdown();
+            }
+        });
+        menu.add(item);
+        jMenu.add(menu);
+
+        menu = new JMenu("\u00A0Console\u00A0");
+        item = new JMenuItem("Clear Screen");
         item.setAccelerator(KeyStroke.getKeyStroke('L', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), true));
         item.addActionListener(new ActionListener() {
             @Override
@@ -244,6 +278,36 @@ public final class ConsoleWindow extends OutputStream {
             }
         });
         menu.add(item);
+        /*
+        menu.addSeparator();
+        item = new JCheckBoxMenuItem("Autosave Preferences");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                // TODO
+            }
+        });
+        menu.add(item);
+        item = new JMenuItem("Save Preferences");
+        item.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), true));
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                // TODO
+            }
+        });
+        menu.add(item);*/
+        if (!exit) {
+            menu.addSeparator();
+            item = new JMenuItem("Close This Window");
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent event) {
+                    GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
+                }
+            });
+            menu.add(item);
+        }
         jMenu.add(menu);
 
         menu = new JMenu("\u00A0Search\u00A0");
@@ -374,52 +438,18 @@ public final class ConsoleWindow extends OutputStream {
         window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName());
         window.setSize((int) (1024 * scale), (int) (575 * scale));
         window.setLocation(
-                (int) ((screen.getWidth() - window.getWidth()) / 2),
-                (int) ((screen.getHeight() - window.getHeight()) / 2)
+                (int) Math.abs((screen.getWidth() - window.getWidth()) / 2),
+                (int) Math.abs((screen.getHeight() - window.getHeight()) / 2)
         );
         window.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Shutdown") {
-                    @Override
-                    public void run() {
-                        try {
-                            if (exit) {
-                                if (Util.<Boolean>reflect(GalaxiEngine.class.getDeclaredField("stopping"), GalaxiEngine.getInstance())) {
-                                    Object[] options = {"Terminate Program", "Run in the Background", "Close This Window"};
-                                    switch (JOptionPane.showOptionDialog(window,
-                                            Galaxi.getInstance().getAppInfo().getDisplayName() + " is shutting down and will close automatically.\n\n" +
-
-                                                    "If this is not happening, for whatever reason,\n" +
-                                                    "you can terminate the program from this screen.\n" +
-                                                    "Terminating a program can cause some undersirable consequences,\n" +
-                                                    "however, such as data loss or corruption.\n\n" +
-
-                                                    "You can also choose to finish running the program in the background,\n" +
-                                                    "but you will not be able to reopen this console window.\n\n" +
-
-                                                    "What would you like to do?\n",
-                                            "End Program",
-                                            JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2])) {
-                                        case JOptionPane.YES_OPTION:
-                                            System.exit(Integer.MAX_VALUE);
-                                            break;
-                                        case JOptionPane.NO_OPTION:
-                                            GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
-                                            break;
-                                    }
-                                } else {
-                                    GalaxiEngine.getInstance().stop();
-                                }
-                            } else {
-                                GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
-                            }
-                        } catch (Exception ex) {
-                            Galaxi.getInstance().getAppInfo().getLogger().error.println(ex);
-                        }
-                    }
-                }.start();
+                if (exit) {
+                    shutdown();
+                } else {
+                    GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
+                }
             }
         });
         window.addComponentListener(new ComponentAdapter() {
@@ -693,14 +723,22 @@ public final class ConsoleWindow extends OutputStream {
     }
 
     private void loadContent() {
+        long sbytes = (slines.size() > 0) ? slines.getFirst() : -Long.MAX_VALUE;
+
+        this.slines.clear();
+        this.sbytes = -Long.MAX_VALUE;
         try (FileInputStream reader = new FileInputStream(FileLogger.getFile())) {
-            long sknownLines = (this.sknownLines <= MAX_SCROLLBACK + 1 + Long.MIN_VALUE)?Long.MIN_VALUE:this.sknownLines - (MAX_SCROLLBACK + 1);
-            this.sknownLines = Long.MIN_VALUE;
+            if (sbytes > -Long.MAX_VALUE) {
+                if (sbytes > 0) {
+                    reader.skip(sbytes);
+                    reader.skip(Long.MAX_VALUE);
+                } else
+                    reader.skip(sbytes + Long.MAX_VALUE);
+            }
 
             int b;
             while ((b = reader.read()) != -1) {
-                if (sknownLines <= this.sknownLines) write(b);
-                else if (b == '\n') this.sknownLines++;
+                write(b);
             }
         } catch (Exception e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
@@ -718,9 +756,13 @@ public final class ConsoleWindow extends OutputStream {
 
             if (b == '\n') stream.write("\u00A0".getBytes("UTF-8"));
             stream.write(b);
+            if (sbytes < Long.MAX_VALUE) ++sbytes;
             if (b == '\n') {
-                sknownLines++;
                 stream.write("\u00A0".getBytes("UTF-8"));
+
+                slines.add(sbytes);
+                while (slines.size() > MAX_SCROLLBACK)
+                    slines.removeFirst();
             }
         } catch (IOException e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
@@ -749,6 +791,44 @@ public final class ConsoleWindow extends OutputStream {
             window.setVisible(false);
         }
         KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keys);
+    }
+
+    private void shutdown() {
+        new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Shutdown") {
+            @Override
+            public void run() {
+                try {
+                    if (Util.<Boolean>reflect(GalaxiEngine.class.getDeclaredField("stopping"), GalaxiEngine.getInstance())) {
+                        Object[] options = {"\u00A0Terminate Program\u00A0", "\u00A0Run in the Background\u00A0", "\u00A0Close This Window\u00A0"};
+                        switch (JOptionPane.showOptionDialog(window,
+                                Galaxi.getInstance().getAppInfo().getDisplayName() + " is shutting down and will close automatically.\n\n" +
+
+                                        "If this is not happening, for whatever reason,\n" +
+                                        "you can terminate the program from this screen.\n" +
+                                        "Terminating a program can cause some undersirable consequences,\n" +
+                                        "however, such as data loss or corruption.\n\n" +
+
+                                        "You can also choose to finish running the program in the background,\u00A0\u00A0\n" +
+                                        "but you will not be able to reopen this console window.\n\n" +
+
+                                        "What would you like to do?\n",
+                                "End Program",
+                                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2])) {
+                            case JOptionPane.YES_OPTION:
+                                System.exit(Integer.MAX_VALUE);
+                                break;
+                            case JOptionPane.NO_OPTION:
+                                GalaxiEngine.getInstance().getConsoleReader().closeConsoleWindow();
+                                break;
+                        }
+                    } else {
+                        GalaxiEngine.getInstance().stop();
+                    }
+                } catch (Exception ex) {
+                    Galaxi.getInstance().getAppInfo().getLogger().error.println(ex);
+                }
+            }
+        }.start();
     }
 
     private void hScroll() {
@@ -922,6 +1002,7 @@ public final class ConsoleWindow extends OutputStream {
     private class AnsiUIOutputStream extends HTMLogger {
         private AnsiUIOutputStream(OutputStream raw, OutputStream wrapped) {
             super(raw, wrapped);
+            nbsp = true;
         }
 
         private void ansi(boolean value) {

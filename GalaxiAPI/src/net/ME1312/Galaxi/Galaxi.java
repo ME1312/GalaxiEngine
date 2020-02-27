@@ -327,9 +327,16 @@ public abstract class Galaxi {
     /**
      * Gets the Runtime Directory
      *
-     * @return Directory
+     * @return Runtime Directory
      */
     public abstract UniversalFile getRuntimeDirectory();
+
+    /**
+     * Gets the AppData Directory
+     *
+     * @return AppData Directory
+     */
+    public abstract UniversalFile getAppDataDirectory();
 
     /**
      * Gets the Galaxi Engine Info

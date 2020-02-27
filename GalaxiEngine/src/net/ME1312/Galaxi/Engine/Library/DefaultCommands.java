@@ -4,15 +4,12 @@ import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Event.GalaxiReloadEvent;
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
-import net.ME1312.Galaxi.Plugin.Command.CompletionHandler;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import net.ME1312.Galaxi.Plugin.PluginManager;
 
-import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -36,47 +33,17 @@ public class DefaultCommands {
             public void command(CommandSender sender, String handle, String[] args) {
                 if (sender.hasPermission("galaxi.command.version")) {
                     if (args.length == 0 || engine.getPluginManager().getPlugins().get(args[0].toLowerCase()) != null) {
-                        String osarch;
-                        if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-                            String arch = System.getenv("PROCESSOR_ARCHITECTURE");
-                            String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
+                        PluginInfo plugin = (args.length > 0)?engine.getPluginManager().getPlugin(args[0].toLowerCase()):engine.getAppInfo();
+                        LinkedList<String> stack = new LinkedList<String>();
 
-                            osarch = arch != null && arch.endsWith("64") || wow64Arch != null && wow64Arch.endsWith("64")?"x64":"x86";
-                        } else if (System.getProperty("os.arch").endsWith("86")) {
-                            osarch = "x86";
-                        } else if (System.getProperty("os.arch").endsWith("64")) {
-                            osarch = "x64";
-                        } else {
-                            osarch = System.getProperty("os.arch");
+                        for (String item : plugin.getPlatformStack()) {
+                            item = "  " + item;
+                            stack.add(item);
                         }
-
-                        String javaarch = null;
-                        switch (System.getProperty("sun.arch.data.model")) {
-                            case "32":
-                                javaarch = "x86";
-                                break;
-                            case "64":
-                                javaarch = "x64";
-                                break;
-                            default:
-                                if (!System.getProperty("sun.arch.data.model").equalsIgnoreCase("unknown"))
-                                    javaarch = System.getProperty("sun.arch.data.model");
-                        }
-
-                        sender.sendMessage(
-                                "These are the platforms and versions that are used to run " + ((args.length == 0)?engine.getAppInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":",
-                                "  " + System.getProperty("os.name") + ((!System.getProperty("os.name").toLowerCase().startsWith("windows"))?' ' + System.getProperty("os.version"):"") + ((osarch != null)?" [" + osarch + ']':"") + ",",
-                                "  Java " + System.getProperty("java.version") + ((javaarch != null)?" [" + javaarch + ']':"") + ",",
-                                "  " + engine.getEngineInfo().getName() + " v" + engine.getEngineInfo().getVersion().toExtendedString() + ((engine.getEngineInfo().getSignature() != null)?" (" + engine.getEngineInfo().getSignature() + ')':"") + ((engine.getEngineInfo() == engine.getAppInfo())?" [Standalone]"+((args.length == 0)?"":","):","));
-                        if (engine.getEngineInfo() != engine.getAppInfo())
-                            sender.sendMessage("  " + engine.getAppInfo().getName() + " v" + engine.getAppInfo().getVersion().toExtendedString() + ((engine.getAppInfo().getSignature() != null)?" (" + engine.getAppInfo().getSignature() + ')':"") + ((args.length == 0)?"":","));
+                        sender.sendMessage(stack.toArray(new String[0]));
 
                         if (args.length > 0) {
-                            PluginInfo plugin = engine.getPluginManager().getPlugin(args[0].toLowerCase());
-                            for (PluginInfo info : searchDependencies(plugin)) {
-                                sender.sendMessage("  " + info.getDisplayName() + " v" + info.getVersion().toExtendedString() + ((info.getSignature() != null)?" (" + info.getSignature() + ')':"") + ((info.getState() != null)?" [" + info.getState() + ']':"") + ',');
-                            }
-                            String title = "  " + plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"");
+                            String title = stack.get(stack.size() - 1);
                             String subtitle = "    by ";
                             int i = 0;
                             for (String author : plugin.getAuthors()) {
@@ -100,7 +67,7 @@ public class DefaultCommands {
                                 }
                                 subtitle += plugin.getWebsite().toString();
                             }
-                            sender.sendMessage(title, subtitle);
+                            sender.sendMessage(subtitle);
                             if (plugin.getDescription() != null) sender.sendMessage("", plugin.getDescription());
                         }
 
@@ -111,7 +78,7 @@ public class DefaultCommands {
                                 if (engine.getEngineInfo().getUpdateChecker() != null) Util.isException(() -> engine.getEngineInfo().getUpdateChecker().run());
                                 if (engine.getEngineInfo() != engine.getAppInfo() && engine.getAppInfo().getUpdateChecker() != null) Util.isException(() -> engine.getAppInfo().getUpdateChecker().run());
                                 if (args.length > 0) {
-                                    for (PluginInfo info : searchDependencies(engine.getPluginManager().getPlugins().get(args[0].toLowerCase()))) if (info.getUpdateChecker() != null) Util.isException(() -> info.getUpdateChecker().run());
+                                    for (PluginInfo info : engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).scanDependencies()) if (info.getUpdateChecker() != null) Util.isException(() -> info.getUpdateChecker().run());
                                     if (engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) Util.isException(() -> engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run());
                                 }
                                 checking = false;
@@ -123,29 +90,6 @@ public class DefaultCommands {
                 } else {
                     sender.sendMessage("You do not have permission to access this command");
                 }
-            }
-
-            private List<PluginInfo> searchDependencies(PluginInfo info) {
-                List<PluginInfo> used = new ArrayList<PluginInfo>();
-                used.add(info);
-                return searchDependencies(info, used);
-            }
-
-            private List<PluginInfo> searchDependencies(PluginInfo info, List<PluginInfo> used) {
-                LinkedList<PluginInfo> output = new LinkedList<PluginInfo>();
-
-                for (PluginInfo.Dependency depend : info.getDependancies()) {
-                    if (engine.getPluginManager().getPlugins().get(depend.getName().toLowerCase()) != null) {
-                        output.addAll(searchDependencies(engine.getPluginManager().getPlugin(depend.getName().toLowerCase()), used));
-                    }
-                }
-
-                if (!used.contains(info)) {
-                    output.add(info);
-                    used.add(info);
-                }
-
-                return output;
             }
         }.autocomplete((sender, handle, args) -> {
             if (args.length <= 1) {
