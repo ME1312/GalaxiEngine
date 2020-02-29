@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Engine.Library.Log;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
-import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Library.Log.LogStream;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Log.StringOutputStream;

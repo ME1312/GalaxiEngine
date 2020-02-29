@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Library;
+package net.ME1312.Galaxi.Library.Container;
 
 /**
  * Container Class

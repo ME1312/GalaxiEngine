@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnCallback;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
-import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Library.Platform;
 import net.ME1312.Galaxi.Library.Util;
 

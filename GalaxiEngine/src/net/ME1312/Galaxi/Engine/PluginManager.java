@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Engine.Library.PluginClassLoader;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
-import net.ME1312.Galaxi.Library.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.Dependency;

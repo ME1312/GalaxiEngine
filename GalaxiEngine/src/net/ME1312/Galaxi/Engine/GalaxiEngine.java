@@ -7,7 +7,7 @@ import net.ME1312.Galaxi.Event.GalaxiStartEvent;
 import net.ME1312.Galaxi.Event.GalaxiStopEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Config.YAMLSection;
-import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Library.Log.LogLevel;
 import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;

@@ -1,14 +1,13 @@
 package net.ME1312.Galaxi.Library.Log;
 
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Container;
-import net.ME1312.Galaxi.Library.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.Container;
+import net.ME1312.Galaxi.Library.Container.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import org.fusesource.jansi.Ansi;
 
 import java.awt.*;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;

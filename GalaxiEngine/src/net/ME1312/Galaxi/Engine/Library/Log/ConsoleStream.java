@@ -2,14 +2,13 @@ package net.ME1312.Galaxi.Engine.Library.Log;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
-import net.ME1312.Galaxi.Library.Container;
+import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Library.Log.StringOutputStream;
 import net.ME1312.Galaxi.Library.Util;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiString;
 import org.jline.reader.LineReader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;

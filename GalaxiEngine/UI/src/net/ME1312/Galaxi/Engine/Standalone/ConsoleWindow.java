@@ -7,7 +7,7 @@ import net.ME1312.Galaxi.Engine.Library.Log.HTMLogger;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;
-import net.ME1312.Galaxi.Library.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.NamedContainer;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
 
