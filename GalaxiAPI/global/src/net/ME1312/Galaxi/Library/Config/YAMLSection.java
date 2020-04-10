@@ -104,7 +104,7 @@ public class YAMLSection extends ObjectMap<String> {
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return yaml.dump(map);
     }
 

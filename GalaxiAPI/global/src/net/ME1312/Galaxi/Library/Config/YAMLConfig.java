@@ -64,7 +64,7 @@ public class YAMLConfig {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public void reload() throws IOException {
+    public synchronized void reload() throws IOException {
         if (file.exists()) {
             InputStream stream = new FileInputStream(file);
             this.config = new YAMLSection((LinkedHashMap<String, ?>) yaml.loadAs(stream, LinkedHashMap.class), null, null, yaml);
@@ -80,10 +80,13 @@ public class YAMLConfig {
      * @throws IOException
      */
     public void save() throws IOException {
-        if (!file.exists()) file.createNewFile();
-        FileWriter writer = new FileWriter(file);
-        yaml.dump(Util.getDespiteException(() -> Util.reflect(ObjectMap.class.getDeclaredField("map"), config), null), writer);
-        writer.close();
+        final YAMLSection config = this.config;
+        synchronized (config) {
+            if (!file.exists()) file.createNewFile();
+            FileWriter writer = new FileWriter(file);
+            yaml.dump(Util.getDespiteException(() -> Util.reflect(ObjectMap.class.getDeclaredField("map"), config), null), writer);
+            writer.close();
+        }
     }
 
     @Override
@@ -102,10 +105,10 @@ public class YAMLConfig {
 
     static DumperOptions getDumperOptions() {
         DumperOptions options = new DumperOptions();
-        options.setAllowUnicode(false);
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        options.setSplitLines(false);
-        options.setIndent(2);
+        Util.isException(() -> options.setAllowUnicode(false));
+        Util.isException(() -> options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK));
+        Util.isException(() -> options.setSplitLines(false));
+        Util.isException(() -> options.setIndent(2));
 
         return options;
     }

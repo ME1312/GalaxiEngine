@@ -134,7 +134,7 @@ public class ObjectMap<K> {
      * @param handle Handle
      * @param value Value
      */
-    public void set(K handle, Object value) {
+    public synchronized void set(K handle, Object value) {
         if (Util.isNull(handle)) throw new NullPointerException();
         map.put(handle, convert(value));
 
@@ -203,7 +203,7 @@ public class ObjectMap<K> {
      *
      * @param handle Handle
      */
-    public void remove(K handle) {
+    public synchronized void remove(K handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
         map.remove(handle);
 

@@ -20,14 +20,14 @@ public class AsyncConsolidator {
     /**
      * Call this before running each task
      */
-    public void reserve() {
+    public synchronized void reserve() {
         ++tasks;
     }
 
     /**
      * Call this after running each task
      */
-    public void release() {
+    public synchronized void release() {
         if (tasks > 0) --tasks;
         if (!done && tasks <= 0) {
             done = true;
