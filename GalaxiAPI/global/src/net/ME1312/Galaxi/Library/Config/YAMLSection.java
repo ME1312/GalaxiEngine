@@ -2,7 +2,6 @@ package net.ME1312.Galaxi.Library.Config;
 
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Util;
-import net.ME1312.Galaxi.Library.Version.Version;
 import org.json.JSONObject;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -14,7 +13,7 @@ import java.util.*;
 /**
  * YAML Config Section Class
  */
-@SuppressWarnings({"unchecked", "unused"})
+@SuppressWarnings({"unchecked", "unused", "rawtypes"})
 public class YAMLSection extends ObjectMap<String> {
     private Yaml yaml;
 
@@ -32,6 +31,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @throws YAMLException
      */
     public YAMLSection(InputStream stream) throws YAMLException {
+        if (Util.isNull(stream)) throw new NullPointerException();
         setAll((LinkedHashMap<String, Object>) (this.yaml = new Yaml(YAMLConfig.getDumperOptions())).loadAs(stream, LinkedHashMap.class));
     }
 
@@ -47,7 +47,7 @@ public class YAMLSection extends ObjectMap<String> {
     }
 
     /**
-     * Creates a YAML Section from String
+     * Creates a YAML Section from a String
      *
      * @param str String
      * @throws YAMLException
@@ -62,11 +62,8 @@ public class YAMLSection extends ObjectMap<String> {
      *
      * @param map Map
      */
-    public YAMLSection(Map<String, ?> map) {
-        if (Util.isNull(map)) throw new NullPointerException();
-        this.yaml = new Yaml(YAMLConfig.getDumperOptions());
-
-        setAll(map);
+    public YAMLSection(Map<? extends String, ?> map) {
+        this(map, new Yaml(YAMLConfig.getDumperOptions()));
     }
 
     /**
@@ -75,7 +72,8 @@ public class YAMLSection extends ObjectMap<String> {
      * @param map Map
      */
     public YAMLSection(ObjectMap<String> map) {
-        this(map.get());
+        super(map);
+        this.yaml = (map instanceof YAMLSection) ? ((YAMLSection) map).yaml : new Yaml(YAMLConfig.getDumperOptions());
     }
 
     /**
@@ -84,28 +82,91 @@ public class YAMLSection extends ObjectMap<String> {
      * @param json JSON
      */
     public YAMLSection(JSONObject json) {
-        if (Util.isNull(json)) throw new NullPointerException();
-        setAll((LinkedHashMap<String, Object>) (this.yaml = new Yaml(YAMLConfig.getDumperOptions())).loadAs(json.toString(4), LinkedHashMap.class));
+        this(json.toString(4));
     }
 
-    YAMLSection(Map<String, ?> map, YAMLSection up, String handle, Yaml yaml) {
+    YAMLSection(Map<? extends String, ?> map, Yaml yaml) {
+        super(map);
         this.yaml = yaml;
+    }
 
-        if (map != null) setAll(map);
+    @Override
+    public YAMLSection clone() {
+        return (YAMLSection) super.clone();
+    }
+
+    @Override
+    protected ObjectMap<String> constructMap(Map<? extends String, ?> map) {
+        return new YAMLSection(map, yaml);
     }
 
     /**
-     * Clone this Map
+     * Get a YAML Section by Handle
      *
-     * @return Map Clone
+     * @param handle Handle
+     * @return Object Map
      */
-    public YAMLSection clone() {
-        return new YAMLSection(map);
+    public YAMLSection getSection(String handle) {
+        return (YAMLSection) super.getMap(handle);
+    }
+
+    /**
+     * Get a YAML Section by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map
+     */
+    public YAMLSection getSection(String handle, Map<? extends String, ?> def) {
+        return (YAMLSection) super.getMap(handle, def);
+    }
+
+    /**
+     * Get a YAML Section by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map
+     */
+    public YAMLSection getSection(String handle, ObjectMap<? extends String> def) {
+        return (YAMLSection) super.getMap(handle, def);
+    }
+
+    /**
+     * Get a YAML Section List by Handle
+     *
+     * @param handle Handle
+     * @return Object Map List
+     */
+    public List<YAMLSection> getSectionList(String handle) {
+        return (List<YAMLSection>) (List) super.getMapList(handle);
+    }
+
+    /**
+     * Get a YAML Section List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map List
+     */
+    public List<YAMLSection> getSectionList(String handle, Collection<? extends Map<? extends String, ?>> def) {
+        return (List<YAMLSection>) (List) super.getMapList(handle, def);
+    }
+
+    /**
+     * Get a YAML Section List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map List
+     */
+    public List<YAMLSection> getSectionList(String handle, List<? extends ObjectMap<? extends String>> def) {
+        return (List<YAMLSection>) (List) super.getMapList(handle, def);
     }
 
     @Override
     public synchronized String toString() {
-        return yaml.dump(map);
+        return yaml.dump(get());
     }
 
     /**
@@ -114,6 +175,6 @@ public class YAMLSection extends ObjectMap<String> {
      * @return JSON
      */
     public JSONObject toJSON() {
-        return new JSONObject(map);
+        return new JSONObject(get());
     }
 }

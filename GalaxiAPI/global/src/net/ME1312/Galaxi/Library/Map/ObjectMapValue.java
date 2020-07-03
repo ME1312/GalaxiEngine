@@ -17,10 +17,8 @@ public class ObjectMapValue<K> {
     K label;
     ObjectMap<K> up;
 
-    ObjectMapValue(Object obj, ObjectMap<K> up, K label) {
+    protected ObjectMapValue(Object obj) {
         this.obj = obj;
-        this.label = label;
-        this.up = up;
     }
 
     /**
@@ -47,7 +45,7 @@ public class ObjectMapValue<K> {
      * @return Object
      */
     public Object asObject() {
-        return obj;
+        return up.simplify(obj);
     }
 
     /**
@@ -56,7 +54,7 @@ public class ObjectMapValue<K> {
      * @return List
      */
     public List<?> asObjectList() {
-        return (List<?>) obj;
+        return (List<?>) up.simplify(obj);
     }
 
     /**
@@ -83,8 +81,7 @@ public class ObjectMapValue<K> {
      * @return Object Map
      */
     public ObjectMap<K> asMap() {
-        if (obj != null) return new ObjectMap((Map<String, ?>) obj, up, label);
-        else return null;
+        return (ObjectMap<K>) obj;
     }
 
     /**
@@ -93,13 +90,7 @@ public class ObjectMapValue<K> {
      * @return Object Map List
      */
     public List<ObjectMap<K>> asMapList() {
-        if (obj != null) {
-            List<ObjectMap<K>> values = new ArrayList<ObjectMap<K>>();
-            for (Map<K, ?> value : (List<? extends Map<K, ?>>) obj) {
-                values.add(new ObjectMap(value, null, null));
-            }
-            return values;
-        } else return null;
+        return (List<ObjectMap<K>>) obj;
     }
 
     /**
@@ -316,7 +307,7 @@ public class ObjectMapValue<K> {
      * @return ObjectMap Status
      */
     public boolean isMap() {
-        return (obj instanceof Map);
+        return (obj instanceof ObjectMap);
     }
 
     /**

@@ -32,10 +32,10 @@ public class YAMLConfig {
         this.yaml = new Yaml(getDumperOptions());
         if (file.exists()) {
             InputStream stream = new FileInputStream(file);
-            this.config = new YAMLSection((LinkedHashMap<String, ?>) yaml.loadAs(stream, LinkedHashMap.class), null, null, yaml);
+            this.config = new YAMLSection((LinkedHashMap<String, ?>) yaml.loadAs(stream, LinkedHashMap.class), yaml);
             stream.close();
         } else {
-            this.config = new YAMLSection(null, null, null, yaml);
+            this.config = new YAMLSection(null, yaml);
         }
     }
 
@@ -67,10 +67,10 @@ public class YAMLConfig {
     public synchronized void reload() throws IOException {
         if (file.exists()) {
             InputStream stream = new FileInputStream(file);
-            this.config = new YAMLSection((LinkedHashMap<String, ?>) yaml.loadAs(stream, LinkedHashMap.class), null, null, yaml);
+            this.config = new YAMLSection((LinkedHashMap<String, ?>) yaml.loadAs(stream, LinkedHashMap.class), yaml);
             stream.close();
         } else {
-            this.config = new YAMLSection(null, null, null, yaml);
+            this.config = new YAMLSection(null, yaml);
         }
     }
 
@@ -84,7 +84,7 @@ public class YAMLConfig {
         synchronized (config) {
             if (!file.exists()) file.createNewFile();
             FileWriter writer = new FileWriter(file);
-            yaml.dump(Util.getDespiteException(() -> Util.reflect(ObjectMap.class.getDeclaredField("map"), config), null), writer);
+            yaml.dump(config.get(), writer);
             writer.close();
         }
     }

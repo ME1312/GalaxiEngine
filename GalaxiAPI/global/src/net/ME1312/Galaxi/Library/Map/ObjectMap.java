@@ -10,17 +10,17 @@ import java.util.*;
  *
  * @param <K> Key Type
  */
-@SuppressWarnings({"unchecked", "unused"})
+@SuppressWarnings({"unchecked", "unused", "rawtypes"})
 public class ObjectMap<K> {
-    protected LinkedHashMap<K, Object> map;
-    K handle = null;
-    ObjectMap<K> up = null;
+    LinkedHashMap<K, ObjectMapValue<K>> map;
+    ObjectMap<K> up;
+    K label;
 
     /**
      * Creates an empty Object Map
      */
     public ObjectMap() {
-        this.map = new LinkedHashMap<>();
+        this((Map<K, ?>) null);
     }
 
     /**
@@ -29,18 +29,18 @@ public class ObjectMap<K> {
      * @param map Map
      */
     public ObjectMap(Map<? extends K, ?> map) {
-        if (Util.isNull(map)) throw new NullPointerException();
         this.map = new LinkedHashMap<>();
-
-        setAll(map);
+        if (map != null) setAll(map);
     }
 
-    ObjectMap(Map<? extends K, ?> map, ObjectMap<K> up, K handle) {
-        this.map = new LinkedHashMap<K, Object>();
-        this.handle = handle;
-        this.up = up;
-
-        if (map != null) setAll(map);
+    /**
+     * Creates an Object Map from Map Contents
+     *
+     * @param map Map
+     */
+    @SuppressWarnings("CopyConstructorMissesField")
+    public ObjectMap(ObjectMap<? extends K> map) {
+        this(map.map);
     }
 
 
@@ -50,9 +50,26 @@ public class ObjectMap<K> {
      * @return Object Map
      */
     public Map<K, ?> get() {
-        LinkedHashMap<K, Object> map = new LinkedHashMap<K, Object>();
-        map.putAll(this.map);
-        return map;
+        return (Map<K, ?>) simplify(this);
+    }
+
+    /**
+     * Clone this Map
+     *
+     * @return Map Clone
+     */
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public ObjectMap<K> clone() {
+        return constructMap(map);
+    }
+
+    /**
+     * Go up a level in the config (or null if this is the top layer)
+     *
+     * @return Super Map
+     */
+    public ObjectMap<K> getParent() {
+        return up;
     }
 
     /**
@@ -80,11 +97,16 @@ public class ObjectMap<K> {
      * @return Values
      */
     public Collection<ObjectMapValue<K>> getValues() {
-        List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
-        for (K value : map.keySet()) {
-            values.add(new ObjectMapValue<K>(map.get(value), this, value));
-        }
-        return values;
+        return map.values();
+    }
+
+    /**
+     * Get the Entries
+     *
+     * @return Entries
+     */
+    public Collection<Map.Entry<K, ObjectMapValue<K>>> getEntries() {
+        return map.entrySet();
     }
 
     /**
@@ -97,32 +119,89 @@ public class ObjectMap<K> {
         return map.keySet().contains(handle);
     }
 
-    private Object convert(Object value) {
+    /**
+     * Wrap a Map in an ObjectMap
+     *
+     * @param map Map
+     * @return ObjectMap
+     */
+    protected ObjectMap<K> constructMap(Map<? extends K, ?> map) {
+        return new ObjectMap<>(map);
+    }
+
+    /**
+     * Wrap an Object in an ObjectMapValue
+     *
+     * @param value Object
+     * @return ObjectMapValue
+     */
+    protected ObjectMapValue<K> constructValue(Object value) {
+        return new ObjectMapValue<>(value);
+    }
+
+    /**
+     * Convert from raw formatting
+     *
+     * @param value Value to convert
+     * @return Converted Value
+     */
+    protected Object complicate(Object value) {
         if (value == null) {
             return null;
         } else if (value instanceof Map) {
-            List<Object> list = new ArrayList<Object>();
-            list.addAll(((Map<Object, Object>) value).keySet());
-            for (Object key : list) ((Map<Object, Object>) value).put(key, convert(((Map<Object, Object>) value).get(key)));
-            return value;
+            return constructMap((Map) value);
         } else if (value instanceof ObjectMap) {
-            ((ObjectMap) value).up = this;
-            ((ObjectMap) value).handle = handle;
-            return ((ObjectMap) value).map;
-        } else if (value instanceof ObjectMapValue) {
-            return ((ObjectMapValue) value).asObject();
+            if (((ObjectMap) value).up != this && (((ObjectMap) value).up != null || ((ObjectMap) value).label != null))
+                return ((ObjectMap) value).clone(); // Clone sub-maps that belong to other maps
+            return value;
         } else if (value instanceof Collection) {
-            List<Object> list = new ArrayList<Object>();
-            for (Object val : (Collection<Object>) value) list.add(convert(val));
+            List<Object> list = new LinkedList<>();
+            for (Object val : (Collection<Object>) value) list.add(complicate(val));
             return list;
         } else if (value.getClass().isArray()) {
-            List<Object> list = new ArrayList<Object>();
-            for (int i = 0; i < ((Object[]) value).length; i++) list.add(convert(((Object[]) value)[i]));
+            List<Object> list = new LinkedList<Object>();
+            for (int i = 0; i < ((Object[]) value).length; i++) list.add(complicate(((Object[]) value)[i]));
             return list;
         } else if (value instanceof UUID) {
             return value.toString();
         } else if (value instanceof Version) {
             return ((Version) value).toFullString();
+        } else {
+            return value;
+        }
+    }
+    private ObjectMapValue<K> wrap(K key, Object value) {
+        ObjectMapValue<K> wrapped = constructValue(complicate((value instanceof ObjectMapValue) ? ((ObjectMapValue) value).obj : value));
+        if (wrapped.isMap()) {
+            wrapped.asMap().up = this;
+            wrapped.asMap().label = key;
+        }
+        wrapped.up = this;
+        wrapped.label = key;
+        return wrapped;
+    }
+
+    /**
+     * Convert to raw formatting
+     *
+     * @param value Value to convert
+     * @return Converted Value
+     */
+    protected Object simplify(Object value) {
+        if (value == null) {
+            return null;
+        } else if (value instanceof ObjectMap) {
+            LinkedHashMap<Object, Object> map = new LinkedHashMap<>();
+            for (Map.Entry<Object, ObjectMapValue> e : (Collection<Map.Entry<Object, ObjectMapValue>>) ((ObjectMap) value).getEntries()) {
+                map.put(e.getKey(), (e.getValue() == null) ? null : simplify(e.getValue().obj));
+            }
+            return map;
+        } else if (value instanceof ObjectMapValue) {
+            return simplify(((ObjectMapValue) value).obj);
+        } else if (value instanceof Collection) {
+            List<Object> list = new LinkedList<>();
+            for (Object val : (Collection<Object>) value) list.add(simplify(val));
+            return list;
         } else {
             return value;
         }
@@ -136,11 +215,7 @@ public class ObjectMap<K> {
      */
     public synchronized void set(K handle, Object value) {
         if (Util.isNull(handle)) throw new NullPointerException();
-        map.put(handle, convert(value));
-
-        if (this.handle != null && this.up != null) {
-            this.up.set(this.handle, this);
-        }
+        map.put(handle, wrap(handle, value));
     }
 
     /**
@@ -206,10 +281,6 @@ public class ObjectMap<K> {
     public synchronized void remove(K handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
         map.remove(handle);
-
-        if (this.handle != null && this.up != null) {
-            this.up.set(this.handle, this);
-        }
     }
 
     /**
@@ -220,24 +291,6 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Clone this Map
-     *
-     * @return Map Clone
-     */
-    public ObjectMap<K> clone() {
-        return new ObjectMap(map, null, null);
-    }
-
-    /**
-     * Go up a level in the config (or null if this is the top layer)
-     *
-     * @return Super Section
-     */
-    public ObjectMap<K> getParent() {
-        return up;
-    }
-
-    /**
      * Get an Object by Handle
      *
      * @param handle Handle
@@ -245,7 +298,7 @@ public class ObjectMap<K> {
      */
     public ObjectMapValue<K> get(K handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
-        return new ObjectMapValue<K>(map.get(handle), this, handle);
+        return map.get(handle);
     }
 
     /**
@@ -257,7 +310,7 @@ public class ObjectMap<K> {
      */
     public ObjectMapValue<K> get(K handle, Object def) {
         if (Util.isNull(handle)) throw new NullPointerException();
-        return new ObjectMapValue<K>((map.get(handle) != null)?map.get(handle):def, this, handle);
+        return (map.get(handle) != null)? map.get(handle):wrap(handle, def);
     }
 
     /**
@@ -267,9 +320,9 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object
      */
-    public ObjectMapValue<K> get(K handle, ObjectMapValue def) {
+    public ObjectMapValue<K> get(K handle, ObjectMapValue<K> def) {
         if (Util.isNull(handle)) throw new NullPointerException();
-        return new ObjectMapValue<K>((map.get(handle) != null)?map.get(handle):def.asObject(), this, handle);
+        return (map.get(handle) != null)? map.get(handle):def;
     }
 
     /**
@@ -283,7 +336,7 @@ public class ObjectMap<K> {
         if (map.get(handle) != null) {
             List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
             for (Object value : (List<?>) map.get(handle)) {
-                values.add(new ObjectMapValue<K>(value, null, null));
+                values.add(wrap(null, value));
             }
             return values;
         } else {
@@ -305,7 +358,7 @@ public class ObjectMap<K> {
         } else if (def != null) {
             List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
             for (Object value : def) {
-                values.add(new ObjectMapValue<K>(value, null, null));
+                values.add(wrap(null, value));
             }
             return values;
         } else return null;
@@ -318,16 +371,12 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object List
      */
-    public List<ObjectMapValue<K>> getList(K handle, List<? extends ObjectMapValue<? extends K>> def) {
+    public List<ObjectMapValue<K>> getList(K handle, List<? extends ObjectMapValue<K>> def) {
         if (Util.isNull(handle)) throw new NullPointerException();
         if (map.get(handle) != null) {
             return getList(handle);
         } else if (def != null) {
-            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
-            for (ObjectMapValue<? extends K> value : def) {
-                values.add(new ObjectMapValue<K>(value.asObject(), null, null));
-            }
-            return values;
+            return (List<ObjectMapValue<K>>) def;
         } else return null;
     }
 
@@ -445,7 +494,11 @@ public class ObjectMap<K> {
      */
     public ObjectMap<K> getMap(K handle, ObjectMap<? extends K> def) {
         if (Util.isNull(handle)) throw new NullPointerException();
-        return (map.get(handle) != null)?get(handle).asMap():((def != null)?new ObjectMap(def.get(), this, handle):null);
+        if (map.get(handle) != null) {
+            return getMap(handle);
+        } else if (def != null) {
+            return (ObjectMap<K>) def;
+        } else return null;
     }
 
     /**
@@ -481,11 +534,7 @@ public class ObjectMap<K> {
         if (map.get(handle) != null) {
             return get(handle).asMapList();
         } else if (def != null) {
-            List<ObjectMap<K>> values = new ArrayList<ObjectMap<K>>();
-            for (ObjectMap<? extends K> value : def) {
-                values.add(new ObjectMap((value == null)?null:value.get(), null, null));
-            }
-            return values;
+            return (List<ObjectMap<K>>) def;
         } else return null;
     }
 
@@ -944,5 +993,11 @@ public class ObjectMap<K> {
         } else {
             return super.equals(object);
         }
+    }
+
+    @Override
+    public String toString() {
+        if (map != null) return map.toString();
+        else return "null";
     }
 }
