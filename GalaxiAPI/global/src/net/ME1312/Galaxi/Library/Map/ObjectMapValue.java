@@ -40,6 +40,21 @@ public class ObjectMapValue<K> {
     }
 
     /**
+     * Get List
+     *
+     * @return List
+     */
+    public List<ObjectMapValue<K>> asList() {
+        if (obj != null) {
+            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
+            for (Object value : (List<?>) obj) {
+                values.add(up.wrap(null, value));
+            }
+            return values;
+        } else return null;
+    }
+
+    /**
      * Get Object
      *
      * @return Object
@@ -49,7 +64,7 @@ public class ObjectMapValue<K> {
     }
 
     /**
-     * Get Object as List
+     * Get Object as Object List
      *
      * @return List
      */
@@ -67,7 +82,7 @@ public class ObjectMapValue<K> {
     }
 
     /**
-     * Get Object as List
+     * Get Object as Boolean List
      *
      * @return List
      */

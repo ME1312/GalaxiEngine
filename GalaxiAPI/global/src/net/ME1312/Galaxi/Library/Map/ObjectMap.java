@@ -170,7 +170,7 @@ public class ObjectMap<K> {
             return value;
         }
     }
-    private ObjectMapValue<K> wrap(K key, Object value) {
+    ObjectMapValue<K> wrap(K key, Object value) {
         ObjectMapValue<K> wrapped = constructValue(complicate((value instanceof ObjectMapValue) ? ((ObjectMapValue) value).obj : value));
         if (wrapped.isMap()) {
             wrapped.asMap().up = this;
@@ -333,15 +333,7 @@ public class ObjectMap<K> {
      */
     public List<ObjectMapValue<K>> getList(K handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
-        if (map.get(handle) != null) {
-            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
-            for (Object value : (List<?>) map.get(handle)) {
-                values.add(wrap(null, value));
-            }
-            return values;
-        } else {
-            return null;
-        }
+        return map.get(handle).asList();
     }
 
     /**
