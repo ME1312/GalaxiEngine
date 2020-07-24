@@ -145,7 +145,7 @@ public final class Logger {
     }
 
     private static void log(boolean COLOR_LEVELS) {
-        long refresh = TimeUnit.SECONDS.toNanos(1) / Util.getDespiteException(() -> GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate(), 30);
+        long refresh = TimeUnit.SECONDS.toNanos(1) / Math.max(Util.getDespiteException(() -> GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate(), 30), 30);
         long refreshMillis = (long) Math.floor(refresh / 1000000d);
         int refreshNanos = (int) (refresh - (refreshMillis * 1000000));
 
