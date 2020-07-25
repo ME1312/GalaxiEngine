@@ -12,6 +12,7 @@ import java.util.*;
  */
 @SuppressWarnings({"unchecked", "unused", "rawtypes"})
 public class ObjectMap<K> {
+    private static final Object x = null;
     LinkedHashMap<K, ObjectMapValue<K>> map;
     ObjectMap<K> up;
     K label;
@@ -379,7 +380,7 @@ public class ObjectMap<K> {
      * @return Object
      */
     public Object getObject(K handle) {
-        return get(handle).asObject();
+        return get(handle, x).asObject();
     }
 
     /**
@@ -400,7 +401,7 @@ public class ObjectMap<K> {
      * @return Object List
      */
     public List<?> getObjectList(K handle) {
-        return get(handle).asObjectList();
+        return get(handle, x).asObjectList();
     }
 
     /**
@@ -421,7 +422,7 @@ public class ObjectMap<K> {
      * @return Boolean
      */
     public Boolean getBoolean(K handle) {
-        return get(handle).asBoolean();
+        return get(handle, x).asBoolean();
     }
 
     /**
@@ -442,7 +443,7 @@ public class ObjectMap<K> {
      * @return Boolean List
      */
     public List<Boolean> getBooleanList(K handle) {
-        return get(handle).asBooleanList();
+        return get(handle, x).asBooleanList();
     }
 
     /**
@@ -463,7 +464,7 @@ public class ObjectMap<K> {
      * @return Object Map
      */
     public ObjectMap<K> getMap(K handle) {
-        return get(handle).asMap();
+        return get(handle, x).asMap();
     }
 
     /**
@@ -500,7 +501,7 @@ public class ObjectMap<K> {
      * @return Object Map List
      */
     public List<ObjectMap<K>> getMapList(K handle) {
-        return get(handle).asMapList();
+        return get(handle, x).asMapList();
     }
 
     /**
@@ -537,7 +538,7 @@ public class ObjectMap<K> {
      * @return Double
      */
     public Double getDouble(K handle) {
-        return get(handle).asDouble();
+        return get(handle, x).asDouble();
     }
 
     /**
@@ -558,7 +559,7 @@ public class ObjectMap<K> {
      * @return Double List
      */
     public List<Double> getDoubleList(K handle) {
-        return get(handle).asDoubleList();
+        return get(handle, x).asDoubleList();
     }
 
     /**
@@ -579,7 +580,7 @@ public class ObjectMap<K> {
      * @return Float
      */
     public Float getFloat(K handle) {
-        return get(handle).asFloat();
+        return get(handle, x).asFloat();
     }
 
     /**
@@ -600,7 +601,7 @@ public class ObjectMap<K> {
      * @return Float List
      */
     public List<Float> getFloatList(K handle) {
-        return get(handle).asFloatList();
+        return get(handle, x).asFloatList();
     }
 
     /**
@@ -621,7 +622,7 @@ public class ObjectMap<K> {
      * @return Integer
      */
     public Integer getInt(K handle) {
-        return get(handle).asInt();
+        return get(handle, x).asInt();
     }
 
     /**
@@ -642,7 +643,7 @@ public class ObjectMap<K> {
      * @return Integer List
      */
     public List<Integer> getIntList(K handle) {
-        return get(handle).asIntList();
+        return get(handle, x).asIntList();
     }
 
     /**
@@ -663,7 +664,7 @@ public class ObjectMap<K> {
      * @return Long
      */
     public Long getLong(K handle) {
-        return get(handle).asLong();
+        return get(handle, x).asLong();
     }
 
     /**
@@ -684,7 +685,7 @@ public class ObjectMap<K> {
      * @return Long List
      */
     public List<Long> getLongList(K handle) {
-        return get(handle).asLongList();
+        return get(handle, x).asLongList();
     }
 
     /**
@@ -695,7 +696,7 @@ public class ObjectMap<K> {
      * @return Long List
      */
     public List<Long> getLongList(K handle, List<Long> def) {
-        return get(handle).asLongList();
+        return get(handle, def).asLongList();
     }
 
     /**
@@ -705,7 +706,7 @@ public class ObjectMap<K> {
      * @return Short
      */
     public Short getShort(K handle) {
-        return get(handle).asShort();
+        return get(handle, x).asShort();
     }
 
     /**
@@ -726,7 +727,7 @@ public class ObjectMap<K> {
      * @return Short List
      */
     public List<Short> getShortList(K handle) {
-        return get(handle).asShortList();
+        return get(handle, x).asShortList();
     }
 
     /**
@@ -737,7 +738,7 @@ public class ObjectMap<K> {
      * @return Short List
      */
     public List<Short> getShortList(K handle, List<Short> def) {
-        return get(handle).asShortList();
+        return get(handle, def).asShortList();
     }
 
     /**
@@ -747,7 +748,7 @@ public class ObjectMap<K> {
      * @return Unparsed String
      */
     public String getRawString(K handle) {
-        return get(handle).asRawString();
+        return get(handle, x).asRawString();
     }
 
     /**
@@ -768,7 +769,7 @@ public class ObjectMap<K> {
      * @return Unparsed String List
      */
     public List<String> getRawStringList(K handle) {
-        return get(handle).asRawStringList();
+        return get(handle, x).asRawStringList();
     }
 
     /**
@@ -789,7 +790,7 @@ public class ObjectMap<K> {
      * @return String
      */
     public String getString(K handle) {
-        return get(handle).asString();
+        return get(handle, x).asString();
     }
 
     /**
@@ -810,7 +811,7 @@ public class ObjectMap<K> {
      * @return String List
      */
     public List<String> getStringList(K handle) {
-        return get(handle).asStringList();
+        return get(handle, x).asStringList();
     }
 
     /**
@@ -831,7 +832,7 @@ public class ObjectMap<K> {
      * @return UUID
      */
     public UUID getUUID(K handle) {
-        return get(handle).asUUID();
+        return get(handle, x).asUUID();
     }
 
     /**
@@ -852,7 +853,7 @@ public class ObjectMap<K> {
      * @return UUID List
      */
     public List<UUID> getUUIDList(K handle) {
-        return get(handle).asUUIDList();
+        return get(handle, x).asUUIDList();
     }
 
     /**
@@ -873,7 +874,7 @@ public class ObjectMap<K> {
      * @return Version
      */
     public Version getVersion(K handle) {
-        return get(handle).asVersion();
+        return get(handle, x).asVersion();
     }
 
     /**
@@ -894,7 +895,7 @@ public class ObjectMap<K> {
      * @return Version List
      */
     public List<Version> getVersionList(K handle) {
-        return get(handle).asVersionList();
+        return get(handle, x).asVersionList();
     }
 
     /**
@@ -915,7 +916,7 @@ public class ObjectMap<K> {
      * @return Object Null Status
      */
     public boolean isNull(K handle) {
-        return get(handle).isNull();
+        return get(handle, x).isNull();
     }
 
     /**
@@ -925,7 +926,7 @@ public class ObjectMap<K> {
      * @return Object Boolean Status
      */
     public boolean isBoolean(K handle) {
-        return get(handle).isBoolean();
+        return get(handle, x).isBoolean();
     }
 
     /**
@@ -935,7 +936,7 @@ public class ObjectMap<K> {
      * @return Object Map Status
      */
     public boolean isMap(K handle) {
-        return get(handle).isMap();
+        return get(handle, x).isMap();
     }
 
     /**
@@ -945,7 +946,7 @@ public class ObjectMap<K> {
      * @return Object List Status
      */
     public boolean isList(K handle) {
-        return get(handle).isList();
+        return get(handle, x).isList();
     }
 
     /**
@@ -955,7 +956,7 @@ public class ObjectMap<K> {
      * @return Number Status
      */
     public boolean isNumber(K handle) {
-        return get(handle).isNumber();
+        return get(handle, x).isNumber();
     }
 
     /**
@@ -965,7 +966,7 @@ public class ObjectMap<K> {
      * @return Object String Status
      */
     public boolean isString(K handle) {
-        return get(handle).isString();
+        return get(handle, x).isString();
     }
 
     /**
@@ -975,7 +976,7 @@ public class ObjectMap<K> {
      * @return Object UUID Status
      */
     public boolean isUUID(K handle) {
-        return get(handle).isUUID();
+        return get(handle, x).isUUID();
     }
 
     @Override
