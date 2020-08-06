@@ -153,15 +153,25 @@ public class ConsoleReader {
 
     private void read() {
         try {
-            String line;
-            while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
-                if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
-                input(line);
-            }
+            boolean interrupted = false;
+            do {
+                try {
+                    String line;
+                    while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
+                        if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
+                        input(line);
+                    }
+                } catch (UserInterruptException e) {
+                    if (!interrupted) {
+                        interrupted = true;
+                        new Thread(() -> {
+                            engine.getAppInfo().getLogger().warn.println("Interrupt Received");
+                            engine.stop();
+                        }, Galaxi.getInstance().getEngineInfo().getName() + "::Process_Interrupt").start();
+                    }
+                }
+            } while (running.get());
         } catch (IOError e) {
-        } catch (UserInterruptException e) {
-            engine.getAppInfo().getLogger().warn.println("Interrupt Received");
-            engine.stop();
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }

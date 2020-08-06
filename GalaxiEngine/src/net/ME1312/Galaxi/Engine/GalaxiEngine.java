@@ -229,14 +229,13 @@ public class GalaxiEngine extends Galaxi {
 
     private boolean stopping = false;
     private void exit(int code) {
-        running.set(false);
-
         if (onStop != null) try {
             onStop.run();
         } catch (Throwable e) {
             app.getLogger().error.println(e);
         }
 
+        running.set(false);
         Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
 
         System.exit(code);

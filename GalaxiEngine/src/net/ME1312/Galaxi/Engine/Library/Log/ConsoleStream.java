@@ -31,8 +31,7 @@ public class ConsoleStream extends StringOutputStream {
     @Override
     public void write(String s) {
         try {
-            getWindow();
-            if (window != null) {
+            if (getWindow() != null) {
                 window.write(s.getBytes(StandardCharsets.UTF_8));
             }
 
@@ -47,39 +46,15 @@ public class ConsoleStream extends StringOutputStream {
                     buffer.append(s);
                 }
 
-                getThread();
-                Container<Boolean> running = Util.reflect(GalaxiEngine.class.getDeclaredField("running"), GalaxiEngine.getInstance());
-                if (running.get() && thread.isAlive()) jline.callWidget(LineReader.CLEAR);
-
                 if (USE_ANSI.def()) {
-                    jline.getTerminal().writer().print(buffer.toString().replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
-                } else jline.getTerminal().writer().print((String) new AnsiString(buffer.toString()).getPlain());
-                if (running.get() && thread.isAlive()) {
-                    jline.callWidget(LineReader.REDRAW_LINE);
-                    jline.callWidget(LineReader.REDISPLAY);
-                }
+                    jline.printAbove(buffer.toString().replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
+                } else jline.printAbove((String) new AnsiString(buffer.toString()).getPlain());
 
                 jline.getTerminal().flush();
             } else {
                 buffer.append(s);
             }
         } catch (Exception e) {}
-    }
-
-    private static Thread thread;
-    private static Thread getThread() {
-        if (thread == null) {
-            ConsoleReader reader = GalaxiEngine.getInstance().getConsoleReader();
-            if (reader != null) try {
-                Field f = ConsoleReader.class.getDeclaredField("thread");
-                f.setAccessible(true);
-                if (f.get(reader) != null) {
-                    thread = (Thread) f.get(reader);
-                }
-                f.setAccessible(false);
-            } catch (Exception e) {}
-        }
-        return thread;
     }
 
     private static OutputStream window;

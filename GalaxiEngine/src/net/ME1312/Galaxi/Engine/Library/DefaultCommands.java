@@ -244,7 +244,7 @@ public class DefaultCommands {
             @Override
             public void command(CommandSender sender, String handle, String[] args) {
                 if (sender.hasPermission("galaxi.command.exit")) {
-                    engine.stop();
+                    new Thread(engine::stop, Galaxi.getInstance().getEngineInfo().getName() + "::CMD_Shutdown").start();
                 } else {
                     sender.sendMessage("You do not have permission to access this command");
                 }
