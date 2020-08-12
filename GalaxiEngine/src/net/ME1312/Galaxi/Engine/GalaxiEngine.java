@@ -37,7 +37,7 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 /**
  * Galaxi Engine Main Class
  */
-@App(name = "GalaxiEngine", version = "3.3.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@App(name = "GalaxiEngine", version = "3.3.1a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 

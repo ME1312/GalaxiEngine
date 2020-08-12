@@ -4,6 +4,7 @@ import net.ME1312.Galaxi.Library.Util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.MessageFormat;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
@@ -43,29 +44,12 @@ public class LogTranslator extends Handler {
             }
 
             if (stream != null) {
-                String message = record.getMessage();
-                int i = 0;
-                if (record.getParameters() != null) for (Object obj : record.getParameters()) {// Parse Parameters
-                    String value = convert(obj);
+                String message = (record.getParameters() == null)? record.getMessage() : MessageFormat.format(record.getMessage(), record.getParameters());
 
-                    boolean logged = false;
-                    if (message.contains("{" + i + "}")) { // Write Parameters
-                        message = message.replace("{" + i + "}", value);
-                        logged = true;
-                    } if (message.contains("{}")) {
-                        message = message.replaceFirst("\\{}", value);
-                        logged = true;
-                    } if (!logged) {
-                        message += "\n" + value;
-                    }
-                    i++;
-                }
-                if (record.getThrown() != null) {
-                    message += "\n" + convert(record.getThrown());
-                }
-
-                message = message.replace("\r", ""); // Remove carriage returns (has special meaning in the Galaxi)
-                for (String m : ((message.contains("\n"))?message.split("\\n"):new String[]{ message })) stream.println(m); // Properly format new lines (if they exist)
+                message = message.replace("\r", ""); // Remove carriage returns (they have special meaning in Galaxi)
+                stream.println(message);
+                if (record.getThrown() != null)
+                    stream.println(record.getThrown());
             }
         }
     }

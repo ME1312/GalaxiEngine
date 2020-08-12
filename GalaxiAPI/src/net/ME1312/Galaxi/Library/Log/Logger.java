@@ -179,15 +179,11 @@ public final class Logger {
                                     case '\r':
                                         terminate_with_prefix = true;
                                         break;
+                                    case '\t':
+                                        c = ' ';
+                                        message.append("   ");
                                     default:
-                                        switch (c) {
-                                            case '\t':
-                                                message.append("    ");
-                                                break;
-                                            default:
-                                                message.appendCodePoint(c);
-                                                break;
-                                        }
+                                        message.appendCodePoint(c);
                                         terminate = false;
                                         terminate_with_prefix = false;
                                         break;

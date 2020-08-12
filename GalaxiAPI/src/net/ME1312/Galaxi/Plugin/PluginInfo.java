@@ -405,14 +405,13 @@ public class PluginInfo implements ExtraDataHandler {
                 engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getSignature() != null)?" (" + engine.getSignature() + ')':"") + ((engine == app)?" [Standalone]"+((engine == this)?"":","):",")
         ));
 
-        if (engine != this) {
+        if (engine != app)
             stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getSignature() != null)?" (" + app.getSignature() + ')':"") + ((app == this)?"":","));
-            if (app != this) {
-                for (PluginInfo plugin : scanDependencies()) {
-                    stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
-                }
-                stack.add(this.getDisplayName() + " v" + this.getVersion().toExtendedString() + ((this.getSignature() != null)?" (" + this.getSignature() + ')':"") + ((this.getState() != null)?" [" + this.getState() + ']':""));
+        if (app != this) {
+            for (PluginInfo plugin : scanDependencies()) {
+                stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
             }
+            stack.add(this.getDisplayName() + " v" + this.getVersion().toExtendedString() + ((this.getSignature() != null)?" (" + this.getSignature() + ')':"") + ((this.getState() != null)?" [" + this.getState() + ']':""));
         }
         return stack;
     }

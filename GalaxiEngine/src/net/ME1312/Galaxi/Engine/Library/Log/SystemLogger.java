@@ -23,6 +23,7 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.COLOR_LOG_LEVELS;
  */
 public final class SystemLogger extends OutputStream {
     private static LineReader jline;
+    private static Container<Boolean> jstatus;
     private HashMap<String, LogStream> last = new HashMap<String, LogStream>();
     private boolean error;
 
@@ -30,11 +31,12 @@ public final class SystemLogger extends OutputStream {
         this.error = level;
     }
 
-    private static void start(LineReader jline) throws Exception {
+    private static void start(Container<OutputStream> window, LineReader jline, Container<Boolean> jstatus) throws Exception {
         if (Util.isNull(jline)) throw new NullPointerException();
         SystemLogger.jline = jline;
+        SystemLogger.jstatus = jstatus;
 
-        Util.<Container<StringOutputStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new FileLogger(new ConsoleStream(jline)));
+        Util.<Container<StringOutputStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new FileLogger(new ConsoleStream(window, jline)));
         Util.reflect(Logger.class.getDeclaredMethod("log", boolean.class), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.get()));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
@@ -77,8 +79,10 @@ public final class SystemLogger extends OutputStream {
         }
 
         Util.reflect(FileLogger.class.getDeclaredMethod("stop"), null);
-        jline.getTerminal().writer().println();
-        jline.getTerminal().writer().flush();
+        if (jstatus.get()) {
+            jline.callWidget(LineReader.CLEAR);
+            jline.getTerminal().flush();
+        }
     }
 }
 

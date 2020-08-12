@@ -32,10 +32,11 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
  */
 public class ConsoleReader {
     private Container<Boolean> running;
+    private Container<Boolean> jstatus;
     private LineReader jline;
     private Parser parser;
     private Thread thread;
-    private OutputStream window;
+    private Container<OutputStream> window;
     private Callback<String> chat = null;
     private GalaxiEngine engine;
 
@@ -52,6 +53,7 @@ public class ConsoleReader {
         TerminalBuilder jtb = TerminalBuilder.builder();
         if (!USE_JLINE.def()) jtb.dumb(true);
         if (!USE_ANSI.def()) jtb.jansi(false);
+        this.jstatus = new Container<>(false);
         this.jline = LineReaderBuilder.builder()
                 .appName(engine.getAppInfo().getName())
                 .terminal(jtb.build())
@@ -62,8 +64,9 @@ public class ConsoleReader {
                 .completer((reader, line, list) -> {
                     for (String s : ConsoleReader.this.complete(ConsoleCommandSender.get(), (ParsedCommand) line)) list.add(new Candidate(s));
                 }).build();
+        window = new Container<>(null);
         thread = new Thread(this::read, Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
-        Util.reflect(SystemLogger.class.getDeclaredMethod("start", LineReader.class), null, jline);
+        Util.reflect(SystemLogger.class.getDeclaredMethod("start", Container.class, LineReader.class, Container.class), null, window, jline, jstatus);
         try {
             if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.get() && System.console() == null)) {
                 openConsoleWindow(!(SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") && System.console() != null));
@@ -89,15 +92,16 @@ public class ConsoleReader {
      */
     public void openConsoleWindow(boolean exit) {
         if (!GraphicsEnvironment.isHeadless())
-            window = Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(ConsoleReader.class, boolean.class).newInstance(this, exit), null);
+            window.set(Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(ConsoleReader.class, boolean.class).newInstance(this, exit), null));
     }
 
     /**
      * Close the Console Window
      */
     public void closeConsoleWindow() {
-        if (window != null) Util.isException(() -> window.close());
-        window = null;
+        OutputStream window;
+        if ((window = this.window.get()) != null) Util.isException(window::close);
+        this.window.set(null);
     }
 
     /**
@@ -154,12 +158,15 @@ public class ConsoleReader {
     private void read() {
         try {
             boolean interrupted = false;
+            jstatus.set(true);
             do {
                 try {
                     String line;
                     while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
                         if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
+                        jstatus.set(false);
                         input(line);
+                        jstatus.set(true);
                     }
                 } catch (UserInterruptException e) {
                     if (!interrupted) {
@@ -175,6 +182,7 @@ public class ConsoleReader {
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
+        jstatus.set(false);
     }
     private void input(String line) {
         if (Util.isNull(line)) throw new NullPointerException();

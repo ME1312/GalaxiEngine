@@ -75,52 +75,56 @@ public final class LogStream {
         Logger.messages.add(new NamedContainer<LogStream, String>(this, str));
     }
 
-    @SuppressWarnings({"unchecked", "StringConcatenationInsideStringBufferAppend"})
+    @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
     private String convert(TextElement original) {
         StringBuilder message = new StringBuilder();
-        ConsoleTextElement element = new ConsoleTextElement(original.toRaw());
-        try {
-            for (TextElement e : Util.<List<TextElement>>reflect(TextElement.class.getDeclaredField("before"), element)) message.append(convert(e));
-        } catch (Throwable e) {
-            getLogger().error.println(e);
-        }
+        if (original != null) {
+            ConsoleTextElement element = new ConsoleTextElement(original.toRaw());
+            try {
+                for (TextElement e : Util.<List<TextElement>>reflect(TextElement.class.getDeclaredField("before"), element)) message.append(convert(e));
+            } catch (Throwable e) {
+                getLogger().error.println(e);
+            }
 
-        if (element.bold()) message.append("\u001B[1m");
-        if (element.italic()) message.append("\u001B[3m");
-        if (element.underline()) message.append("\u001B[4m");
-        if (element.strikethrough()) message.append("\u001B[9m");
-        if (element.color() != null) {
-            int red = element.color().getRed();
-            int green = element.color().getGreen();
-            int blue = element.color().getBlue();
-            float alpha = element.color().getAlpha() / 255f;
+            if (element.bold()) message.append("\u001B[1m");
+            if (element.italic()) message.append("\u001B[3m");
+            if (element.underline()) message.append("\u001B[4m");
+            if (element.strikethrough()) message.append("\u001B[9m");
+            if (element.color() != null) {
+                int red = element.color().getRed();
+                int green = element.color().getGreen();
+                int blue = element.color().getBlue();
+                float alpha = element.color().getAlpha() / 255f;
 
-            red = Math.round(alpha * red);
-            green = Math.round(alpha * green);
-            blue = Math.round(alpha * blue);
+                red = Math.round(alpha * red);
+                green = Math.round(alpha * green);
+                blue = Math.round(alpha * blue);
 
-            message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
-        }
-        if (element.backgroundColor() != null) {
-            int red = element.backgroundColor().getRed();
-            int green = element.backgroundColor().getGreen();
-            int blue = element.backgroundColor().getBlue();
-            float alpha = element.backgroundColor().getAlpha() / 255f;
+                message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
+            }
+            if (element.backgroundColor() != null) {
+                int red = element.backgroundColor().getRed();
+                int green = element.backgroundColor().getGreen();
+                int blue = element.backgroundColor().getBlue();
+                float alpha = element.backgroundColor().getAlpha() / 255f;
 
-            red = Math.round(alpha * red);
-            green = Math.round(alpha * green);
-            blue = Math.round(alpha * blue);
+                red = Math.round(alpha * red);
+                green = Math.round(alpha * green);
+                blue = Math.round(alpha * blue);
 
-            message.append("\u001B[48;2;" + red + ";" + green + ";" + blue + "m");
-        }
-        if (element.onClick() != null) message.append("\033]99900;" + element.onClick().toString() + "\007");
-        message.append(element.message());
-        message.append("\u001B[m");
+                message.append("\u001B[48;2;" + red + ";" + green + ";" + blue + "m");
+            }
+            if (element.onClick() != null) message.append("\033]99900;" + element.onClick().toString() + "\007");
+            message.append(element.message());
+            message.append("\u001B[m");
 
-        try {
-            for (TextElement e : Util.<List<TextElement>>reflect(TextElement.class.getDeclaredField("after"), element)) message.append(convert(e));
-        } catch (Throwable e) {
-            getLogger().error.println(e);
+            try {
+                for (TextElement e : Util.<List<TextElement>>reflect(TextElement.class.getDeclaredField("after"), element)) message.append(convert(e));
+            } catch (Throwable e) {
+                getLogger().error.println(e);
+            }
+        } else {
+            message.append("null");
         }
 
         return message.toString();
@@ -133,9 +137,13 @@ public final class LogStream {
      */
     public void print(Object obj) {
         if (obj == null) {
-            print("null");
+            submit("null");
+        } else if (obj instanceof Throwable) {
+            print((Throwable) obj);
+        } else if (obj instanceof TextElement) {
+            print((TextElement) obj);
         } else {
-            print(obj.toString());
+            submit(obj.toString());
         }
     }
 
@@ -146,11 +154,11 @@ public final class LogStream {
      */
     public void print(Throwable err) {
         if (err == null) {
-            print("null");
+            submit("null");
         } else {
             StringWriter sw = new StringWriter();
             err.printStackTrace(new PrintWriter(sw));
-            print(sw.toString());
+            submit(sw.toString());
         }
     }
 
@@ -160,11 +168,7 @@ public final class LogStream {
      * @param element Text Element
      */
     public void print(TextElement element) {
-        if (element == null) {
-            submit("null");
-        } else {
-            submit(convert(element));
-        }
+        submit(convert(element));
     }
 
     /**
@@ -186,7 +190,11 @@ public final class LogStream {
      * @param str Character Array
      */
     public void print(char[] str) {
-        print(new String(str));
+        if (str == null) {
+            submit("null");
+        } else {
+            submit(new String(str));
+        }
     }
 
     /**
@@ -202,7 +210,7 @@ public final class LogStream {
      * Print an empty line
      */
     public void println() {
-        print("\r\n");
+        submit("\r\n");
     }
 
     /**
@@ -213,9 +221,13 @@ public final class LogStream {
     public void println(Object... obj) {
         for (Object OBJ : obj) {
             if (OBJ == null) {
-                print("null\n");
+                submit("null\n");
+            } else if (OBJ instanceof Throwable) {
+                println((Throwable) OBJ);
+            } else if (OBJ instanceof TextElement) {
+                println((TextElement) OBJ);
             } else {
-                print(OBJ.toString() + '\n');
+                submit(OBJ.toString() + '\n');
             }
         }
     }
@@ -228,11 +240,11 @@ public final class LogStream {
     public void println(Throwable... err) {
         for (Throwable ERR : err) {
             if (ERR == null) {
-                print("null\n");
+                submit("null\n");
             } else {
                 StringWriter sw = new StringWriter();
                 ERR.printStackTrace(new PrintWriter(sw));
-                print(sw.toString() + '\n');
+                submit(sw.toString() + '\n');
             }
         }
     }
@@ -255,7 +267,11 @@ public final class LogStream {
      */
     public void println(String... str) {
         for (String STR : str) {
-            print(STR + '\n');
+            if (STR == null) {
+                submit("null\n");
+            } else {
+                submit(STR + '\n');
+            }
         }
     }
 
@@ -266,7 +282,11 @@ public final class LogStream {
      */
     public void println(char[]... str) {
         for (char[] STR : str) {
-            print(new String(STR) + '\n');
+            if (STR == null) {
+                submit("null\n");
+            } else {
+                submit(new String(STR) + '\n');
+            }
         }
     }
 

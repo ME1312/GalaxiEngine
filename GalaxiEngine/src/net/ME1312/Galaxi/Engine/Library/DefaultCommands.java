@@ -40,6 +40,7 @@ public class DefaultCommands {
                             item = "  " + item;
                             stack.add(item);
                         }
+                        sender.sendMessage("These are the platforms and versions that are running " + ((args.length == 0)?engine.getAppInfo().getName():engine.getPluginManager().getPlugin(args[0]).getName()) +":");
                         sender.sendMessage(stack.toArray(new String[0]));
 
                         if (args.length > 0) {
@@ -62,6 +63,8 @@ public class DefaultCommands {
                                         i++;
                                         subtitle += ' ';
                                     }
+                                } else if (Math.max(title.length(), 37) <= subtitle.length()) {
+                                    subtitle += "\n    ";
                                 } else {
                                     subtitle += " - ";
                                 }
