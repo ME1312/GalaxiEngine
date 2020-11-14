@@ -7,7 +7,7 @@ import net.ME1312.Galaxi.Engine.Library.Log.HTMLogger;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;
-import net.ME1312.Galaxi.Library.Container.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.ConsoleCommandSender;
 
@@ -36,7 +36,7 @@ public final class ConsoleWindow extends OutputStream {
         public Integer run() throws Throwable {
             return Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr());
         }
-    }, 0) > 0)?Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr()):MAX_CONSOLE_WINDOW_SCROLLBACK.get();
+    }, 0) > 0)?Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr()):MAX_CONSOLE_WINDOW_SCROLLBACK.app();
     private static final Double USER_WINDOW_SIZE = (Util.getDespiteException(new ExceptionReturnRunnable<Double>() {
         @Override
         public Double run() throws Throwable {
@@ -53,7 +53,7 @@ public final class ConsoleWindow extends OutputStream {
     private boolean ifocus = false;
     private Boolean iauto = false;
     private int iautopos = 0;
-    private NamedContainer<Integer, List<CharSequence>> icache = null;
+    private ContainedPair<Integer, List<CharSequence>> icache = null;
     private TextFieldPopup popup;
     private JTextPane log;
     private JScrollPane vScroll;
@@ -181,10 +181,10 @@ public final class ConsoleWindow extends OutputStream {
                                 candidates.add(command.line());
                                 for (String candidate : reader.complete(ConsoleCommandSender.get(), command))
                                     candidates.add(command.line().substring(0, command.line().length() - command.rawWordLength()) + command.escape(candidate, true));
-                                icache = new NamedContainer<>(position, candidates);
+                                icache = new ContainedPair<>(position, candidates);
                                 iautopos = (kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE)?candidates.size() - 1:1;
                             } else {
-                                candidates = icache.get();
+                                candidates = icache.value();
                                 iautopos += (kpressed[KeyEvent.VK_SHIFT] != Boolean.TRUE)?-1:1;
                             }
                             if (iautopos >= candidates.size()) iautopos = 0;

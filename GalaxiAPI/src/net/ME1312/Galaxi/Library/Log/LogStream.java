@@ -1,7 +1,7 @@
 package net.ME1312.Galaxi.Library.Log;
 
 import net.ME1312.Galaxi.Library.Container.Container;
-import net.ME1312.Galaxi.Library.Container.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.TextElement;
 
@@ -72,7 +72,7 @@ public final class LogStream {
     }
 
     private void submit(String str) {
-        Logger.messages.add(new NamedContainer<LogStream, String>(this, str));
+        Logger.messages.add(new ContainedPair<LogStream, String>(this, str));
     }
 
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")

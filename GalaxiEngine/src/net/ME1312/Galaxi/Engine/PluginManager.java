@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Engine.Library.PluginClassLoader;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
-import net.ME1312.Galaxi.Library.Container.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.Dependency;
@@ -89,7 +89,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
              * Load Jars & Find Main Classes
              * (Unordered)
              */
-            LinkedHashMap<PluginClassLoader, NamedContainer<LinkedList<String>, LinkedHashMap<String, String>>> classes = new LinkedHashMap<PluginClassLoader, NamedContainer<LinkedList<String>, LinkedHashMap<String, String>>>();
+            LinkedHashMap<PluginClassLoader, ContainedPair<LinkedList<String>, LinkedHashMap<String, String>>> classes = new LinkedHashMap<PluginClassLoader, ContainedPair<LinkedList<String>, LinkedHashMap<String, String>>>();
             for (File file : pljars) {
                 try {
                     JarFile jar = new JarFile(file);
@@ -106,9 +106,9 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                             try {
                                 Class<?> clazz = loader.loadClass(cname);
                                 if (clazz.isAnnotationPresent(Plugin.class)) {
-                                    NamedContainer<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.keySet().contains(loader))?classes.get(loader):new NamedContainer<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
-                                    for (Dependency dependency : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.name().add(dependency.name());
-                                    jarmap.get().put(clazz.getAnnotation(Plugin.class).name(), cname);
+                                    ContainedPair<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.keySet().contains(loader))?classes.get(loader):new ContainedPair<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
+                                    for (Dependency dependency : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.key().add(dependency.name());
+                                    jarmap.value().put(clazz.getAnnotation(Plugin.class).name(), cname);
                                     classes.put(loader, jarmap);
                                     isplugin = true;
                                 }
@@ -138,16 +138,16 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                 LinkedHashMap<PluginClassLoader, LinkedList<String>> loaded = new LinkedHashMap<PluginClassLoader, LinkedList<String>>();
                 for (PluginClassLoader loader : classes.keySet()) {
                     LinkedList<String> loadedlist = new LinkedList<String>();
-                    for (String name : classes.get(loader).get().keySet()) {
+                    for (String name : classes.get(loader).value().keySet()) {
                         boolean load = true;
-                        for (String depend : classes.get(loader).name()) {
+                        for (String depend : classes.get(loader).key()) {
                             if (!plugins.keySet().contains(depend.toLowerCase())) {
                                 load = progress <= 0;
                             }
                         }
 
                         if (load) {
-                            String main = classes.get(loader).get().get(name);
+                            String main = classes.get(loader).value().get(name);
                             try {
                                 Class<?> clazz = loader.loadClass(main);
                                 if (!clazz.isAnnotationPresent(Plugin.class))
@@ -194,10 +194,10 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                 }
                 progress = 0;
                 for (PluginClassLoader loader : loaded.keySet()) {
-                    NamedContainer<LinkedList<String>, LinkedHashMap<String, String>> jarmap = classes.get(loader);
+                    ContainedPair<LinkedList<String>, LinkedHashMap<String, String>> jarmap = classes.get(loader);
                     progress++;
-                    for (String main : loaded.get(loader)) jarmap.get().remove(main);
-                    if (jarmap.get().size() > 0) {
+                    for (String main : loaded.get(loader)) jarmap.value().remove(main);
+                    if (jarmap.value().size() > 0) {
                         classes.put(loader, jarmap);
                     } else {
                         classes.remove(loader);

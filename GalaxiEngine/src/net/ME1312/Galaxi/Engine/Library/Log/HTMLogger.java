@@ -46,12 +46,12 @@ public class HTMLogger extends AnsiOutputStream {
      */
     public static <T extends HTMLogger> T wrap(OutputStream raw, HTMConstructor<T> constructor) {
         Container<T> html = new Container<T>(null);
-        html.set(constructor.construct(raw, new OutputStream() {
+        html.value(constructor.construct(raw, new OutputStream() {
             private boolean nbsp = false;
 
             @Override
             public void write(int data) throws IOException {
-                HTMLogger htm = html.get();
+                HTMLogger htm = html.value();
                 if (htm.queue.size() > 0) {
                     LinkedList<String> queue = htm.queue;
                     htm.queue = new LinkedList<>();
@@ -80,14 +80,14 @@ public class HTMLogger extends AnsiOutputStream {
                             raw.write(BYTES_GT);
                             break;
                         case 10:
-                            html.get().closeAttributes();
+                            html.value().closeAttributes();
                         default:
                             raw.write(data);
                     }
                 }
             }
         }));
-        return html.get();
+        return html.value();
     }
     protected HTMLogger(final OutputStream raw, OutputStream wrapped) {
         super(wrapped);

@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.LOG_DIRECTORY;
@@ -28,7 +29,7 @@ public final class FileLogger extends StringOutputStream {
     FileLogger(StringOutputStream origin) throws IOException {
         this.origin = origin;
         if (tmpwriter == null) {
-            File dir = LOG_DIRECTORY.get();
+            File dir = LOG_DIRECTORY.app();
             int i = 1;
             if (dir.isDirectory()) try {
                 for (File file : dir.listFiles()) {
@@ -36,14 +37,16 @@ public final class FileLogger extends StringOutputStream {
                 }
             } catch (Exception e) {}
 
-            String name = Galaxi.getInstance().getAppInfo().getName() + " #" + i + " (" + new SimpleDateFormat("MM-dd-yyyy").format(Calendar.getInstance().getTime()) + ')';
+            Date time = Calendar.getInstance().getTime();
+            String name = Galaxi.getInstance().getAppInfo().getName() + " #" + i + " (" + new SimpleDateFormat("MM-dd-yyyy").format(time) + ')';
+            String nameX = Galaxi.getInstance().getAppInfo().getName() + " #" + i + " [" + new SimpleDateFormat("M/d/yyyy").format(time) + ']';
             tmp = File.createTempFile(Galaxi.getInstance().getAppInfo().getName() + '.', ".log");
             tmp.deleteOnExit();
             tmpwriter = new FileOutputStream(tmp);
 
-            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || (USE_LOG_FILE.usr().length() <= 0 && USE_LOG_FILE.get())) {
+            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || (USE_LOG_FILE.usr().length() <= 0 && USE_LOG_FILE.app())) {
                 dir.mkdirs();
-                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || (USE_RAW_LOG.usr().length() <= 0 && USE_RAW_LOG.get())) {
+                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || (USE_RAW_LOG.usr().length() <= 0 && USE_RAW_LOG.app())) {
                     file = new File(dir, name + ".log.txt");
 
                     writer = iwriter = new FileOutputStream(file);
@@ -52,7 +55,7 @@ public final class FileLogger extends StringOutputStream {
                     Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Library/Files/GalaxiLog.htm", file.getAbsolutePath());
 
                     iwriter = new FileOutputStream(file, true);
-                    iwriter.write(("<h1>" + name + "</h1>\n").getBytes("UTF-8"));
+                    iwriter.write(("<h1>" + nameX + "</h1>\n").getBytes("UTF-8"));
                     iwriter.flush();
                     writer = HTMLogger.wrap(iwriter);
                 }

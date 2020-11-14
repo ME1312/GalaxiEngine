@@ -36,8 +36,8 @@ public final class SystemLogger extends OutputStream {
         SystemLogger.jline = jline;
         SystemLogger.jstatus = jstatus;
 
-        Util.<Container<StringOutputStream>>reflect(Logger.class.getDeclaredField("pso"), null).set(new FileLogger(new ConsoleStream(window, jline)));
-        Util.reflect(Logger.class.getDeclaredMethod("log", boolean.class), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.get()));
+        Util.<Container<StringOutputStream>>reflect(Logger.class.getDeclaredField("pso"), null).value(new FileLogger(new ConsoleStream(window, jline)));
+        Util.reflect(Logger.class.getDeclaredMethod("log", boolean.class), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.app()));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
         System.setErr(new PrintStream(new SystemLogger(true), false, "UTF-8"));
@@ -79,7 +79,7 @@ public final class SystemLogger extends OutputStream {
         }
 
         Util.reflect(FileLogger.class.getDeclaredMethod("stop"), null);
-        if (jstatus.get()) {
+        if (jstatus.value()) {
             jline.callWidget(LineReader.CLEAR);
             jline.getTerminal().flush();
         }

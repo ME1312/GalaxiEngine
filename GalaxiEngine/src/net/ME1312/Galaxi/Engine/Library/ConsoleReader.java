@@ -8,7 +8,7 @@ import net.ME1312.Galaxi.Event.ConsoleInputEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Library.Container.Container;
-import net.ME1312.Galaxi.Library.Container.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
@@ -68,7 +68,7 @@ public class ConsoleReader {
         thread = new Thread(this::read, Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         Util.reflect(SystemLogger.class.getDeclaredMethod("start", Container.class, LineReader.class, Container.class), null, window, jline, jstatus);
         try {
-            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.get() && System.console() == null)) {
+            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.app() && System.console() == null)) {
                 openConsoleWindow(!(SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") && System.console() != null));
             }
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class ConsoleReader {
      */
     public void openConsoleWindow(boolean exit) {
         if (!GraphicsEnvironment.isHeadless())
-            window.set(Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(ConsoleReader.class, boolean.class).newInstance(this, exit), null));
+            window.value(Util.getDespiteException(() -> (OutputStream) Class.forName("net.ME1312.Galaxi.Engine.Standalone.ConsoleWindow").getConstructor(ConsoleReader.class, boolean.class).newInstance(this, exit), null));
     }
 
     /**
@@ -100,8 +100,8 @@ public class ConsoleReader {
      */
     public void closeConsoleWindow() {
         OutputStream window;
-        if ((window = this.window.get()) != null) Util.isException(window::close);
-        this.window.set(null);
+        if ((window = this.window.value()) != null) Util.isException(window::close);
+        this.window.value(null);
     }
 
     /**
@@ -158,15 +158,15 @@ public class ConsoleReader {
     private void read() {
         try {
             boolean interrupted = false;
-            jstatus.set(true);
+            jstatus.value(true);
             do {
                 try {
                     String line;
-                    while (running.get() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
-                        if (!running.get() || line.replaceAll("\\s", "").length() == 0) continue;
-                        jstatus.set(false);
+                    while (running.value() && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
+                        if (!running.value() || line.replaceAll("\\s", "").length() == 0) continue;
+                        jstatus.value(false);
                         input(line);
-                        jstatus.set(true);
+                        jstatus.value(true);
                     }
                 } catch (UserInterruptException e) {
                     if (!interrupted) {
@@ -177,12 +177,12 @@ public class ConsoleReader {
                         }, Galaxi.getInstance().getEngineInfo().getName() + "::Process_Interrupt").start();
                     }
                 }
-            } while (running.get());
+            } while (running.value());
         } catch (IOError e) {
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
-        jstatus.set(false);
+        jstatus.value(false);
     }
     private void input(String line) {
         if (Util.isNull(line)) throw new NullPointerException();
@@ -327,10 +327,10 @@ public class ConsoleReader {
         return builder.toString();
     }
 
-    private String escapeArgument(NamedContainer<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
+    private String escapeArgument(ContainedPair<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
         if (Util.isNull((Object) arg)) throw new NullPointerException();
-        boolean append = start != null && arg.startsWith(start.get());
-        if (append) arg = arg.substring(start.get().length());
+        boolean append = start != null && arg.startsWith(start.value());
+        if (append) arg = arg.substring(start.value().length());
 
         if (literal) {
             if (!append)
@@ -343,7 +343,7 @@ public class ConsoleReader {
             }
         } else {
             arg = arg.replace("\\", "\\\\").replace("\n", "\\n").replace("\'", "\\\'").replace("\"", "\\\"");
-            if (PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+            if (PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.app()))
                 arg = arg.replace("$", "\\$").replace("%", "\\%");
             if (!whitespaced) {
                 if (append || arg.length() > 0) {
@@ -355,7 +355,7 @@ public class ConsoleReader {
                 arg += '\"';
             }
         }
-        if (append) arg = start.name() + arg;
+        if (append) arg = start.key() + arg;
         else if (whitespaced) arg = '\"' + arg;
         return arg;
     }
@@ -384,7 +384,7 @@ public class ConsoleReader {
 
         public ParsedCommand parse(final String LINE, final int CURSOR, boolean command) throws SyntaxError {
             if (!command) command = chat == null;
-            final LinkedList<NamedContainer<String, String>> MAPPINGS = new LinkedList<NamedContainer<String, String>>();
+            final LinkedList<ContainedPair<String, String>> MAPPINGS = new LinkedList<ContainedPair<String, String>>();
 
             StringBuilder part = new StringBuilder();
             int wcursor = 0;
@@ -418,7 +418,7 @@ public class ConsoleReader {
                     } else {
                         if (!whitespaced && ch == ' ') {
                             if (!between) { // Ends the current word
-                                MAPPINGS.add(new NamedContainer<>(LINE.substring(start, i), part.toString()));
+                                MAPPINGS.add(new ContainedPair<>(LINE.substring(start, i), part.toString()));
                                 part = new StringBuilder(LINE.length());
                             }
                             start = i + 1;
@@ -437,7 +437,7 @@ public class ConsoleReader {
                                     continue;
                                 case '$': // Replace java system variables
                                     int varEnd;
-                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.app()))
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('$', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
@@ -460,7 +460,7 @@ public class ConsoleReader {
                                     }
                                     continue;
                                 case '%': // Replace environment variables
-                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.get()))
+                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.app()))
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('%', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
@@ -598,7 +598,7 @@ public class ConsoleReader {
             final boolean LITERAL = literal;
             final boolean WHITESPACED = whitespaced;
 
-            MAPPINGS.add(new NamedContainer<>(LINE.substring(start), WORD));
+            MAPPINGS.add(new ContainedPair<>(LINE.substring(start), WORD));
             return new ParsedCommand() {
                 @Override
                 public CharSequence escape(CharSequence argument, boolean complete) {
@@ -618,7 +618,7 @@ public class ConsoleReader {
                 @Override
                 public LinkedList<String> words() {
                     LinkedList<String> list = new LinkedList<>();
-                    for (NamedContainer<String, String> e : MAPPINGS) list.add(e.get());
+                    for (ContainedPair<String, String> e : MAPPINGS) list.add(e.value());
                     return list;
                 }
 
@@ -633,12 +633,12 @@ public class ConsoleReader {
                 }
 
                 @Override
-                public NamedContainer<String, String> translation() {
+                public ContainedPair<String, String> translation() {
                     return (MAPPINGS.size() <= 0)?null:MAPPINGS.getLast();
                 }
 
                 @Override
-                public LinkedList<NamedContainer<String, String>> translations() {
+                public LinkedList<ContainedPair<String, String>> translations() {
                     return new LinkedList<>(MAPPINGS);
                 }
 
@@ -650,7 +650,7 @@ public class ConsoleReader {
                 @Override
                 public LinkedList<String> rawWords() {
                     LinkedList<String> list = new LinkedList<>();
-                    for (NamedContainer<String, String> e : MAPPINGS) list.add(e.name());
+                    for (ContainedPair<String, String> e : MAPPINGS) list.add(e.key());
                     return list;
                 }
 
@@ -694,14 +694,14 @@ public class ConsoleReader {
          *
          * @return Word Translation
          */
-        NamedContainer<String, String> translation();
+        ContainedPair<String, String> translation();
 
         /**
          * Get the Word Translation List
          *
          * @return Word Translation List
          */
-        LinkedList<NamedContainer<String, String>> translations();
+        LinkedList<ContainedPair<String, String>> translations();
 
         /**
          * Get the Raw Word

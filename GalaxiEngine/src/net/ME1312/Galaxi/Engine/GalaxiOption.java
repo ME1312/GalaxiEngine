@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnCallback;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
-import net.ME1312.Galaxi.Library.Container.Container;
+import net.ME1312.Galaxi.Library.Container.Value;
 import net.ME1312.Galaxi.Library.Platform;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -14,12 +14,12 @@ import java.io.File;
  *
  * @param <T> Option Type
  */
-public final class GalaxiOption<T> extends Container<T> {
+public final class GalaxiOption<T> extends Value<T> {
 
     // Directories
     public static final GalaxiOption<File> APPDATA_DIRECTORY = new GalaxiOption<>(() -> Platform.getSystem().getAppDataDirectory());
     public static final GalaxiOption<File> RUNTIME_DIRECTORY = new GalaxiOption<>("user.dir", File::new);
-    public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(() -> new File(RUNTIME_DIRECTORY.get(), "Logs"));
+    public static final GalaxiOption<File> LOG_DIRECTORY = new GalaxiOption<>(() -> new File(RUNTIME_DIRECTORY.value(), "Logs"));
 
     // Logging
     public static final GalaxiOption<Boolean> USE_LOG_FILE = new GalaxiOption<>("galaxi.log", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
@@ -41,22 +41,33 @@ public final class GalaxiOption<T> extends Container<T> {
     public static final GalaxiOption<Boolean> ENABLE_RELOAD = new GalaxiOption<>(() -> false);
 
 
-    private static boolean lock = false;
+    private T app;
     private final T def;
     private final String usr;
+    private static boolean lock = false;
     private GalaxiOption(ExceptionReturnRunnable<T> def) {
         this(null, usr -> def.run());
     }
     private GalaxiOption(String usr, ExceptionReturnCallback<String, T> def) {
-        super(Util.getDespiteException(() -> def.run((usr == null)?"":System.getProperty(usr, "")), null));
+        this.app = Util.getDespiteException(() -> def.run((usr == null)?"":System.getProperty(usr, "")), null);
         this.usr = (usr == null)?null:System.getProperty(usr, "");
-        this.def = get();
+        this.def = value();
     }
 
     @Override
-    public void set(T value) {
+    public T value(T value) {
         if (lock) throw new IllegalStateException("GalaxiOptions have been locked in. Please adjust settings before launching GalaxiEngine");
-        super.set(value);
+        return app = value;
+    }
+
+    /**
+     * Grabs the Object Value as set by the app
+     *
+     * @return The Apps Object Value
+     */
+    @Override
+    public T value() {
+        return app;
     }
 
     /**
@@ -73,9 +84,8 @@ public final class GalaxiOption<T> extends Container<T> {
      *
      * @return The Apps Object Value
      */
-    @Override
-    public T get() {
-        return super.get();
+    public T app() {
+        return value();
     }
 
     /**

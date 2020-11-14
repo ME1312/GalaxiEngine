@@ -37,11 +37,11 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 /**
  * Galaxi Engine Main Class
  */
-@App(name = "GalaxiEngine", version = "3.3.1a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@App(name = "GalaxiEngine", version = "3.4.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
-    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.get());
+    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.app());
     private final UniversalFile idir;
     private final ConsoleReader console;
 
@@ -98,10 +98,10 @@ public class GalaxiEngine extends Galaxi {
         this.engine = PluginInfo.getPluginInfo(this);
         this.app = (app == null)?engine:app;
 
-        if (APPDATA_DIRECTORY.get() == Platform.getSystem().getAppDataDirectory()) APPDATA_DIRECTORY.set(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
+        if (APPDATA_DIRECTORY.app() == Platform.getSystem().getAppDataDirectory()) APPDATA_DIRECTORY.value(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
         Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
 
-        this.idir = new UniversalFile(APPDATA_DIRECTORY.get());
+        this.idir = new UniversalFile(APPDATA_DIRECTORY.app());
 
         Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
@@ -112,7 +112,7 @@ public class GalaxiEngine extends Galaxi {
         pluginManager.findClasses(engine.get().getClass());
         pluginManager.findClasses(this.app.get().getClass());
 
-        if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.get())))
+        if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.app())))
             Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
         this.console = new ConsoleReader(this, running);
 
@@ -172,10 +172,10 @@ public class GalaxiEngine extends Galaxi {
      * @param callback Callback for when Galaxi is stopped
      */
     public void start(Runnable callback) {
-        if (!running.get()) {
+        if (!running.value()) {
             try {
                 onStop = callback;
-                running.set(true);
+                running.value(true);
                 Util.isException(() -> Util.<Thread>reflect(ConsoleReader.class.getDeclaredField("thread"), console).start());
                 pluginManager.executeEvent(new GalaxiStartEvent(this));
             } catch (Exception e) {}
@@ -235,7 +235,7 @@ public class GalaxiEngine extends Galaxi {
             app.getLogger().error.println(e);
         }
 
-        running.set(false);
+        running.value(false);
         Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
 
         System.exit(code);

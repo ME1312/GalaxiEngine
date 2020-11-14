@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Library.Log;
 
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container.Container;
-import net.ME1312.Galaxi.Library.Container.NamedContainer;
+import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Util;
 import org.fusesource.jansi.Ansi;
 
@@ -22,7 +22,7 @@ import static net.ME1312.Galaxi.Library.Log.LogLevel.*;
 public final class Logger {
     private static final Container<StringOutputStream> pso = new Container<StringOutputStream>(null);
     private static boolean running = true;
-    static final LinkedList<NamedContainer<LogStream, String>> messages = new LinkedList<NamedContainer<LogStream, String>>();
+    static final LinkedList<ContainedPair<LogStream, String>> messages = new LinkedList<ContainedPair<LogStream, String>>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
     private LinkedList<LogFilter> lFilters = new LinkedList<LogFilter>();
     private final java.util.logging.Logger primitive;
@@ -154,18 +154,18 @@ public final class Logger {
             boolean terminated = true;
             while (running) {
                 while (running && messages.size() > 0) try {
-                    NamedContainer<LogStream, String> container = Util.getDespiteException(() -> messages.get(0), null);
+                    ContainedPair<LogStream, String> container = Util.getDespiteException(() -> messages.get(0), null);
                     if (container != null) {
-                        LogStream stream = container.name();
+                        LogStream stream = container.key();
                         String prefix = '[' + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + "] [" + stream.getLogger().getPrefix() + File.separator + stream.getLevel().getName() + "] > ";
                         StringBuilder result = new StringBuilder();
 
                         LinkedList<String> messages = new LinkedList<String>();
                         boolean terminate = false;
-                        if (container.get().length() > 0) {
+                        if (container.value().length() > 0) {
                             StringBuilder message = new StringBuilder();
                             boolean terminate_with_prefix = false;
-                            for (PrimitiveIterator.OfInt $i = container.get().codePoints().iterator(); $i.hasNext();) {
+                            for (PrimitiveIterator.OfInt $i = container.value().codePoints().iterator(); $i.hasNext();) {
                                 int c = $i.nextInt();
                                 if (terminate) {
                                     messages.add(message.toString());
@@ -231,7 +231,7 @@ public final class Logger {
                         }
 
                         if (result.length() > 0)
-                            stream.stream.get().write(result.toString());
+                            stream.stream.value().write(result.toString());
                     }
                     Util.isException(() -> Logger.messages.remove(0));
                 } catch (Throwable e) {

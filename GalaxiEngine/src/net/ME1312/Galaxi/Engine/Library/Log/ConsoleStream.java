@@ -31,7 +31,7 @@ public class ConsoleStream extends StringOutputStream {
     public void write(String s) {
         try {
             OutputStream window;
-            if ((window = this.window.get()) != null) {
+            if ((window = this.window.value()) != null) {
                 Util.isException(() -> window.write(s.getBytes(StandardCharsets.UTF_8)));
             }
 

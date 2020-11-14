@@ -1,20 +1,35 @@
 package net.ME1312.Galaxi.Library.Container;
 
 /**
- * Value Container Class
+ * Key-Value Pair Container Class
  *
+ * @param <K> Key Type
  * @param <V> Value Type
  */
-public class Container<V> extends Value<V> {
+public class ContainedPair<K, V> extends Pair<K, V> {
+    public K key;
     public V value;
 
     /**
      * Creates the Container
      *
+     * @param key Key
      * @param value Value
      */
-    public Container(V value) {
+    public ContainedPair(K key, V value) {
+        this.key = key;
         this.value = value;
+    }
+
+
+    @Override
+    public K key() {
+        return this.key;
+    }
+
+    @Override
+    public K key(K key) {
+        return this.key = key;
     }
 
     @Override
