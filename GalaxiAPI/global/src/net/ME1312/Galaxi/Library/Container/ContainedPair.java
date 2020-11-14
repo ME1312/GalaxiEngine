@@ -12,6 +12,11 @@ public class ContainedPair<K, V> extends Pair<K, V> {
 
     /**
      * Creates the Container
+     */
+    public ContainedPair() {}
+
+    /**
+     * Creates the Container
      *
      * @param key Key
      * @param value Value

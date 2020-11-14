@@ -10,6 +10,11 @@ public class Container<V> extends Value<V> {
 
     /**
      * Creates the Container
+     */
+    public Container() {}
+
+    /**
+     * Creates the Container
      *
      * @param value Value
      */
