@@ -72,7 +72,7 @@ public final class LogStream {
     }
 
     private void submit(String str) {
-        Logger.messages.add(new ContainedPair<LogStream, String>(this, str));
+        Logger.log(this, str);
     }
 
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")

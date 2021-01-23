@@ -2,6 +2,7 @@ package net.ME1312.Galaxi.Engine.Library.Log;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.PluginManager;
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Library.Log.LogStream;
 import net.ME1312.Galaxi.Library.Log.Logger;
@@ -15,6 +16,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.COLOR_LOG_LEVELS;
 
@@ -37,7 +41,8 @@ public final class SystemLogger extends OutputStream {
         SystemLogger.jstatus = jstatus;
 
         Util.<Container<StringOutputStream>>reflect(Logger.class.getDeclaredField("pso"), null).value(new FileLogger(new ConsoleStream(window, jline)));
-        Util.reflect(Logger.class.getDeclaredMethod("log", boolean.class), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.app()));
+        Util.reflect(Logger.class.getDeclaredField("service"), null, Executors.newSingleThreadExecutor(r -> new Thread(r, Galaxi.getInstance().getEngineInfo().getName() + "::Log_Spooler")));
+        Util.reflect(Logger.class.getDeclaredField("color"), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() <= 0 && COLOR_LOG_LEVELS.app()));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, "UTF-8"));
         System.setErr(new PrintStream(new SystemLogger(true), false, "UTF-8"));
@@ -71,12 +76,10 @@ public final class SystemLogger extends OutputStream {
     private static void stop() throws Exception {
         Thread.sleep(125);
 
-        Util.reflect(Logger.class.getDeclaredField("running"), null, false);
-
-        Thread thread = Util.reflect(Logger.class.getDeclaredField("thread"), null);
-        if (thread != null) while (thread.isAlive()) {
-            Thread.sleep(125);
-        }
+        ExecutorService service = Util.reflect(Logger.class.getDeclaredField("service"), null);
+        Util.reflect(Logger.class.getDeclaredField("service"), null, null);
+        service.shutdown();
+        service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
         Util.reflect(FileLogger.class.getDeclaredMethod("stop"), null);
         if (jstatus.value()) {

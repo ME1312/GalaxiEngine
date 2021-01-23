@@ -50,7 +50,7 @@ public abstract class Galaxi {
                 } catch (Throwable e) {
                     builder.plugin().getLogger().error.println(new InvocationTargetException(e, "Unhandled exception while running Task " + sid.toString()));
                 }
-                if (builder.repeat() <= 0) schedule.remove(sid);
+                if (builder.repeat() <= 0) schedule.remove(sid).cancel();
             }
         };
 
@@ -74,7 +74,7 @@ public abstract class Galaxi {
             if (builder.delay() > 0) {
                 schedule.get(sid).schedule(task, builder.delay());
             } else {
-                schedule.remove(sid);
+                schedule.remove(sid).cancel();
                 new Thread(task, name).start();
             }
         }
@@ -296,8 +296,7 @@ public abstract class Galaxi {
     public void cancelTask(UUID sid) {
         if (Util.isNull(sid)) throw new NullPointerException();
         if (schedule.keySet().contains(sid)) {
-            schedule.get(sid).cancel();
-            schedule.remove(sid);
+            schedule.remove(sid).cancel();
         }
     }
 
