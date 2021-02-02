@@ -137,26 +137,30 @@ public class GalaxiEngine extends Galaxi {
             }
         });
 
-        engine.setUpdateChecker(() -> {
-            if (engine == this.app || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(this.app.get().getClass().getProtectionDomain().getCodeSource().getLocation())) try {
-                YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
-                List<Version> versions = new LinkedList<Version>();
+        if (engine == this.app || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(this.app.get().getClass().getProtectionDomain().getCodeSource().getLocation())) {
+            engine.setUpdateChecker(() -> {
+                try {
+                    YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
+                    List<Version> versions = new LinkedList<Version>();
 
-                Version updversion = getEngineInfo().getVersion();
-                int updcount = 0;
-                for (ObjectMap<String> tag : tags.getMapList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
-                Collections.sort(versions);
-                for (Version version : versions) {
-                    if (version.compareTo(updversion) > 0) {
-                        updversion = version;
-                        updcount++;
+                    Version updversion = getEngineInfo().getVersion();
+                    int updcount = 0;
+                    for (ObjectMap<String> tag : tags.getMapList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
+                    Collections.sort(versions);
+                    for (Version version : versions) {
+                        if (version.compareTo(updversion) > 0) {
+                            updversion = version;
+                            updcount++;
+                        }
                     }
-                }
-                if (updcount != 0) {
-                    getAppInfo().getLogger().message.println(engine.getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
-                }
-            } catch (Exception e) {}
-        });
+                    if (updcount != 0) {
+                        getAppInfo().getLogger().message.println(engine.getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
+                        return true;
+                    }
+                } catch (Exception e) {}
+                return false;
+            });
+        }
     }
 
     /**

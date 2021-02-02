@@ -1,6 +1,8 @@
 package net.ME1312.Galaxi.Plugin;
 
 import net.ME1312.Galaxi.Galaxi;
+import net.ME1312.Galaxi.Library.Callback.Callback;
+import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
 import net.ME1312.Galaxi.Library.Log.Logger;
@@ -45,8 +47,8 @@ public class PluginInfo implements ExtraDataHandler {
 
     private File dir = new File(System.getProperty("user.dir"));
     private Logger logger = null;
-    private Runnable updateChecker = null;
     private boolean enabled = false;
+    private ReturnRunnable<Boolean> updateChecker = null;
     private ObjectMap<String> extra = new ObjectMap<String>();
 
     public static class Dependency {
@@ -402,11 +404,11 @@ public class PluginInfo implements ExtraDataHandler {
         stack.addAll(Arrays.asList(
                 Platform.getSystemName() + ' ' + Platform.getSystemVersion() + ((!Platform.getSystemArchitecture().equals("unknown"))?" [" + Platform.getSystemArchitecture() + ']':"") + ",",
                 "Java " + Platform.getJavaVersion() + ((!Platform.getJavaArchitecture().equals("unknown"))?" [" + Platform.getJavaArchitecture() + ']':"") + ",",
-                engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getSignature() != null)?" (" + engine.getSignature() + ')':"") + ((engine == app)?" [Standalone]"+((engine == this)?"":","):",")
+                engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getSignature() != null)?" (" + engine.getSignature() + ')':"") + ((engine == app)?" [Standalone]" + ((engine == this)?"":","):",")
         ));
 
         if (engine != app)
-            stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getSignature() != null)?" (" + app.getSignature() + ')':"") + ((app == this)?"":","));
+            stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getSignature() != null)?" (" + app.getSignature() + ')':"") + ((app.getState() != null)?" [" + app.getState() + ']':"") + ((app == this)?"":","));
         if (app != this) {
             for (PluginInfo plugin : scanDependencies()) {
                 stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
@@ -459,16 +461,16 @@ public class PluginInfo implements ExtraDataHandler {
      *
      * @return Update Checker
      */
-    public Runnable getUpdateChecker() {
+    public ReturnRunnable<Boolean> getUpdateChecker() {
         return updateChecker;
     }
 
     /**
      * Set the Update Checker for this Plugin
      *
-     * @param checker Value
+     * @param checker Value (return true when an update is available)
      */
-    public void setUpdateChecker(Runnable checker) {
+    public void setUpdateChecker(ReturnRunnable<Boolean> checker) {
         this.updateChecker = checker;
     }
 

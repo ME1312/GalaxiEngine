@@ -4,12 +4,15 @@ import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Event.GalaxiReloadEvent;
 import net.ME1312.Galaxi.Galaxi;
+import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
+import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Plugin.Command.Command;
 import net.ME1312.Galaxi.Plugin.Command.CommandSender;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import net.ME1312.Galaxi.Plugin.PluginManager;
 
+import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -74,18 +77,30 @@ public class DefaultCommands {
                             if (plugin.getDescription() != null) sender.sendMessage("", plugin.getDescription());
                         }
 
-                        sender.sendMessage("");
                         if (!checking) {
                             checking = true;
-                            new Thread(() -> {
-                                if (engine.getEngineInfo().getUpdateChecker() != null) Util.isException(() -> engine.getEngineInfo().getUpdateChecker().run());
-                                if (engine.getEngineInfo() != engine.getAppInfo() && engine.getAppInfo().getUpdateChecker() != null) Util.isException(() -> engine.getAppInfo().getUpdateChecker().run());
-                                if (args.length > 0) {
-                                    for (PluginInfo info : engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).scanDependencies()) if (info.getUpdateChecker() != null) Util.isException(() -> info.getUpdateChecker().run());
-                                    if (engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker() != null) Util.isException(() -> engine.getPluginManager().getPlugins().get(args[0].toLowerCase()).getUpdateChecker().run());
-                                }
-                                checking = false;
-                            }, Galaxi.getInstance().getEngineInfo().getName() + "::Update_Check").start();
+                            LinkedList<ReturnRunnable<Boolean>> checks = new LinkedList<>();
+
+                            if (engine.getEngineInfo().getUpdateChecker() != null) checks.add(engine.getEngineInfo().getUpdateChecker());
+                            if (engine.getEngineInfo() != engine.getAppInfo() && engine.getAppInfo().getUpdateChecker() != null) checks.add(engine.getAppInfo().getUpdateChecker());
+                            if (args.length > 0) {
+                                for (PluginInfo info : plugin.scanDependencies()) if (info.getUpdateChecker() != null) checks.add(info.getUpdateChecker());
+                                if (plugin.getUpdateChecker() != null) checks.add(plugin.getUpdateChecker());
+                            }
+
+                            if (checks.size() != 0) {
+                                sender.sendMessage("");
+                                new Thread(() -> {
+                                    boolean updated = true;
+                                    for (ReturnRunnable<Boolean> check : checks) try {
+                                        updated = check.run() != Boolean.TRUE && updated;
+                                    } catch (Throwable e) {
+                                        engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Unhandled exception while checking version"));
+                                    }
+                                    if (updated) sender.sendMessage("You are on the latest version.");
+                                    checking = false;
+                                }, Galaxi.getInstance().getEngineInfo().getName() + "::Update_Check").start();
+                            } else checking = false;
                         }
                     } else {
                         sender.sendMessage("There is no plugin with that name");

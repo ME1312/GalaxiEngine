@@ -257,7 +257,7 @@ public class ConsoleReader {
                 try {
                     commands.get(label.toLowerCase()).command(sender, label, args);
                 } catch (Exception e) {
-                    engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Uncaught exception while running command"));
+                    engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Unhandled exception while running command"));
                 }
             } else {
                 engine.getAppInfo().getLogger().message.println("Unknown Command: " + escapeCommand(label, args));

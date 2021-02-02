@@ -181,7 +181,7 @@ public class PluginManager extends net.ME1312.Galaxi.Plugin.PluginManager {
                                     engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main));
                                 }
                             } catch (InvocationTargetException e) {
-                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e.getTargetException(), "Uncaught exception occurred while loading main class: " + main));
+                                engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e.getTargetException(), "Unhandled exception occurred while loading main class: " + main));
                             } catch (ClassCastException e) {
                                 engine.getAppInfo().getLogger().error.println(new IllegalPluginException(e, "Main class isn't annotated as a Plugin: " + main));
                             } catch (Throwable e) {

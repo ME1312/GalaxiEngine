@@ -221,11 +221,7 @@ public abstract class PluginManager {
                 LinkedList<PluginInfo> p = new LinkedList<>(listeners.get(order).get(type).keySet());
                 if (reverse) Collections.reverse(p);
                 for (PluginInfo plugin : p) {
-                    try {
-                        Util.reflect(Event.class.getDeclaredField("plugin"), event, plugin);
-                    } catch (Exception e) {
-                        Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
-                    }
+                    Util.isException(() -> Util.reflect(Event.class.getDeclaredField("plugin"), event, plugin));
                     LinkedList<Object> l = new LinkedList<>(listeners.get(order).get(type).get(plugin).keySet());
                     if (reverse) Collections.reverse(l);
                     for (Object listener : l) {
@@ -248,10 +244,6 @@ public abstract class PluginManager {
                 }
             }
         }
-        try {
-            Util.reflect(Event.class.getDeclaredField("plugin"), event, null);
-        } catch (Exception e) {
-            Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
-        }
+        Util.isException(() -> Util.reflect(Event.class.getDeclaredField("plugin"), event, null));
     }
 }
