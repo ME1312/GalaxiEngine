@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 public enum Platform {
     WINDOWS("Windows", new File((System.getenv("APPDATALOCAL") != null)?System.getenv("APPDATALOCAL"):System.getenv("APPDATA"), "GalaxiEngine")),
     MAC_OS("Mac OS", new File(System.getProperty("user.home"), "Library/Application Support/GalaxiEngine")),
-    OTHER("Other", new File(System.getProperty("user.home"), ".GalaxiEngine"))
+    OTHER("Alt OS", new File(System.getProperty("user.home"), ".GalaxiEngine"))
     ;
     private static final Platform OS;
     private static final String OS_NAME;
@@ -139,9 +139,9 @@ public enum Platform {
         String osversion = System.getProperty("os.version");
         String osname = System.getProperty("os.name", "");
         String os = osname.toLowerCase(Locale.ENGLISH);
-        if (os.startsWith("mac") || os.contains("darwin")) {
+        if (os.startsWith("mac") || os.startsWith("darwin")) {
             OS = MAC_OS;
-            OS_NAME = "Mac OS";
+            OS_NAME = OS.name;
             OS_VERSION = osversion;
         } else if (os.startsWith("win")) {
             OS = WINDOWS;
@@ -149,7 +149,7 @@ public enum Platform {
                 OS_NAME = "Windows Server";
                 OS_VERSION = osname.substring(OS_NAME.length() + 1);
             } else if (os.startsWith("windows ")) {
-                OS_NAME = "Windows";
+                OS_NAME = OS.name;
                 OS_VERSION = osname.substring(OS_NAME.length() + 1);
             } else {
                 OS_NAME = osname;
@@ -182,27 +182,30 @@ public enum Platform {
                     System.getProperty("os.arch")
             };
         }
-        if (isArch(osarch, arch -> arch.endsWith("64"))) {
+
+        boolean x86 = false;
+        if (isArch(osarch, arch -> arch.equals("amd64") || arch.equals("x86_64"))) {
             OS_ARCH = "x64";
+            x86 = true;
         } else if (isArch(osarch, arch -> arch.endsWith("86"))) {
             OS_ARCH = "x86";
+            x86 = true;
         } else {
             OS_ARCH = (osarch[0] != null) ? osarch[0] : "unknown";
         }
 
         String jarch = System.getProperty("sun.arch.data.model", "unknown");
-        switch (jarch) {
-            case "32":
-                JAVA_ARCH = "x86";
-                break;
-            case "64":
-                JAVA_ARCH = "x64";
-                break;
-            default:
-                JAVA_ARCH = jarch;
+        if (Util.isException(() -> Long.parseLong(jarch))) {
+            JAVA_ARCH = jarch;
+        } else if (x86 && jarch.equals("32")) {
+            JAVA_ARCH = "x86";
+        } else if (x86 && jarch.equals("64")) {
+            JAVA_ARCH = "x64";
+        } else {
+            JAVA_ARCH = jarch + "-bit";
         }
 
-        String jversion = getJavaVersion();
+        String jversion = System.getProperty("java.specification.version");
         Matcher regex = Pattern.compile("(?:1\\.)?(\\d+).*").matcher(jversion);
         if (regex.find()) {
             JAVA_LANG = Integer.parseInt(regex.group(1));
@@ -211,8 +214,8 @@ public enum Platform {
         }
     }
 
-    private static <T> boolean isArch(T[] array, ReturnCallback<T, Boolean> operation) {
-        for (T object : array) if (object != null && operation.run(object)) {
+    private static boolean isArch(String[] array, ReturnCallback<String, Boolean> operation) {
+        for (String object : array) if (object != null && operation.run(object.toLowerCase(Locale.ENGLISH))) {
             return true;
         }
         return false;
