@@ -401,7 +401,7 @@ public class PluginInfo implements ExtraDataHandler {
         PluginInfo engine = Galaxi.getInstance().getEngineInfo();
         PluginInfo app = Galaxi.getInstance().getAppInfo();
         stack.addAll(Arrays.asList(
-                Platform.getSystemName() + ' ' + Platform.getSystemVersion() + ((!Platform.getSystemVersion().equals(Platform.getSystemBuild()))?" (" + Platform.getSystemBuild() + ')':"") + ((!Platform.getSystemArchitecture().equals("unknown"))?" [" + Platform.getSystemArchitecture() + ']':"") + ",",
+                Platform.getSystemName() + ' ' + Platform.getSystemVersion() + ((Platform.getSystemBuild() != null)?" (" + Platform.getSystemBuild() + ')':"") + ((!Platform.getSystemArchitecture().equals("unknown"))?" [" + Platform.getSystemArchitecture() + ']':"") + ",",
                 "Java " + Platform.getJavaVersion() + ((!Platform.getJavaArchitecture().equals("unknown"))?" [" + Platform.getJavaArchitecture() + ']':"") + ",",
                 engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getBuild() != null)?" (" + engine.getBuild() + ')':"") + ((engine == app)?" [Standalone]" + ((engine == this)?"":","):",")
         ));

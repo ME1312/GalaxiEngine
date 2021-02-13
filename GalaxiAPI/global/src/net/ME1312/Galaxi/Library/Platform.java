@@ -92,8 +92,7 @@ public enum Platform {
     /**
      * Get the build of the Operating System that is currently being used
      *
-     * @see #getSystemVersion() The resulting Build string may be the same as the Version string on some operating systems
-     * @return Current Operating System Build
+     * @return Current Operating System Build (or null if no further versioning information is available)
      */
     public static String getSystemBuild() {
         return OS_BUILD;
@@ -136,9 +135,9 @@ public enum Platform {
     }
 
     static {
-        String osversion = System.getProperty("os.version");
-        String osname = System.getProperty("os.name", "");
-        String os = osname.toLowerCase(Locale.ENGLISH);
+        final String osversion = System.getProperty("os.version");
+        final String osname = System.getProperty("os.name", "");
+        final String os = osname.toLowerCase(Locale.ENGLISH);
         if (os.startsWith("mac") || os.startsWith("darwin")) {
             OS = MAC_OS;
             OS_NAME = OS.name;
@@ -161,9 +160,9 @@ public enum Platform {
             OS_VERSION = osversion;
         }
 
-        String[] osarch;
+        final String[] osarch;
         if (OS == WINDOWS) {
-            String osbuild = osversion;
+            String osbuild = null;
             try {
                 Matcher build = Pattern.compile(Pattern.quote(osversion) + "(?:.\\d+)*").matcher(Util.readAll(new InputStreamReader(Runtime.getRuntime().exec(new String[]{"cmd.exe", "/q", "/c", "ver"}).getInputStream())));
                 if (build.find()) osbuild = build.group().substring(osversion.length() + 1);
@@ -177,7 +176,7 @@ public enum Platform {
                     System.getenv("PROCESSOR_ARCHITEW6432")
             };
         } else {
-            OS_BUILD = osversion;
+            OS_BUILD = null;
             osarch = new String[] {
                     System.getProperty("os.arch")
             };
