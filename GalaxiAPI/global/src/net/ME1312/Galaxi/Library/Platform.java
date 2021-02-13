@@ -70,17 +70,6 @@ public enum Platform {
     }
 
     /**
-     * Get the name of the Operating System that is currently being used as the system originally presented it
-     *
-     * @see #getSystemName() The resulting Display Name may be the same as the same as the standardized name on some operating systems
-     * @see #getSystemVersion() The resulting Display Name may contain the Version string on some operating systems
-     * @return Current Operating System Display Name
-     */
-    public static String getSystemDisplayName() {
-        return System.getProperty("os.name");
-    }
-
-    /**
      * Get the version of the Operating System that is currently being used
      *
      * @return Current Operating System Version
@@ -136,7 +125,7 @@ public enum Platform {
 
     static {
         final String osversion = System.getProperty("os.version");
-        final String osname = System.getProperty("os.name", "");
+        final String osname = System.getProperty("os.name", OTHER.name);
         final String os = osname.toLowerCase(Locale.ENGLISH);
         if (os.startsWith("mac") || os.startsWith("darwin")) {
             OS = MAC_OS;
@@ -152,7 +141,7 @@ public enum Platform {
                 OS_VERSION = osname.substring(OS_NAME.length() + 1);
             } else {
                 OS_NAME = osname;
-                OS_VERSION = "";
+                OS_VERSION = osversion;
             }
         } else {
             OS = OTHER;
@@ -164,16 +153,14 @@ public enum Platform {
         if (OS == WINDOWS) {
             String osbuild = null;
             try {
-                Matcher build = Pattern.compile(Pattern.quote(osversion) + "(?:.\\d+)*").matcher(Util.readAll(new InputStreamReader(Runtime.getRuntime().exec(new String[]{"cmd.exe", "/q", "/c", "ver"}).getInputStream())));
+                Matcher build = Pattern.compile(Pattern.quote(osversion) + "(?:\\.\\d+)*").matcher(Util.readAll(new InputStreamReader(Runtime.getRuntime().exec(new String[]{"cmd.exe", "/q", "/c", "ver"}).getInputStream())));
                 if (build.find()) osbuild = build.group().substring(osversion.length() + 1);
-            } catch (IOException e) {
-//              e.printStackTrace(); // enable for debugging only -- normal users don't care
-            }
+            } catch (IOException e) {}
 
             OS_BUILD = osbuild;
             osarch = new String[] {
-                    System.getenv("PROCESSOR_ARCHITECTURE"),
-                    System.getenv("PROCESSOR_ARCHITEW6432")
+                    System.getenv("PROCESSOR_ARCHITEW6432"),
+                    System.getenv("PROCESSOR_ARCHITECTURE")
             };
         } else {
             OS_BUILD = null;
@@ -190,7 +177,19 @@ public enum Platform {
             OS_ARCH = "x86";
             x86 = true;
         } else {
-            OS_ARCH = (osarch[0] != null) ? osarch[0] : "unknown";
+            int i = -1;
+            String arch = "unknown";
+            for (int e = 0; e < osarch.length; ++e) if (osarch[e] != null) {
+                arch = osarch[e].toLowerCase(Locale.ENGLISH);
+                i = e;
+                break;
+            }
+
+            if (i == -1 || arch.equals("arm") || arch.equals("arm64")) {
+                OS_ARCH = arch;
+            } else {
+                OS_ARCH = osarch[i];
+            }
         }
 
         String jarch = System.getProperty("sun.arch.data.model", "unknown");
