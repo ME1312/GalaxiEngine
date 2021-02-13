@@ -184,10 +184,10 @@ public enum Platform {
         }
 
         boolean x86 = false;
-        if (isArch(osarch, arch -> arch.equals("amd64") || arch.equals("x86_64"))) {
+        if (isArch(osarch, arch -> arch.equals("ia64") || arch.equals("em64t") || arch.equals("amd64") || arch.equals("x86_64"))) {
             OS_ARCH = "x64";
             x86 = true;
-        } else if (isArch(osarch, arch -> arch.endsWith("86"))) {
+        } else if (isArch(osarch, arch -> Pattern.compile("^(?:i\\d|x)86$").matcher(arch).find())) {
             OS_ARCH = "x86";
             x86 = true;
         } else {
