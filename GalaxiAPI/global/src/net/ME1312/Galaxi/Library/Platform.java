@@ -1,6 +1,10 @@
 package net.ME1312.Galaxi.Library;
 
+import net.ME1312.Galaxi.Library.Callback.ReturnCallback;
+
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,11 +15,12 @@ import java.util.regex.Pattern;
 public enum Platform {
     WINDOWS("Windows", new File((System.getenv("APPDATALOCAL") != null)?System.getenv("APPDATALOCAL"):System.getenv("APPDATA"), "GalaxiEngine")),
     MAC_OS("Mac OS", new File(System.getProperty("user.home"), "Library/Application Support/GalaxiEngine")),
-    OTHER("Other", new File(System.getProperty("user.home"), ".GalaxiEngine"));
-
+    OTHER("Other", new File(System.getProperty("user.home"), ".GalaxiEngine"))
+    ;
     private static final Platform OS;
     private static final String OS_NAME;
     private static final String OS_VERSION;
+    private static final String OS_BUILD;
     private static final String OS_ARCH;
 
     private static final int JAVA_LANG;
@@ -58,18 +63,18 @@ public enum Platform {
     /**
      * Get the name of the Operating System that is currently being used
      *
-     * @return Current Operating System's Name
+     * @return Current Operating System Name
      */
     public static String getSystemName() {
         return OS_NAME;
     }
 
     /**
-     * Get the name of the Operating System that is currently being used as displayed by the system
+     * Get the name of the Operating System that is currently being used as the system originally presented it
      *
-     * @see #getSystemName() The resulting Display Name may be the same as the same as the standardized Name on some operating systems
-     * @see #getSystemVersion() The resulting Dosplay Name may contain the Version string on some operating systems
-     * @return Current Operating System's Display Name
+     * @see #getSystemName() The resulting Display Name may be the same as the same as the standardized name on some operating systems
+     * @see #getSystemVersion() The resulting Display Name may contain the Version string on some operating systems
+     * @return Current Operating System Display Name
      */
     public static String getSystemDisplayName() {
         return System.getProperty("os.name");
@@ -91,7 +96,7 @@ public enum Platform {
      * @return Current Operating System Build
      */
     public static String getSystemBuild() {
-        return System.getProperty("os.version");
+        return OS_BUILD;
     }
 
     /**
@@ -156,20 +161,33 @@ public enum Platform {
             OS_VERSION = osversion;
         }
 
-        String osarch;
-        String osarch2 = null;
+        String[] osarch;
         if (OS == WINDOWS) {
-            osarch = System.getenv("PROCESSOR_ARCHITECTURE");
-            osarch2 = System.getenv("PROCESSOR_ARCHITEW6432");
+            String osbuild = osversion;
+            try {
+                Matcher build = Pattern.compile(Pattern.quote(osversion) + "(?:.\\d+)*").matcher(Util.readAll(new InputStreamReader(Runtime.getRuntime().exec(new String[]{"cmd.exe", "/q", "/c", "ver"}).getInputStream())));
+                if (build.find()) osbuild = build.group().substring(osversion.length() + 1);
+            } catch (IOException e) {
+//              e.printStackTrace(); // enable for debugging only -- normal users don't care
+            }
+
+            OS_BUILD = osbuild;
+            osarch = new String[] {
+                    System.getenv("PROCESSOR_ARCHITECTURE"),
+                    System.getenv("PROCESSOR_ARCHITEW6432")
+            };
         } else {
-            osarch = System.getProperty("os.arch");
+            OS_BUILD = osversion;
+            osarch = new String[] {
+                    System.getProperty("os.arch")
+            };
         }
-        if (osarch != null && osarch.endsWith("64") || osarch2 != null && osarch2.endsWith("64")) {
+        if (isArch(osarch, arch -> arch.endsWith("64"))) {
             OS_ARCH = "x64";
-        } else if (osarch != null && osarch.endsWith("86") || osarch2 != null && osarch2.endsWith("86")) {
+        } else if (isArch(osarch, arch -> arch.endsWith("86"))) {
             OS_ARCH = "x86";
         } else {
-            OS_ARCH = (osarch != null) ? osarch : "unknown";
+            OS_ARCH = (osarch[0] != null) ? osarch[0] : "unknown";
         }
 
         String jarch = System.getProperty("sun.arch.data.model", "unknown");
@@ -191,5 +209,12 @@ public enum Platform {
         } else {
             JAVA_LANG = Integer.MAX_VALUE;
         }
+    }
+
+    private static <T> boolean isArch(T[] array, ReturnCallback<T, Boolean> operation) {
+        for (T object : array) if (object != null && operation.run(object)) {
+            return true;
+        }
+        return false;
     }
 }

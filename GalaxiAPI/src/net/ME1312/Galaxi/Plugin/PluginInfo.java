@@ -1,7 +1,6 @@
 package net.ME1312.Galaxi.Plugin;
 
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
@@ -37,7 +36,7 @@ public class PluginInfo implements ExtraDataHandler {
     private String name;
     private String display;
     private Version version;
-    private Version signature;
+    private Version build;
     private String state;
     private List<String> authors;
     private String desc;
@@ -125,8 +124,8 @@ public class PluginInfo implements ExtraDataHandler {
                     String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
                     String display = (mainClass.getAnnotation(Plugin.class).display().length() > 0)?mainClass.getAnnotation(Plugin.class).display():mainClass.getAnnotation(Plugin.class).name();
                     Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
-                    Version signature = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).signature()):null;
-                    String state = (mainClass.getAnnotation(Plugin.class).signature().length() > 0)?mainClass.getAnnotation(Plugin.class).state():null;
+                    Version build = (mainClass.getAnnotation(Plugin.class).build().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).build()):null;
+                    String state = (mainClass.getAnnotation(Plugin.class).build().length() > 0)?mainClass.getAnnotation(Plugin.class).state():null;
                     List<String> authors = Arrays.asList(mainClass.getAnnotation(Plugin.class).authors());
                     String description = (mainClass.getAnnotation(Plugin.class).description().length() > 0)?mainClass.getAnnotation(Plugin.class).description():null;
                     URL website = (mainClass.getAnnotation(Plugin.class).website().length() > 0)?new URL(mainClass.getAnnotation(Plugin.class).website()):null;
@@ -145,7 +144,7 @@ public class PluginInfo implements ExtraDataHandler {
 
                     PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, loadBefore, dependencies);
                     plugin.setDisplayName(display);
-                    plugin.setSignature(signature);
+                    plugin.setBuild(build);
                     plugin.setState(state);
 
                     pluginMap.put(mainClass, plugin);
@@ -154,15 +153,15 @@ public class PluginInfo implements ExtraDataHandler {
                     String name = mainClass.getAnnotation(App.class).name().replaceAll(ID_PATTERN, "$1");
                     String display = (mainClass.getAnnotation(App.class).display().length() > 0)?mainClass.getAnnotation(App.class).display():mainClass.getAnnotation(App.class).name();
                     Version version = Version.fromString(mainClass.getAnnotation(App.class).version());
-                    Version signature = (mainClass.getAnnotation(App.class).signature().length() > 0)?Version.fromString(mainClass.getAnnotation(App.class).signature()):null;
-                    String state = (mainClass.getAnnotation(App.class).signature().length() > 0)?mainClass.getAnnotation(App.class).state():null;
+                    Version build = (mainClass.getAnnotation(App.class).build().length() > 0)?Version.fromString(mainClass.getAnnotation(App.class).build()):null;
+                    String state = (mainClass.getAnnotation(App.class).build().length() > 0)?mainClass.getAnnotation(App.class).state():null;
                     List<String> authors = Arrays.asList(mainClass.getAnnotation(App.class).authors());
                     String description = (mainClass.getAnnotation(App.class).description().length() > 0)?mainClass.getAnnotation(App.class).description():null;
                     URL website = (mainClass.getAnnotation(App.class).website().length() > 0)?new URL(mainClass.getAnnotation(App.class).website()):null;
 
                     PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, Collections.emptyList(), Collections.emptyList());
                     plugin.setDisplayName(display);
-                    plugin.setSignature(signature);
+                    plugin.setBuild(build);
                     plugin.setState(state);
 
                     pluginMap.put(mainClass, plugin);
@@ -282,22 +281,22 @@ public class PluginInfo implements ExtraDataHandler {
     }
 
     /**
-     * Get the Plugin's Build Signature
+     * Get the Plugin's Build Version
      *
-     * @return Plugin Build Signature
+     * @return Plugin Build Version
      */
-    public Version getSignature() {
-        return this.signature;
+    public Version getBuild() {
+        return this.build;
     }
 
     /**
-     * Set the Plugin's Build Signature (may only be done once)
+     * Set the Plugin's Build Version (may only be done once)
      *
-     * @param value Plugin Build Signature
+     * @param value Plugin Build Version
      */
-    public void setSignature(Version value) {
-        if (signature == null) {
-            signature = value;
+    public void setBuild(Version value) {
+        if (build == null) {
+            build = value;
         }
     }
 
@@ -402,18 +401,18 @@ public class PluginInfo implements ExtraDataHandler {
         PluginInfo engine = Galaxi.getInstance().getEngineInfo();
         PluginInfo app = Galaxi.getInstance().getAppInfo();
         stack.addAll(Arrays.asList(
-                Platform.getSystemName() + ' ' + Platform.getSystemVersion() + ((!Platform.getSystemArchitecture().equals("unknown"))?" [" + Platform.getSystemArchitecture() + ']':"") + ",",
+                Platform.getSystemName() + ' ' + Platform.getSystemVersion() + ((!Platform.getSystemVersion().equals(Platform.getSystemBuild()))?" (" + Platform.getSystemBuild() + ')':"") + ((!Platform.getSystemArchitecture().equals("unknown"))?" [" + Platform.getSystemArchitecture() + ']':"") + ",",
                 "Java " + Platform.getJavaVersion() + ((!Platform.getJavaArchitecture().equals("unknown"))?" [" + Platform.getJavaArchitecture() + ']':"") + ",",
-                engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getSignature() != null)?" (" + engine.getSignature() + ')':"") + ((engine == app)?" [Standalone]" + ((engine == this)?"":","):",")
+                engine.getName() + " v" + engine.getVersion().toExtendedString() + ((engine.getBuild() != null)?" (" + engine.getBuild() + ')':"") + ((engine == app)?" [Standalone]" + ((engine == this)?"":","):",")
         ));
 
         if (engine != app)
-            stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getSignature() != null)?" (" + app.getSignature() + ')':"") + ((app.getState() != null)?" [" + app.getState() + ']':"") + ((app == this)?"":","));
+            stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getBuild() != null)?" (" + app.getBuild() + ')':"") + ((app.getState() != null)?" [" + app.getState() + ']':"") + ((app == this)?"":","));
         if (app != this) {
             for (PluginInfo plugin : scanDependencies()) {
-                stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getSignature() != null)?" (" + plugin.getSignature() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
+                stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getBuild() != null)?" (" + plugin.getBuild() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
             }
-            stack.add(this.getDisplayName() + " v" + this.getVersion().toExtendedString() + ((this.getSignature() != null)?" (" + this.getSignature() + ')':"") + ((this.getState() != null)?" [" + this.getState() + ']':""));
+            stack.add(this.getDisplayName() + " v" + this.getVersion().toExtendedString() + ((this.getBuild() != null)?" (" + this.getBuild() + ')':"") + ((this.getState() != null)?" [" + this.getState() + ']':""));
         }
         return stack;
     }

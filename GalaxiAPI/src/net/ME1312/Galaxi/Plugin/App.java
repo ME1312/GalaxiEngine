@@ -34,11 +34,11 @@ public @interface App {
     String version();
 
     /**
-     * The Build Signature of the App
+     * The Build Version of the App
      *
-     * @return Build Signature
+     * @return App Build Version
      */
-    String signature() default "";
+    String build() default "";
 
     /**
      * The State of the App

@@ -37,7 +37,7 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 /**
  * Galaxi Engine Main Class
  */
-@App(name = "GalaxiEngine", version = "3.4.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@App(name = "GalaxiEngine", version = "3.5.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 public class GalaxiEngine extends Galaxi {
     private final PluginManager pluginManager = new PluginManager(this);
 
@@ -105,7 +105,7 @@ public class GalaxiEngine extends Galaxi {
 
         Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
-            engine.setSignature(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
+            engine.setBuild(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
         engine.setIcon(GalaxiEngine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Library/Files/GalaxiIcon.png"));
 
         Util.isException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));

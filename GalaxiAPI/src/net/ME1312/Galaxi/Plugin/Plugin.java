@@ -34,11 +34,11 @@ public @interface Plugin {
     String version();
 
     /**
-     * The Build Signature of this Plugin
+     * The Build Version of this Plugin
      *
-     * @return Build Signature
+     * @return Plugin Build Version
      */
-    String signature() default "";
+    String build() default "";
 
     /**
      * The State of the Plugin

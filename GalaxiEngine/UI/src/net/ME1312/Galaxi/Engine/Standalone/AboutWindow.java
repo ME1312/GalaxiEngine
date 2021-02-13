@@ -47,7 +47,7 @@ public class AboutWindow extends JDialog {
         appName.setFont(appVersion.getFont().deriveFont((float) (36 * scale)));
 
         String versionText = app.getVersion().toFullExtendedString();
-        if (app.getSignature() != null) versionText += " (" + app.getSignature().toString() + ')';
+        if (app.getBuild() != null) versionText += " (" + app.getBuild().toString() + ')';
         if (app.getState() != null) versionText += " [" + app.getState() + "]";
         appVersion.setText(versionText.substring(0, 1).toUpperCase() + versionText.substring(1));
         appVersion.setFont(appVersion.getFont().deriveFont((float) (12 * scale)));
