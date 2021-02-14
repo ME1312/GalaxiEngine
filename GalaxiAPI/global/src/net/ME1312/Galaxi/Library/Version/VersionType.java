@@ -5,7 +5,7 @@ public enum VersionType {
     ALPHA(-6, "a", "alpha"),
     PRE_BETA(-5, "pb", "pre-beta"),
     BETA(-4, "b", "beta"),
-    PREVIEW(-3, "pv", "preview"),
+    PREVIEW(-3, "p", "preview"),
     SNAPSHOT(-3, "s", "snapshot"),
     PRE_RELEASE(-2, "pr", "pre-release"),
     RELEASE_CANDIDATE(-1, "rc", "release candidate"),
