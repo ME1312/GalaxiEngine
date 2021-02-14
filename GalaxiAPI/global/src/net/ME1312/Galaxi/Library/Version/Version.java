@@ -119,7 +119,7 @@ public class Version implements Serializable, Comparable<Version> {
      * @see #toFullString() <b>#toString()</b> returns a valid string
      */
     public static Version fromString(String string) {
-        Matcher regex = Pattern.compile("(rv|p?[abrv]|[su])?([^/]+)", Pattern.CASE_INSENSITIVE).matcher(string);
+        Matcher regex = Pattern.compile("(r[cv]|p?[abrv]|[su])?([^/]+)", Pattern.CASE_INSENSITIVE).matcher(string);
         Version current = null;
         while (regex.find()) {
             try {
@@ -145,6 +145,9 @@ public class Version implements Serializable, Comparable<Version> {
                         break;
                     case "pr":
                         type = VersionType.PRE_RELEASE;
+                        break;
+                    case "rc":
+                        type = VersionType.RELEASE_CANDIDATE;
                         break;
                     case "r":
                         type = VersionType.RELEASE;
@@ -180,7 +183,7 @@ public class Version implements Serializable, Comparable<Version> {
      * The full toString() method<br>
      * <br>
      * <b style="font-family: consolas">new Version(new Version("1.0.0"), VersionType.PRE_ALPHA, "7")</b> would return:<br>
-     * <b style="font-family: consolas">r1.0.0/pa7</b>
+     * <b style="font-family: consolas">v1.0.0/pa7</b>
      *
      * @return Version as a String
      */
@@ -204,7 +207,7 @@ public class Version implements Serializable, Comparable<Version> {
      * The full extended toString() method<br>
      * <br>
      * <b style="font-family: consolas">new Version(new Version("1.0.0"), VersionType.PRE_ALPHA, "7")</b> would return:<br>
-     * <b style="font-family: consolas">release 1.0.0 pre-alpha 7</b>
+     * <b style="font-family: consolas">version 1.0.0 pre-alpha 7</b>
      *
      * @return Version as a String
      */
