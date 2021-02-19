@@ -3,7 +3,9 @@ package net.ME1312.Galaxi.Library.Version;
 import net.ME1312.Galaxi.Library.Util;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -213,6 +215,40 @@ public class Version implements Serializable, Comparable<Version> {
      */
     public String toFullExtendedString() {
         return ((parent == null)?"":parent.toFullExtendedString()+' ') + type.longname + ' ' + string;
+    }
+
+    /**
+     * The default toString() method for Collections
+     *
+     * @param collection Version Collection
+     * @see #toString()
+     * @return Version Collection as a String
+     */
+    public static String toString(Collection<Version> collection) {
+        return collection.toString();
+    }
+
+    /**
+     * The full toString() method for Collections
+     *
+     * @param collection Version Collection
+     * @see #toFullString()
+     * @return Version Collection as a String
+     */
+    public static String toFullString(Collection<Version> collection) {
+        if (collection.size() == 0) {
+            return "[]";
+        }
+
+        StringBuilder string = new StringBuilder("[");
+        for (Iterator<Version> i = collection.iterator();;) {
+            Version next = i.next();
+            string.append((next == null)?"null":next.toFullString());
+            if (i.hasNext()) string.append(", ");
+            else break;
+        }
+        string.append(']');
+        return string.toString();
     }
 
     @Override

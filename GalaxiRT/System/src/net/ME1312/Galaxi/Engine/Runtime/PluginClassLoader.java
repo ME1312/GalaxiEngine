@@ -86,7 +86,7 @@ class PluginClassLoader extends URLClassLoader {
             if (check) {
                 Iterator i = new LinkedList<>(loaders.values()).iterator();
 
-                while (true) {
+                for (;;) {
                     PluginClassLoader loader;
                     do {
                         if (!i.hasNext()) {

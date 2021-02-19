@@ -51,7 +51,8 @@ public class ConsoleCommandSender implements CommandSender {
      * Send a message as Console
      *
      * @param message Message to send
-     * @throws UnsupportedOperationException when impossible
+     * @see InputSender#chat(String) ConsoleCommandSender should be of type InputSender when this method is implemented
+     * @throws UnsupportedOperationException when not implemented
      */
     public void chat(String message) {
         throw new UnsupportedOperationException("No console chat handler for type: String");
@@ -61,7 +62,8 @@ public class ConsoleCommandSender implements CommandSender {
      * Send a message as Console
      *
      * @param message Message to send
-     * @throws UnsupportedOperationException when impossible
+     * @see InputSender#chat(TextElement) ConsoleCommandSender should be of type InputSender when this method is implemented
+     * @throws UnsupportedOperationException when not implemented
      */
     public void chat(TextElement message) {
         throw new UnsupportedOperationException("No console chat handler for type: TextElement");
