@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Engine.RT;
+package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Command.*;
 import net.ME1312.Galaxi.Engine.CommandParser;
@@ -64,7 +64,7 @@ class Console extends CommandParser {
             window.open();
         } else {
             if (!GraphicsEnvironment.isHeadless()) {
-                this.window = window = Util.getDespiteException(() -> (ConsoleUI) Class.forName("net.ME1312.Galaxi.Engine.RT.ConsoleWindow").getConstructor(Console.class, boolean.class).newInstance(this, exit), null);
+                this.window = window = Util.getDespiteException(() -> (ConsoleUI) Class.forName("net.ME1312.Galaxi.Engine.Runtime.ConsoleWindow").getConstructor(Console.class, boolean.class).newInstance(this, exit), null);
                 window.open();
             }
         }

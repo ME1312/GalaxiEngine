@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Engine.RT;
+package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Galaxi;
 
@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class PluginClassLoader extends URLClassLoader {
+class PluginClassLoader extends URLClassLoader {
     private static final HashMap<File, PluginClassLoader> loaders = new HashMap<File, PluginClassLoader>();
     private Class<?> defaultClass = null;
     private final ClassLoader parent;
@@ -46,7 +46,7 @@ public class PluginClassLoader extends URLClassLoader {
         return (result == null)?new URL[0]:new URL[]{result};
     }
 
-    public File getFile() {
+    File getFile() {
         return file;
     }
 

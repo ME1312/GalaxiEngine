@@ -1,8 +1,8 @@
-package net.ME1312.Galaxi.Engine.RT;
+package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Command.ConsoleCommandSender;
 import net.ME1312.Galaxi.Command.InputSender;
-import net.ME1312.Galaxi.Engine.RT.Console.ParsedInput;
+import net.ME1312.Galaxi.Engine.Runtime.Console.ParsedInput;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;

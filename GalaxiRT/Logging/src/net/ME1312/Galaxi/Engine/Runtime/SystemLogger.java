@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Engine.RT;
+package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.LogStream;
@@ -17,13 +17,13 @@ import java.util.concurrent.TimeUnit;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.COLOR_LOG_LEVELS;
 
-public final class SystemLogger extends OutputStream {
+final class SystemLogger extends OutputStream {
     private final HashMap<String, LogStream> last = new HashMap<String, LogStream>();
     private static ExecutorService service;
     private static FileLogger file;
     private final boolean error;
 
-    protected SystemLogger(boolean level) {
+    private SystemLogger(boolean level) {
         this.error = level;
     }
 
@@ -55,7 +55,7 @@ public final class SystemLogger extends OutputStream {
         }
     }
 
-    protected String origin() {
+    private String origin() {
         int i = 0;
         String origin = java.lang.System.class.getCanonicalName();
         for (StackTraceElement element : new Exception().getStackTrace()) {

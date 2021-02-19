@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Engine.RT;
+package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Plugin.PluginInfo;

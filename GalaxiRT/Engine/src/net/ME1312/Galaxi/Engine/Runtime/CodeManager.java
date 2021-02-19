@@ -1,4 +1,4 @@
-package net.ME1312.Galaxi.Engine.RT;
+package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Command.Command;
 import net.ME1312.Galaxi.Library.Container.ContainedPair;
@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
+class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
     final HashMap<String, ClassLoader> knownClasses = new HashMap<String, ClassLoader>();
     final HashMap<String, PluginInfo> plugins = new LinkedHashMap<String, PluginInfo>();
     final TreeMap<String, Command> commands = super.commands;
