@@ -10,31 +10,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-/**
- * Plugin ClassLoader Class
- */
 public class PluginClassLoader extends URLClassLoader {
     private static final HashMap<File, PluginClassLoader> loaders = new HashMap<File, PluginClassLoader>();
     private Class<?> defaultClass = null;
     private final ClassLoader parent;
     private final File file;
 
-    /**
-     * Load Classes from URLs
-     *
-     * @param file File
-     */
-    public static PluginClassLoader get(File file) {
+    static PluginClassLoader get(File file) {
         return get(null, file);
     }
 
-    /**
-     * Load Classes from URLs with a parent loader
-     *
-     * @param parent Parent loader
-     * @param file File
-     */
-    public static PluginClassLoader get(ClassLoader parent, File file) {
+    static PluginClassLoader get(ClassLoader parent, File file) {
         if (!loaders.keySet().contains(file)) loaders.put(file, new PluginClassLoader(parent, file));
         return loaders.get(file);
     }
@@ -60,32 +46,15 @@ public class PluginClassLoader extends URLClassLoader {
         return (result == null)?new URL[0]:new URL[]{result};
     }
 
-    /**
-     * Get the file used by this ClassLoader
-     *
-     * @return Loaded File
-     */
     public File getFile() {
         return file;
     }
 
-    /**
-     * Set the Default Class to load when no class is found
-     *
-     * @param clazz Class
-     */
-    public void setDefaultClass(Class<?> clazz) {
+    void setDefaultClass(Class<?> clazz) {
         defaultClass = clazz;
     }
 
-
-    /**
-     * Get the Default Class to load when no class is found
-     *
-     * @throws ClassNotFoundException when no Default Class is set
-     * @return Default Class
-     */
-    public Class<?> getDefaultClass() throws ClassNotFoundException {
+    Class<?> getDefaultClass() throws ClassNotFoundException {
         if (defaultClass == null) {
             throw new ClassNotFoundException();
         } else {

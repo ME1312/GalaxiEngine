@@ -31,7 +31,7 @@ import java.util.jar.Manifest;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 @App(name = "GalaxiEngine", version = "3.6.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
-public class Engine extends GalaxiEngine {
+class Engine extends GalaxiEngine {
     private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.app());
     private final UniversalFile idir;
 

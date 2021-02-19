@@ -23,7 +23,7 @@ public final class SystemLogger extends OutputStream {
     private static FileLogger file;
     private final boolean error;
 
-    SystemLogger(boolean level) {
+    protected SystemLogger(boolean level) {
         this.error = level;
     }
 
@@ -55,7 +55,7 @@ public final class SystemLogger extends OutputStream {
         }
     }
 
-    private String origin() {
+    protected String origin() {
         int i = 0;
         String origin = java.lang.System.class.getCanonicalName();
         for (StackTraceElement element : new Exception().getStackTrace()) {

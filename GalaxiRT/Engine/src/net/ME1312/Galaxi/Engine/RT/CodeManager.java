@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
+public class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
     final HashMap<String, ClassLoader> knownClasses = new HashMap<String, ClassLoader>();
     final HashMap<String, PluginInfo> plugins = new LinkedHashMap<String, PluginInfo>();
     final TreeMap<String, Command> commands = super.commands;
@@ -28,11 +28,6 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
         this.engine = engine;
     }
 
-    /**
-     * Catalog classes for a library
-     *
-     * @param clazz A class from the library to search
-     */
     @Override
     public String[] catalogLibrary(Class<?> clazz) throws IOException {
         LinkedList<String> classes = new LinkedList<String>();
