@@ -471,7 +471,7 @@ public final class ConsoleWindow implements ConsoleUI {
         fontSize = (int) (12 * scale);
         String font;
         try {
-            Font f = Font.createFont(Font.TRUETYPE_FONT, ConsoleWindow.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/RT/Files/GalaxiFont.ttf"));
+            Font f = Font.createFont(Font.TRUETYPE_FONT, ConsoleWindow.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiFont.ttf"));
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(f);
             font = f.getFontName();
             input.setFont(f);

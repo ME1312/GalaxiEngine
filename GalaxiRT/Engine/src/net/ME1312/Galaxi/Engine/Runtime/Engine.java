@@ -65,7 +65,7 @@ class Engine extends GalaxiEngine {
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
             engine.setBuild(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
 
-        Util.isException(() -> engine.setIcon(Engine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/RT/Files/GalaxiIcon.png")));
+        Util.isException(() -> engine.setIcon(Engine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiIcon.png")));
         Util.isException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
         code.catalogLibrary(engine.get().getClass());
         code.catalogLibrary(this.app.get().getClass());

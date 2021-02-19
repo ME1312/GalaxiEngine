@@ -50,7 +50,7 @@ final class FileLogger implements LogMessenger {
                     writer = iwriter = new FileOutputStream(file);
                 } else {
                     file = new File(dir, name + ".log.htm");
-                    Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/RT/Files/GalaxiLog.htm", file.getAbsolutePath());
+                    Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiLog.htm", file.getAbsolutePath());
 
                     iwriter = new FileOutputStream(file, true);
                     iwriter.write(("<h1>" + nameX + "</h1>\n").getBytes("UTF-8"));
