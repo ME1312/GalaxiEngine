@@ -1,56 +1,17 @@
 package net.ME1312.Galaxi.Engine;
 
-import net.ME1312.Galaxi.Engine.Library.ConsoleReader;
-import net.ME1312.Galaxi.Engine.Library.DefaultCommands;
-import net.ME1312.Galaxi.Engine.Library.Log.SystemLogger;
-import net.ME1312.Galaxi.Event.GalaxiStartEvent;
-import net.ME1312.Galaxi.Event.GalaxiStopEvent;
+import net.ME1312.Galaxi.Command.ConsoleCommandSender;
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Config.YAMLSection;
-import net.ME1312.Galaxi.Library.Container.Container;
-import net.ME1312.Galaxi.Library.Log.LogLevel;
-import net.ME1312.Galaxi.Library.Log.Logger;
-import net.ME1312.Galaxi.Library.Map.ObjectMap;
-import net.ME1312.Galaxi.Library.Platform;
-import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
-import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Plugin.App;
 import net.ME1312.Galaxi.Plugin.Plugin;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
-import org.json.JSONObject;
-
-import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLStreamHandler;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.Timer;
-import java.util.concurrent.TimeUnit;
-import java.util.jar.Manifest;
-
-import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 /**
- * Galaxi Engine Main Class
+ * GalaxiEngine Main Class
  */
-@App(name = "GalaxiEngine", version = "3.5.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
-public class GalaxiEngine extends Galaxi {
-    private final PluginManager pluginManager = new PluginManager(this);
-
-    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.app());
-    private final UniversalFile idir;
-    private final ConsoleReader console;
-
-    private final PluginInfo app;
-    private final PluginInfo engine;
-    private static GalaxiEngine instance = null;
-
-    private final Container<Boolean> running = new Container<>(false);
-    private Runnable onStop = null;
+public abstract class GalaxiEngine extends Galaxi {
+    private ConsoleCommandSender console = new ConsoleCommandSender() {};
 
     /**
      * Initialize the Galaxi Engine
@@ -63,7 +24,7 @@ public class GalaxiEngine extends Galaxi {
     public static GalaxiEngine init(Object app) throws Exception {
         if (Util.isNull(app)) throw new NullPointerException();
         if (instance == null) {
-            return new GalaxiEngine(PluginInfo.getPluginInfo(app));
+            return Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.RT.Engine").getDeclaredConstructor(PluginInfo.class), PluginInfo.load(app));
         } else throw new IllegalStateException("Engine already initialized");
     }
 
@@ -76,7 +37,7 @@ public class GalaxiEngine extends Galaxi {
     public static GalaxiEngine init(PluginInfo app) throws Exception {
         if (Util.isNull(app)) throw new NullPointerException();
         if (instance == null) {
-            return new GalaxiEngine(app);
+            return Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.RT.Engine").getDeclaredConstructor(PluginInfo.class), app);
         } else throw new IllegalStateException("Engine already initialized");
     }
 
@@ -86,81 +47,7 @@ public class GalaxiEngine extends Galaxi {
      * @return The GalaxiEngine
      */
     public static GalaxiEngine getInstance() {
-        if (instance == null) throw new IllegalStateException("Illegal call to getInstance() before engine initialization");
-        return instance;
-    }
-
-    @SuppressWarnings("unchecked")
-    private GalaxiEngine(PluginInfo app) throws Exception {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-
-        instance = this;
-        this.engine = PluginInfo.getPluginInfo(this);
-        this.app = (app == null)?engine:app;
-
-        if (APPDATA_DIRECTORY.app() == Platform.getSystem().getAppDataDirectory()) APPDATA_DIRECTORY.value(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
-        Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
-
-        this.idir = new UniversalFile(APPDATA_DIRECTORY.app());
-
-        Manifest manifest = new Manifest(GalaxiEngine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
-        if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
-            engine.setBuild(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
-        engine.setIcon(GalaxiEngine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Library/Files/GalaxiIcon.png"));
-
-        Util.isException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
-        pluginManager.findClasses(engine.get().getClass());
-        pluginManager.findClasses(this.app.get().getClass());
-
-        if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.app())))
-            Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
-        this.console = new ConsoleReader(this, running);
-
-        this.app.getLogger().info.println("Loading " + engine.getName() + " v" + engine.getVersion().toString() + " Libraries");
-        if (app == null) this.app.getLogger().warn.println("GalaxiEngine is running in standalone mode");
-        else if (engine.getName().equalsIgnoreCase(this.app.getName())) throw new IllegalStateException("App name cannot be the same as the Engine's name");
-
-        DefaultCommands.load(this);
-        URL.setURLStreamHandlerFactory(protocol -> {
-            HashMap<String, URLStreamHandler> protocols;
-            try {
-                protocols = Util.reflect(Galaxi.class.getDeclaredField("protocols"), this);
-            } catch (Exception e) {
-                e.printStackTrace();
-                protocols = new HashMap<String, URLStreamHandler>();
-            }
-
-            if (protocols.keySet().contains(protocol.toLowerCase())) {
-                return protocols.get(protocol.toLowerCase());
-            } else {
-                return null;
-            }
-        });
-
-        if (engine == this.app || !GalaxiEngine.class.getProtectionDomain().getCodeSource().getLocation().equals(this.app.get().getClass().getProtectionDomain().getCodeSource().getLocation())) {
-            engine.setUpdateChecker(() -> {
-                try {
-                    YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
-                    List<Version> versions = new LinkedList<Version>();
-
-                    Version updversion = getEngineInfo().getVersion();
-                    int updcount = 0;
-                    for (ObjectMap<String> tag : tags.getMapList("tags")) versions.add(Version.fromString(tag.getString("ref").substring(10)));
-                    Collections.sort(versions);
-                    for (Version version : versions) {
-                        if (version.compareTo(updversion) > 0) {
-                            updversion = version;
-                            updcount++;
-                        }
-                    }
-                    if (updcount != 0) {
-                        getAppInfo().getLogger().message.println(engine.getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
-                        return true;
-                    }
-                } catch (Exception e) {}
-                return false;
-            });
-        }
+        return (GalaxiEngine) Galaxi.getInstance();
     }
 
     /**
@@ -175,26 +62,7 @@ public class GalaxiEngine extends Galaxi {
      *
      * @param callback Callback for when Galaxi is stopped
      */
-    public void start(Runnable callback) {
-        if (!running.value()) {
-            try {
-                onStop = callback;
-                running.value(true);
-                Util.isException(() -> Util.<Thread>reflect(ConsoleReader.class.getDeclaredField("thread"), console).start());
-                pluginManager.executeEvent(new GalaxiStartEvent(this));
-            } catch (Exception e) {}
-
-            new Timer(getEngineInfo().getName() + "::Routine_Update_Check").schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        if (engine.getUpdateChecker() != null) engine.getUpdateChecker().run();
-                        if (engine != app && app.getUpdateChecker() != null) app.getUpdateChecker().run();
-                    } catch (Exception e) {}
-                }
-            }, 0, TimeUnit.DAYS.toMillis(2));
-        }
-    }
+    public abstract void start(Runnable callback);
 
     /**
      * Stop the GalaxiEngine
@@ -208,74 +76,32 @@ public class GalaxiEngine extends Galaxi {
      *
      * @param code Exit Code
      */
-    public void stop(int code) {
-        if (!stopping) {
-            stopping = true;
-            GalaxiStopEvent event = new GalaxiStopEvent(this, code);
-            pluginManager.executeEvent(event);
-            if (!event.isCancelled()) {
-                exit(code);
-            } else stopping = false;
-        }
-    }
+    public abstract void stop(int code);
 
     /**
      * Force stop the GalaxiEngine
      *
      * @param code Exit Code
      */
-    public void terminate(int code) {
-        stopping = true;
-        GalaxiStopEvent event = new GalaxiStopEvent(this, code);
-        pluginManager.executeEvent(event);
-        exit(code);
-    }
-
-    private boolean stopping = false;
-    private void exit(int code) {
-        if (onStop != null) try {
-            onStop.run();
-        } catch (Throwable e) {
-            app.getLogger().error.println(e);
-        }
-
-        running.value(false);
-        Util.isException(() -> Util.reflect(SystemLogger.class.getDeclaredMethod("stop"), null));
-
-        System.exit(code);
-    }
+    public abstract void terminate(int code);
 
     /**
-     * Get the ConsoleReader
+     * Override the Console Sender
      *
-     * @return ConsoleReader
+     * @param sender Console Command Sender
      */
-    public ConsoleReader getConsoleReader() {
+    public void setConsole(ConsoleCommandSender sender) {
+        console = sender;
+    }
+
+    @Override
+    public ConsoleCommandSender getConsole() {
         return console;
     }
 
     @Override
-    public PluginManager getPluginManager() {
-        return pluginManager;
-    }
+    public abstract CommandParser getCommandProcessor();
 
     @Override
-    public UniversalFile getAppDataDirectory() {
-        return idir;
-    }
-
-    @Override
-    public UniversalFile getRuntimeDirectory() {
-        return dir;
-    }
-
-    @Override
-    public PluginInfo getAppInfo() {
-        return app;
-    }
-
-    @Override
-    public PluginInfo getEngineInfo() {
-        return engine;
-    }
+    public abstract CodeManager getPluginManager();
 }

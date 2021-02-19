@@ -11,6 +11,8 @@
         <module>GalaxiAPI/global</module>
         <module>GalaxiAPI</module>
         <module>GalaxiEngine</module>
-        <module>GalaxiEngine/UI</module>
+        <module>GalaxiRT</module>
+        <module>GalaxiRT/UI</module>
+        <module>GalaxiRT/X</module>
     </modules>
 </project>

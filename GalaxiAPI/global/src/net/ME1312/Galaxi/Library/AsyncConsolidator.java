@@ -5,8 +5,8 @@ package net.ME1312.Galaxi.Library;
  */
 public class AsyncConsolidator {
     private final Runnable action;
-    private int tasks = 0;
-    private boolean done;
+    private volatile int tasks = 0;
+    private volatile boolean done;
 
     /**
      * Create a Asynchronous Task Consolidator

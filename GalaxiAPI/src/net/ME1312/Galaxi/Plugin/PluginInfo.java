@@ -4,12 +4,12 @@ import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
-import net.ME1312.Galaxi.Library.Log.Logger;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Map.ObjectMapValue;
 import net.ME1312.Galaxi.Library.Platform;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
+import net.ME1312.Galaxi.Log.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 /**
  * Plugin Info Class
@@ -31,29 +31,29 @@ public class PluginInfo implements ExtraDataHandler {
     private static ArrayList<String> usedNames = new ArrayList<String>();
     private static HashMap<Class<?>, PluginInfo> pluginMap = new HashMap<Class<?>, PluginInfo>();
 
-    private Object plugin;
+    private final Object plugin;
     private Image icon;
-    private String name;
+    private final String name;
     private String display;
-    private Version version;
+    private final Version version;
     private Version build;
     private String state;
-    private List<String> authors;
-    private String desc;
-    private URL website;
-    private List<String> loadBefore;
-    private List<Dependency> depend;
+    private final List<String> authors;
+    private final String desc;
+    private final URL website;
+    private final List<String> loadBefore;
+    private final List<Dependency> depend;
 
     private File dir = new File(System.getProperty("user.dir"));
     private Logger logger = null;
     private boolean enabled = false;
     private ReturnRunnable<Boolean> updateChecker = null;
-    private ObjectMap<String> extra = new ObjectMap<String>();
+    private final ObjectMap<String> extra = new ObjectMap<String>();
 
     public static class Dependency {
-        private String name;
-        private Version minversion, maxversion;
-        private boolean required;
+        private final String name;
+        private final Version minversion, maxversion;
+        private final boolean required;
 
         /**
          * Generate Plugin DependencyInfo
@@ -115,10 +115,9 @@ public class PluginInfo implements ExtraDataHandler {
      * @return PluginInfo
      * @throws InvocationTargetException
      */
-    public static PluginInfo getPluginInfo(Object main) throws InvocationTargetException {
+    public static PluginInfo load(Object main) throws InvocationTargetException {
         Class<?> mainClass = main.getClass();
         if (!pluginMap.keySet().contains(mainClass)) {
-
             try {
                 if (mainClass.isAnnotationPresent(Plugin.class)) {
                     String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
@@ -173,7 +172,27 @@ public class PluginInfo implements ExtraDataHandler {
                 throw new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main);
             }
         }
-        return pluginMap.get(mainClass);
+        return get(mainClass);
+    }
+
+    /**
+     * Get an already registered PluginInfo by plugin class
+     *
+     * @param main Class tagged with @App/@Plugin
+     * @return PluginInfo
+     */
+    public static PluginInfo get(Object main) {
+        return pluginMap.get(main.getClass());
+    }
+
+    /**
+     * Get an already registered PluginInfo by plugin class
+     *
+     * @param main Class tagged with @App/@Plugin
+     * @return PluginInfo
+     */
+    public static PluginInfo get(Class<?> main) {
+        return pluginMap.get(main);
     }
 
     /**
