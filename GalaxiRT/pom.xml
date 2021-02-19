@@ -23,12 +23,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.sf.jopt-simple</groupId>
-            <artifactId>jopt-simple</artifactId>
-            <version>5.0.4</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>net.ME1312.Galaxi</groupId>
             <artifactId>GalaxiEngine</artifactId>
             <version>-PLACEHOLDER</version>
