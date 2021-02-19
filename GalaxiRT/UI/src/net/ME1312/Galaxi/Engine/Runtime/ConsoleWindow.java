@@ -411,7 +411,7 @@ public final class ConsoleWindow implements ConsoleUI {
             @Override
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                fontSize += 2 * scale;
+                fontSize += scale;
                 doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
@@ -423,7 +423,7 @@ public final class ConsoleWindow implements ConsoleUI {
             @Override
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                fontSize -= 2 * scale;
+                fontSize -= scale;
                 doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
@@ -441,7 +441,7 @@ public final class ConsoleWindow implements ConsoleUI {
             }
         });
         window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName());
-        window.setSize((int) (1024 * scale), (int) (575 * scale));
+        window.setSize((int) (1280 * scale), (int) (720 * scale));
         window.setLocation(
                 (int) Math.abs((screen.getWidth() - window.getWidth()) / 2),
                 (int) Math.abs((screen.getHeight() - window.getHeight()) / 2)
