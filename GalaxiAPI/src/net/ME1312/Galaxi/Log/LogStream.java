@@ -5,6 +5,8 @@ import net.ME1312.Galaxi.Library.Util;
 import java.io.*;
 import java.util.Calendar;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Log Stream Class
  */
@@ -27,11 +29,11 @@ public final class LogStream {
             @Override
             public void flush() throws IOException {
                 if (pending.size() > 0) {
-                    print(pending.toString("UTF-8").replace("\r", ""));
+                    print(pending.toString(UTF_8.name()).replace("\r", ""));
                     pending.reset();
                 }
             }
-        }, true, "UTF-8"), null);
+        }, true, UTF_8.name()), null);
     }
 
     interface MessageHandler {
@@ -130,7 +132,11 @@ public final class LogStream {
             message.append("null");
         }
 
-        return message.toString();
+        // hack for formatting over newlines
+        int length = message.codePointCount(0, message.length());
+        if (length > 3 && message.codePointAt(length - 4) == '\n') {
+            return message.substring(0, message.length() - 3);
+        } else return message.toString();
     }
 
     /**

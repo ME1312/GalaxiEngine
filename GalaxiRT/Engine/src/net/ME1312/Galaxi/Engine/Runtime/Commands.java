@@ -2,15 +2,19 @@ package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Command.Command;
 import net.ME1312.Galaxi.Command.CommandSender;
+import net.ME1312.Galaxi.Command.ConsoleCommandSender;
 import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Event.Engine.GalaxiReloadEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Log.ConsoleTextElement;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.*;
 
 /**
@@ -162,11 +166,11 @@ class Commands {
                     HashMap<Command, String> reverse = new LinkedHashMap<Command, String>();
                     TreeMap<String, Command> commands = engine.code.commands;
 
-                    int length = 0;
+                    int label = 0, description = 0;
                     for(String command : commands.keySet()) {
                         String formatted = "/ ";
                         Command cmd = commands.get(command);
-                        String alias = (reverse.keySet().contains(cmd))?reverse.get(cmd):null;
+                        String alias = reverse.getOrDefault(cmd, null);
 
                         if (alias != null) formatted = result.get(alias);
                         if (cmd.usage().length == 0 || alias != null) {
@@ -176,9 +180,9 @@ class Commands {
                             for (String str : cmd.usage()) usage += ((usage.length() == 0)?"":" ") + str;
                             formatted = formatted.replaceFirst("\\s", command + ' ' + usage + ' ');
                         }
-                        if(formatted.length() > length) {
-                            length = formatted.length();
-                        }
+
+                        if (formatted.length() > label) label = formatted.length();
+                        if (cmd.description() != null && cmd.description().length() > description) description = cmd.description().length();
 
                         if (alias == null) {
                             result.put(command, formatted);
@@ -188,19 +192,44 @@ class Commands {
                         }
                     }
 
+                    ++label;
+                    ++description;
                     if (args.length == 0) {
-                        sender.sendMessage("Command List:");
-                        for (String command : result.keySet()) {
-                            String formatted = result.get(command);
-                            Command cmd = commands.get(command);
-
-                            while (formatted.length() < length) {
-                                formatted += ' ';
-                            }
-                            formatted += ((cmd.description() == null || cmd.description().length() == 0)?"  ":"- "+cmd.description());
-
-                            sender.sendMessage(formatted);
+                        boolean color = false;
+                        Color a = new Color(48, 52, 54), b = new Color(53, 57, 59);
+                        StringBuilder formatted = new StringBuilder("Command Listing");
+                        StringBuilder blank = new StringBuilder(" \u00A0");
+                        if (sender instanceof ConsoleCommandSender) for (int limit = label + description + 2, i = blank.length(); i < limit; ++i) {
+                            if (i == formatted.length()) formatted.append(' ');
+                            blank.append(' ');
                         }
+
+                        formatted.append('\n');
+                        blank.append('\n');
+                        sender.sendMessage(new ConsoleTextElement(formatted.toString()).backgroundColor(b));
+                        for (Iterator<String> set = result.keySet().iterator(); set.hasNext();) {
+                            String command = set.next(), text = result.get(command);
+                            Command cmd = commands.get(command);
+                            formatted = new StringBuilder();
+                            color = !color;
+
+                            formatted.append("  ");
+                            formatted.append(text);
+                            if (sender instanceof ConsoleCommandSender || cmd.description() != null) {
+                                for (int i = text.length(); i < label; ++i) {
+                                    formatted.append(' ');
+                                }
+
+                                if (cmd.description() != null) formatted.append(cmd.description());
+                                if (sender instanceof ConsoleCommandSender) for (int i = (cmd.description() == null)? 0 : cmd.description().length(); i < description; ++i) {
+                                    formatted.append(' ');
+                                }
+                            }
+
+                            formatted.append('\n');
+                            sender.sendMessage(new ConsoleTextElement(formatted.toString()).backgroundColor((color)?a:b));
+                        }
+                        sender.sendMessage(new ConsoleTextElement(blank.toString()).backgroundColor((!color)?a:b));
                     } else if (commands.keySet().contains((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase())) {
                         Command cmd = commands.get((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase());
                         String formatted = result.get(Util.getBackwards(commands, cmd).get(0));

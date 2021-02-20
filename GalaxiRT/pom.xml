@@ -30,23 +30,18 @@
         </dependency>
     </dependencies>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>me1312-repo</id>
+            <url>https://dev.me1312.net/maven</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <directory>../out/compile/target/GalaxiRT</directory>
         <resources>
             <resource>
                 <directory>Engine/src</directory>
-                <excludes>
-                    <exclude>**/*.java</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <directory>Logging/src</directory>
-                <excludes>
-                    <exclude>**/*.java</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <directory>System/src</directory>
                 <excludes>
                     <exclude>**/*.java</exclude>
                 </excludes>
@@ -65,8 +60,8 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>Logging/src</source>
                                 <source>Engine/src</source>
+                                <source>Logging/src</source>
                                 <source>System/src</source>
                             </sources>
                         </configuration>
@@ -93,12 +88,33 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <mkdir dir="${project.build.directory}" />
+                                <mkdir dir="${project.build.directory}/classes/net/ME1312/Galaxi/Engine/Runtime/Files" />
                                 <copy file="${basedir}/../LICENSE" todir="${project.build.directory}/classes" />
                             </tasks>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.htmlminifier</groupId>
+                <artifactId>html-maven-plugin</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>html-minifier</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source-folder>${basedir}/Logging/src/net/ME1312/Galaxi/Engine/Runtime/Files</source-folder>
+                    <target-folder>${project.build.directory}/classes/net/ME1312/Galaxi/Engine/Runtime/Files</target-folder>
+                    <walk-recursively>false</walk-recursively>
+                    <compression-enabled>true</compression-enabled>
+                    <remove-http-protocol>false</remove-http-protocol>
+                    <remove-https-protocol>false</remove-https-protocol>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

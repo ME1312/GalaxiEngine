@@ -8,13 +8,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
+import static net.ME1312.Galaxi.Engine.Runtime.ConsoleLogger.ansi;
 
 final class FileLogger implements LogMessenger {
     private FileOutputStream iwriter = null;
@@ -53,7 +54,7 @@ final class FileLogger implements LogMessenger {
                     Util.copyFromJar(FileLogger.class.getClassLoader(), "net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiLog.htm", file.getAbsolutePath());
 
                     iwriter = new FileOutputStream(file, true);
-                    iwriter.write(("<h1>" + nameX + "</h1>\n").getBytes("UTF-8"));
+                    iwriter.write(("<h1>" + nameX.replace("<", "&lt;").replace(">", "&gt;").replace("&", "&amp;") + "</h1>\n").getBytes(UTF_8));
                     iwriter.flush();
                     writer = HTMLogger.wrap(iwriter);
                 }
@@ -63,12 +64,15 @@ final class FileLogger implements LogMessenger {
 
     public void log(String s) throws IOException {
         child.log(s);
-        if (writer != null) {
-            writer.write(s.getBytes(StandardCharsets.UTF_8));
+        if (writer instanceof HTMLogger) {
+            writer.write(s.getBytes(UTF_8));
+            writer.flush();
+        } else if (writer != null) {
+            writer.write(ansi(s).getBytes(UTF_8));
             writer.flush();
         }
         if (tmpwriter != null) {
-            tmpwriter.write(s.getBytes(StandardCharsets.UTF_8));
+            tmpwriter.write(s.getBytes(UTF_8));
             tmpwriter.flush();
         }
     }
@@ -81,7 +85,7 @@ final class FileLogger implements LogMessenger {
         File compressed = (file != null)?new File(file.getParentFile(), file.getName().substring(0, file.getName().length() - 4) + ".zip"):null;
         try {
             if (writer != null) {
-                if (writer instanceof HTMLogger) iwriter.write(("</body>\n</html>").getBytes("UTF-8"));
+                if (writer instanceof HTMLogger) iwriter.write(("</body></html>").getBytes(UTF_8));
                 writer.close();
             }
             if (file != null && compressed != null) {

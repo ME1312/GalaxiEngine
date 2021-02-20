@@ -1,9 +1,9 @@
 package net.ME1312.Galaxi.Plugin;
 
 import net.ME1312.Galaxi.Command.Command;
+import net.ME1312.Galaxi.Event.*;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container.Container;
-import net.ME1312.Galaxi.Event.*;
 import net.ME1312.Galaxi.Library.Util;
 
 import java.lang.reflect.InvocationTargetException;

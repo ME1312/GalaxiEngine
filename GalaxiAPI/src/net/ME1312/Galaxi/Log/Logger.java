@@ -147,8 +147,8 @@ public final class Logger {
                 String prefix = '[' + new SimpleDateFormat("HH:mm:ss").format(time) + "] [" + stream.getLogger().getPrefix() + File.separator + stream.getLevel().getName() + "] > ";
                 StringBuilder result = new StringBuilder();
 
-                LinkedList<String> messages = new LinkedList<String>();
                 boolean terminate = false;
+                LinkedList<String> messages = new LinkedList<String>();
                 if (original.length() > 0) {
                     StringBuilder message = new StringBuilder();
                     boolean terminate_with_prefix = false;
@@ -167,8 +167,8 @@ public final class Logger {
                                 terminate_with_prefix = true;
                                 break;
                             case '\t':
-                                c = ' ';
                                 message.append("   ");
+                                c = ' ';
                             default:
                                 message.appendCodePoint(c);
                                 terminate = false;

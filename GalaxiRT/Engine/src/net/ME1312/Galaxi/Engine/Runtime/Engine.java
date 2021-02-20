@@ -22,7 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -83,7 +83,7 @@ class Engine extends GalaxiEngine {
         if (engine == this.app || !Engine.class.getProtectionDomain().getCodeSource().getLocation().equals(this.app.get().getClass().getProtectionDomain().getCodeSource().getLocation())) {
             engine.setUpdateChecker(() -> {
                 try {
-                    YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), Charset.forName("UTF-8")))) + '}'));
+                    YAMLSection tags = new YAMLSection(new JSONObject("{\"tags\":" + Util.readAll(new BufferedReader(new InputStreamReader(new URL("https://api.github.com/repos/ME1312/GalaxiEngine/git/refs/tags").openStream(), StandardCharsets.UTF_8))) + '}'));
                     List<Version> versions = new LinkedList<Version>();
 
                     Version updversion = getEngineInfo().getVersion();

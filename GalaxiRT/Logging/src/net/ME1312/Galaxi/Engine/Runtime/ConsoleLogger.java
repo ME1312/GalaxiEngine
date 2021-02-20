@@ -32,14 +32,17 @@ final class ConsoleLogger {
                     buffer.append(s);
                 }
 
-                if (USE_ANSI.def()) {
-                    console.jline.printAbove(buffer.toString().replace("\n", Ansi.ansi().a(Ansi.Attribute.RESET) + "\n"));
-                } else console.jline.printAbove((String) new AnsiString(buffer.toString()).getPlain());
-
+                console.jline.printAbove(ansi(buffer.toString()));
                 console.jline.getTerminal().flush();
             } else {
                 buffer.append(s);
             }
         } catch (Exception e) {}
+    }
+
+    static String ansi(String s) {
+        if (USE_ANSI.def()) {
+            return s.replace("\n", "\n" + Ansi.ansi().a(Ansi.Attribute.RESET));
+        } else return (String) new AnsiString(s).getPlain();
     }
 }

@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.List;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.CONSOLE_WINDOW_SIZE;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.MAX_CONSOLE_WINDOW_SCROLLBACK;
 
@@ -89,7 +90,7 @@ public final class ConsoleWindow implements ConsoleUI {
         public void flush() throws IOException {
             try {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                ((HTMLEditorKit) log.getEditorKit()).insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), "UTF-8"), 0, 0, null);
+                ((HTMLEditorKit) log.getEditorKit()).insertHTML(doc, doc.getLength() - 2, new String(scache.toByteArray(), UTF_8), 0, 0, null);
                 EventQueue.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -399,7 +400,7 @@ public final class ConsoleWindow implements ConsoleUI {
             @Override
             public void actionPerformed(ActionEvent event) {
                 HTMLDocument doc = (HTMLDocument) log.getDocument();
-                fontSize = (int) (12 * scale);
+                fontSize = (int) (13 * scale);
                 doc.getStyleSheet().addRule("body {font-size: " + fontSize + ";}\n");
                 ConsoleWindow.this.hScroll();
             }
@@ -468,7 +469,7 @@ public final class ConsoleWindow implements ConsoleUI {
         log.setContentType("text/html");
         log.setEditorKit(new HTMLEditorKit());
         StyleSheet style = new StyleSheet();
-        fontSize = (int) (12 * scale);
+        fontSize = (int) (13 * scale);
         String font;
         try {
             Font f = Font.createFont(Font.TRUETYPE_FONT, ConsoleWindow.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiFont.ttf"));
@@ -726,7 +727,7 @@ public final class ConsoleWindow implements ConsoleUI {
         try {
             clear();
             slines.add(sbytes);
-            stream.write("\u00A0".getBytes("UTF-8"));
+            stream.write("\u00A0".getBytes(UTF_8));
         } catch (IOException e) {}
 
         loadContent();
@@ -765,7 +766,7 @@ public final class ConsoleWindow implements ConsoleUI {
                 stream.write(b, 0, i);
             }
 
-            log(stream.toString("UTF-8"));
+            log(stream.toString(UTF_8.name()));
         } catch (Exception e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
         }
@@ -781,18 +782,18 @@ public final class ConsoleWindow implements ConsoleUI {
             end = (i == -1) ? s.length() : i + 1;
 
             // Submit the text (without any newlines)
-            stream.write(s.substring(begin, (i == -1) ? s.length() : i).getBytes("UTF-8"));
+            stream.write(s.substring(begin, (i == -1) ? s.length() : i).getBytes(UTF_8));
 
             // Count the bytes (with 1 possible newline)
-            bytes = s.substring(begin, end).getBytes("UTF-8").length;
+            bytes = s.substring(begin, end).getBytes(UTF_8).length;
             if (sbytes + bytes < sbytes) sbytes = Long.MAX_VALUE;
             else sbytes += bytes;
 
             // Submit a newline if necessary
             if (i != -1) {
-                stream.write("\u00A0".getBytes("UTF-8"));
+                stream.write("\u00A0".getBytes(UTF_8));
                 stream.flush();
-                stream.write("\n\u00A0".getBytes("UTF-8"));
+                stream.write("\n\u00A0".getBytes(UTF_8));
                 slines.add(sbytes);
                 while (slines.size() > MAX_SCROLLBACK + 1) {
                     slines.removeFirst();

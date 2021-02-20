@@ -1,7 +1,7 @@
 package net.ME1312.Galaxi.Event.Engine;
 
-import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Event.CancellableEvent;
+import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
 
 /**
