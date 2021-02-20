@@ -1,9 +1,13 @@
 package net.ME1312.Galaxi.Log;
 
+import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Util;
 
+import java.awt.*;
 import java.io.*;
 import java.util.Calendar;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -38,6 +42,7 @@ public final class LogStream {
 
     interface MessageHandler {
         void log(String message) throws IOException;
+        Color parse256(int color);
     }
 
     /**
@@ -91,52 +96,92 @@ public final class LogStream {
             }
 
             ConsoleTextElement element = new ConsoleTextElement(original.element);
-            if (element.bold()) message.append("\u001B[1m");
-            if (element.italic()) message.append("\u001B[3m");
-            if (element.underline()) message.append("\u001B[4m");
-            if (element.strikethrough()) message.append("\u001B[9m");
-            if (element.color() != null) {
-                int red = element.color().getRed();
-                int green = element.color().getGreen();
-                int blue = element.color().getBlue();
-                float alpha = element.color().getAlpha() / 255f;
+            LinkedList<String> style = new LinkedList<String>();
+            if (element.bold()) style.add("1");
+            if (element.italic()) style.add("3");
+            if (element.underline()) style.add("4");
+            if (element.strikethrough()) style.add("9");
+            if (element.element.contains("c")) {
+                ObjectMap<String> map = element.element.getMap("c");
+                int color = map.getInt("8", -1);
+                if (color != -1) {
+                    if (color < 8) {
+                        style.add(String.valueOf(30 + color));
+                    } else if (color < 16) {  //    90 + color - 8
+                        style.add(String.valueOf(82 + color));
+                    } else {
+                        style.add("38;5;" + color);
+                    }
+                } else {
+                    int red = map.getInt("r");
+                    int green = map.getInt("g");
+                    int blue = map.getInt("b");
+                    float alpha = map.getInt("a") / 255f;
 
-                red = Math.round(alpha * red);
-                green = Math.round(alpha * green);
-                blue = Math.round(alpha * blue);
+                    red = Math.round(alpha * red);
+                    green = Math.round(alpha * green);
+                    blue = Math.round(alpha * blue);
 
-                message.append("\u001B[38;2;" + red + ";" + green + ";" + blue + "m");
+                    style.add("38;2;" + red + ";" + green + ";" + blue);
+                }
             }
-            if (element.backgroundColor() != null) {
-                int red = element.backgroundColor().getRed();
-                int green = element.backgroundColor().getGreen();
-                int blue = element.backgroundColor().getBlue();
-                float alpha = element.backgroundColor().getAlpha() / 255f;
+            if (element.element.contains("bc")) {
+                ObjectMap<String> map = element.element.getMap("bc");
+                int color = map.getInt("8", -1);
+                if (color != -1) {
+                    if (color < 8) {
+                        style.add(String.valueOf(40 + color));
+                    } else if (color < 16) {  //   100 + color - 8
+                        style.add(String.valueOf(92 + color));
+                    } else {
+                        style.add("48;5;" + color);
+                    }
+                } else {
+                    int red = map.getInt("r");
+                    int green = map.getInt("g");
+                    int blue = map.getInt("b");
+                    float alpha = map.getInt("a") / 255f;
 
-                red = Math.round(alpha * red);
-                green = Math.round(alpha * green);
-                blue = Math.round(alpha * blue);
+                    red = Math.round(alpha * red);
+                    green = Math.round(alpha * green);
+                    blue = Math.round(alpha * blue);
 
-                message.append("\u001B[48;2;" + red + ";" + green + ";" + blue + "m");
+                    style.add("48;2;" + red + ";" + green + ";" + blue);
+                }
             }
-            if (element.onClick() != null) message.append("\033]99900;" + element.onClick().toString() + "\007");
+
+            boolean escaped = style.size() != 0;
+            if (escaped) {
+                message.append("\u001B[");
+                for (Iterator<String> i = style.iterator();;) {
+                    message.append(i.next());
+                    if (i.hasNext()) {
+                        message.append(';');
+                    } else {
+                        message.append('m');
+                        break;
+                    }
+                }
+            }
+            if (element.onClick() != null) {
+                escaped = true;
+                message.append("\033]99900;" + element.onClick().toString() + "\007");
+            }
             message.append(element.message());
-            message.append("\u001B[m");
+            if (escaped) message.append("\u001B[m");
 
             try {
                 for (TextElement e : original.after) message.append(convert(e));
             } catch (Throwable e) {
                 getLogger().error.println(e);
             }
-        } else {
-            message.append("null");
-        }
 
-        // hack for formatting over newlines
-        int length = message.codePointCount(0, message.length());
-        if (length > 3 && message.codePointAt(length - 4) == '\n') {
-            return message.substring(0, message.length() - 3);
-        } else return message.toString();
+            if (message.length() > 3 && message.substring(message.length() - 4).equals("\n\u001B[m")) {
+                return message.substring(0, message.length() - 3);
+            } else return message.toString();
+        } else {
+            return "null";
+        }
     }
 
     /**

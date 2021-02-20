@@ -4,6 +4,7 @@ import net.ME1312.Galaxi.Library.Container.Container;
 
 import org.fusesource.jansi.AnsiOutputStream;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedList;
@@ -11,8 +12,8 @@ import java.util.LinkedList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 class HTMLogger extends AnsiOutputStream {
-    private static final String[] ANSI_COLOR_MAP = new String[]{"000000", "cd0000", "25bc24", "d7d700", "0000c3", "be00be", "00a5dc", "cccccc"};
-    private static final String[] ANSI_BRIGHT_COLOR_MAP = new String[]{"808080", "ff0000", "31e722", "ffff00", "0000ff", "ff00ff", "00c8ff", "ffffff"};
+    private static final String[] ANSI_COLOR_MAP = new String[8];
+    private static final String[] ANSI_BRIGHT_COLOR_MAP = new String[8];
     private static final byte[] BYTES_NBSP = "\u00A0".getBytes(UTF_8);
     private static final byte[] BYTES_AMP = "&amp;".getBytes(UTF_8);
     private static final byte[] BYTES_LT = "&lt;".getBytes(UTF_8);
@@ -134,13 +135,13 @@ class HTMLogger extends AnsiOutputStream {
         super.processDeleteLine(amount);
     }
 
-    private String parseTextDecoration() {
+    private void renderTextDecoration() throws IOException {
         String dec = "";
         if (underline) dec += " underline";
         if (strikethrough) dec += " line-through";
-        if (dec.length() <= 0) dec += " none";
 
-        return dec.substring(1);
+        closeAttribute("span style=\"text-decoration:");
+        if (dec.length() != 0) writeAttribute("span style=\"text-decoration:" + dec.substring(1) + "\"");
     }
 
     @Override
@@ -155,14 +156,12 @@ class HTMLogger extends AnsiOutputStream {
                 writeAttribute("i");
                 break;
             case 4:
-                closeAttribute("span style=\"text-decoration:");
                 underline = true;
-                writeAttribute("span style=\"text-decoration:" + parseTextDecoration() + ";\"");
+                renderTextDecoration();
                 break;
             case 9:
-                closeAttribute("span style=\"text-decoration:");
                 strikethrough = true;
-                writeAttribute("span style=\"text-decoration:" + parseTextDecoration() + ";\"");
+                renderTextDecoration();
                 break;
             case 22:
                 closeAttribute("b");
@@ -171,14 +170,20 @@ class HTMLogger extends AnsiOutputStream {
                 closeAttribute("i");
                 break;
             case 24:
-                closeAttribute("span style=\"text-decoration:");
                 underline = false;
-                writeAttribute("span style=\"text-decoration:" + parseTextDecoration() + ";\"");
+                renderTextDecoration();
                 break;
             case 29:
-                closeAttribute("span style=\"text-decoration:");
                 strikethrough = false;
-                writeAttribute("span style=\"text-decoration:" + parseTextDecoration() + ";\"");
+                renderTextDecoration();
+                break;
+            case 73:
+                closeAttribute("su");
+                writeAttribute("sup");
+                break;
+            case 74:
+                closeAttribute("su");
+                writeAttribute("sub");
                 break;
         }
     }
@@ -200,21 +205,23 @@ class HTMLogger extends AnsiOutputStream {
         closeAttributes();
     }
 
-    private String parse8BitColor(int color) throws IOException {
+    static {
+        int color = 0;
+        for (; color < ANSI_COLOR_MAP.length; ++color) ANSI_COLOR_MAP[color] = parseColor(Console.ANSI_COLOR_MAP[color]);
+        for (int i = 0; i < ANSI_BRIGHT_COLOR_MAP.length; ++i, ++color) ANSI_BRIGHT_COLOR_MAP[i] = parseColor(Console.ANSI_COLOR_MAP[color]);
+    }
+
+    private static String parseColor(Color color) {
+        return ((color.getRed() >= 16)? "" : "0") + Integer.toString(color.getRed(), 16) + ((color.getGreen() >= 16)? "" : "0") + Integer.toString(color.getGreen(), 16) + ((color.getBlue() >= 16)? "" : "0") + Integer.toString(color.getBlue(), 16);
+    }
+
+    private static String parse256(int color) throws IOException {
         if (color < 8) {
             return ANSI_COLOR_MAP[color];
         } else if (color < 16) {
             return ANSI_BRIGHT_COLOR_MAP[color - 8];
-        } else if (color < 232) {
-            int r = (int) (Math.floor((color - 16) / 36d) * (255 / 5));
-            int g = (int) (Math.floor(((color - 16) % 36d) / 6d) * (255 / 5));
-            int b = (int) (Math.floor(((color - 16) % 36d) % 6d) * (255 / 5));
-            return ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16);
-        } else if (color < 256) {
-            int gray = (int) ((255 / 25d) * (color - 232 + 1));
-            return ((gray >= 16)?"":"0") + Integer.toString(gray, 16) + ((gray >= 16)?"":"0") + Integer.toString(gray, 16) + ((gray >= 16)?"":"0") + Integer.toString(gray, 16);
         } else {
-            throw new IOException("Invalid 8-bit color: " + color);
+            return parseColor(Console.parse256(color));
         }
     }
 
@@ -232,7 +239,7 @@ class HTMLogger extends AnsiOutputStream {
     protected void processSetForegroundColor(int color, boolean bright) throws IOException {
         if (ansi) {
             processDefaultTextColor();
-            writeAttribute("span style=\"color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+            writeAttribute("span style=\"color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
         }
     }
 
@@ -240,7 +247,7 @@ class HTMLogger extends AnsiOutputStream {
     protected void processSetForegroundColorExt(int index) throws IOException {
         if (ansi) {
             processDefaultTextColor();
-            writeAttribute("span style=\"color:#" + parse8BitColor(index) + ";\"");
+            writeAttribute("span style=\"color:#" + parse256(index) + "\"");
         }
     }
 
@@ -248,7 +255,7 @@ class HTMLogger extends AnsiOutputStream {
     protected void processSetForegroundColorExt(int r, int g, int b) throws IOException {
         if (ansi) {
             processDefaultTextColor();
-            writeAttribute("span style=\"color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+            writeAttribute("span style=\"color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
         }
     }
 
@@ -266,7 +273,7 @@ class HTMLogger extends AnsiOutputStream {
     protected void processSetBackgroundColor(int color, boolean bright) throws IOException {
         if (ansi) {
             processDefaultBackgroundColor();
-            writeAttribute("span style=\"background-color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + ";\"");
+            writeAttribute("span style=\"background-color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
         }
     }
 
@@ -274,7 +281,7 @@ class HTMLogger extends AnsiOutputStream {
     protected void processSetBackgroundColorExt(int index) throws IOException {
         if (ansi) {
             processDefaultBackgroundColor();
-            writeAttribute("span style=\"background-color:#" + parse8BitColor(index) + ";\"");
+            writeAttribute("span style=\"background-color:#" + parse256(index) + "\"");
         }
     }
 
@@ -282,7 +289,7 @@ class HTMLogger extends AnsiOutputStream {
     protected void processSetBackgroundColorExt(int r, int g, int b) throws IOException {
         if (ansi) {
             processDefaultBackgroundColor();
-            writeAttribute("span style=\"background-color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + ";\"");
+            writeAttribute("span style=\"background-color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
         }
     }
 

@@ -17,7 +17,7 @@ import static net.ME1312.Galaxi.Log.LogLevel.*;
 public final class Logger {
     private static boolean color = false;
     private static ExecutorService service = null;
-    private static LogStream.MessageHandler writer = null;
+    static LogStream.MessageHandler writer = null;
 
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
     private final LinkedList<LogFilter> lFilters = new LinkedList<LogFilter>();

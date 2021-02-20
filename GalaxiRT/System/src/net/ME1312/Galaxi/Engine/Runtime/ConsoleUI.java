@@ -1,9 +1,10 @@
 package net.ME1312.Galaxi.Engine.Runtime;
 
-import net.ME1312.Galaxi.Log.LogMessenger;
+import java.io.IOException;
 
-interface ConsoleUI extends LogMessenger {
+interface ConsoleUI {
     void open();
+    void log(String message) throws IOException;
     void close();
     void destroy();
 }

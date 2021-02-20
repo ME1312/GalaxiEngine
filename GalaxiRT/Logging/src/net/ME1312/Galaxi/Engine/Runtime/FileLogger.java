@@ -4,6 +4,7 @@ import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.LogMessenger;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -107,5 +108,10 @@ final class FileLogger implements LogMessenger {
         file = null;
         iwriter = null;
         writer = null;
+    }
+
+    @Override
+    public Color parse256(int color) {
+        return Console.parse256(color);
     }
 }

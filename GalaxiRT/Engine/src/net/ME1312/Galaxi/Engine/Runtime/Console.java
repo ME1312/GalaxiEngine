@@ -14,6 +14,7 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.awt.*;
 import java.io.IOError;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,6 +87,40 @@ class Console extends CommandParser {
             } else {
                 window.close();
             }
+        }
+    }
+
+    static final Color[] ANSI_COLOR_MAP = new Color[] {
+            new Color(  0,   0,   0),
+            new Color(205,   0,   0),
+            new Color( 37, 188,  36),
+            new Color(215, 215,   0),
+            new Color(  0,   0, 195),
+            new Color(190,   0, 190),
+            new Color(  0, 165, 220),
+            new Color(204, 204, 204),
+            new Color(128, 128, 128),
+            new Color(255,   0,   0),
+            new Color( 49, 231,  34),
+            new Color(255, 255,   0),
+            new Color(  0,   0, 255),
+            new Color(255,   0, 255),
+            new Color(  0, 200, 255),
+            new Color(255, 255, 255),
+    };
+    static Color parse256(int color) {
+        if (color < 16) {
+            return ANSI_COLOR_MAP[color];
+        } else if (color < 232) {
+            int r = (int) (Math.floor((color - 16) / 36d) * (255 / 5));
+            int g = (int) (Math.floor(((color - 16) % 36d) / 6d) * (255 / 5));
+            int b = (int) (Math.floor(((color - 16) % 36d) % 6d) * (255 / 5));
+            return new Color(r, g, b);
+        } else if (color < 256) {
+            int gray = (int) ((255 / 25d) * (color - 232 + 1));
+            return new Color(gray, gray, gray);
+        } else {
+            throw new IllegalArgumentException("Invalid 8-bit color: " + color);
         }
     }
 

@@ -61,9 +61,38 @@ public class ConsoleTextElement extends TextElement {
         return (ConsoleTextElement) super.strikethrough(value);
     }
 
+    /**
+     * Set the color of the text
+     *
+     * @param color 8-bit Text Color
+     * @return Text Element
+     */
+    public ConsoleTextElement color(int color) {
+        if (Logger.writer != null) {
+            color(Logger.writer.parse256(color));
+            element.getMap("c").set("8", color);
+        }
+        return this;
+    }
+
     @Override
     public ConsoleTextElement color(Color color) {
         return (ConsoleTextElement) super.color(color);
+    }
+
+
+    /**
+     * Set the background color of the text
+     *
+     * @param color 8-bit Background Color
+     * @return Text Element
+     */
+    public ConsoleTextElement backgroundColor(int color) {
+        if (Logger.writer != null) {
+            backgroundColor(Logger.writer.parse256(color));
+            element.getMap("bc").set("8", color);
+        }
+        return this;
     }
 
     /**

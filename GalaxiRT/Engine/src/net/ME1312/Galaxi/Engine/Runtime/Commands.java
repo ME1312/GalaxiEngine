@@ -125,7 +125,7 @@ class Commands {
             } else {
                 return new String[0];
             }
-        }).usage("[plugin]").description("Gets the version of the System, Engine, App, and the specified Plugin").help(
+        }).usage("[plugin]").description("Prints versioning information").help(
                 "This command will print what OS you're running, your OS version,",
                 "your Java version, the GalaxiEngine version, and the app version.",
                 "",
@@ -149,7 +149,7 @@ class Commands {
                     sender.sendMessage("You do not have permission to access this command");
                 }
             }
-        }.description("Reload the app settings").help(
+        }.description("Reloads app settings").help(
                 "This command will reload the configuration for the app",
                 "and any plugins that opt-in via the reload event.",
                 "",
@@ -193,13 +193,13 @@ class Commands {
                     }
 
                     ++label;
-                    description += 2;
+                    description += 3;
                     if (args.length == 0) {
                         boolean color = false;
-                        Color a = new Color(48, 52, 54), b = new Color(53, 57, 59);
+                        int a = 236, b = 237;
                         StringBuilder formatted = new StringBuilder("Command Listing");
                         StringBuilder blank = new StringBuilder("  ");
-                        if (sender instanceof ConsoleCommandSender) for (int limit = label + description + 2, i = blank.length(); i < limit; ++i) {
+                        if (sender instanceof ConsoleCommandSender) for (int limit = label + description + 3, i = blank.length(); i < limit; ++i) {
                             if (i == formatted.length()) formatted.append(' ');
                             blank.append(' ');
                         }
@@ -213,7 +213,7 @@ class Commands {
                             formatted = new StringBuilder();
                             color = !color;
 
-                            formatted.append("  ");
+                            formatted.append("   ");
                             formatted.append(text);
                             if (sender instanceof ConsoleCommandSender || cmd.description() != null) {
                                 for (int i = text.length(); i < label; ++i) {
@@ -261,7 +261,7 @@ class Commands {
             } else {
                 return new String[0];
             }
-        }).usage("[command]").description("Prints a list of the commands and/or their descriptions").help(
+        }).usage("[command]").description("Prints help on using commands").help(
                 "This command will print a list of all currently registered commands and aliases,",
                 "along with their usage and a short description.",
                 "",

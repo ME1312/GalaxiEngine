@@ -117,7 +117,7 @@ public class ObjectMap<K> {
      * @return if that handle exists
      */
     public boolean contains(K handle) {
-        return map.keySet().contains(handle);
+        return map.containsKey(handle);
     }
 
     /**
