@@ -791,6 +791,7 @@ public final class ConsoleWindow implements ConsoleUI {
 
             // Submit a newline if necessary
             if (i != -1) {
+                stream.closeAttributes();
                 stream.write("\u00A0".getBytes(UTF_8));
                 stream.flush();
                 stream.write("\n\u00A0".getBytes(UTF_8));

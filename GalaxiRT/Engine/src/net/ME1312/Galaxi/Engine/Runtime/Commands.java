@@ -193,12 +193,12 @@ class Commands {
                     }
 
                     ++label;
-                    ++description;
+                    description += 2;
                     if (args.length == 0) {
                         boolean color = false;
                         Color a = new Color(48, 52, 54), b = new Color(53, 57, 59);
                         StringBuilder formatted = new StringBuilder("Command Listing");
-                        StringBuilder blank = new StringBuilder(" \u00A0");
+                        StringBuilder blank = new StringBuilder("  ");
                         if (sender instanceof ConsoleCommandSender) for (int limit = label + description + 2, i = blank.length(); i < limit; ++i) {
                             if (i == formatted.length()) formatted.append(' ');
                             blank.append(' ');
