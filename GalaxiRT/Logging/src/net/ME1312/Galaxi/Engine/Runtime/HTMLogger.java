@@ -41,7 +41,10 @@ class HTMLogger extends AnsiOutputStream {
                 if (htm.queue.size() > 0) {
                     LinkedList<String> queue = htm.queue;
                     htm.queue = new LinkedList<>();
-                    for (String item : queue) htm.write(item);
+                    for (String attr : queue) {
+                        htm.write('<' + attr + '>');
+                        htm.closingAttributes.addFirst(attr);
+                    }
                 }
 
                 if (data == 32) {
@@ -63,7 +66,7 @@ class HTMLogger extends AnsiOutputStream {
                             raw.write(BYTES_GT);
                             break;
                         case 10:
-                            html.value().closeAttributes();
+                            htm.closeAttributes();
                         default:
                             raw.write(data);
                     }
@@ -84,45 +87,55 @@ class HTMLogger extends AnsiOutputStream {
         raw.write(s.getBytes(UTF_8));
     }
 
-    private void writeAttribute(String s) throws IOException {
-        queue.add("<" + s + ">");
-        closingAttributes.add(0, s);
+    private void writeAttribute(String attr) throws IOException {
+        queue.add(attr);
     }
 
     void closeAttribute(String s) throws IOException {
+
+        // Try to remove a tag that doesn't exist yet first
+        String[] queue = this.queue.toArray(new String[0]);
+        for (int i = queue.length; i > 0;) {
+            String attr = queue[--i];
+            if (attr.toLowerCase().startsWith(s.toLowerCase())) {
+                this.queue.removeLastOccurrence(attr);
+                return;
+            }
+        }
+
+        // Close a tag that we've already written
         LinkedList<String> closedAttributes = new LinkedList<String>();
         LinkedList<String> closingAttributes = new LinkedList<String>();
         LinkedList<String> unclosedAttributes = new LinkedList<String>();
 
-        int qi = 0, qs = queue.size();
         closingAttributes.addAll(this.closingAttributes);
         for (String attr : closingAttributes) {
             if (attr.toLowerCase().startsWith(s.toLowerCase())) {
                 for (String a : unclosedAttributes) {
-                    closedAttributes.add(0, a);
-                    if (qi < qs) queue.removeLast();
-                    else write("</" + a.split(" ", 2)[0] + ">");
+                    closedAttributes.add(a);
+                    this.closingAttributes.removeFirst();
+                    write("</" + a.split(" ", 2)[0] + '>');
                 }
-                this.closingAttributes.removeFirstOccurrence(attr);
                 unclosedAttributes.clear();
-                if (qi < qs) queue.removeLast();
-                else write("</" + attr.split(" ", 2)[0] + ">");
+                this.closingAttributes.removeFirst();
+                write("</" + attr.split(" ", 2)[0] + '>');
+                break;
             } else {
                 unclosedAttributes.add(attr);
             }
-            ++qi;
         }
+
+        // Queue unrelated tags to be re-opened
         for (String attr : closedAttributes) {
-            queue.add("<" + attr + ">");
+            this.queue.addFirst(attr);
         }
     }
 
     void closeAttributes() throws IOException {
-        int qi = 0, qs = queue.size();
+        queue.clear();
+
         for (String attr : closingAttributes) {
-            if (qi < qs) queue.removeLast();
-            else write("</" + attr.split(" ", 2)[0] + ">");
-            ++qi;
+            write("</" + attr.split(" ", 2)[0] + ">");
         }
 
         underline = false;
@@ -185,17 +198,19 @@ class HTMLogger extends AnsiOutputStream {
                 closeAttribute("su");
                 writeAttribute("sub");
                 break;
+            case 75:
+                closeAttribute("su");
+                break;
         }
     }
 
     @Override
     protected void processUnknownOperatingSystemCommand(int label, String arg) {
         try {
-            if (ansi) switch (label) {
-                case 99900: // Galaxi Console Exclusives 99900-99999
-                    closeAttribute("a");
-                    if (arg.length() > 0) writeAttribute("a href=\"" + arg.replace("\"", "&quot;") + "\" target=\"_blank\"");
-                    break;
+            if (ansi && label == 8) {
+                closeAttribute("a");
+                String[] args = arg.split(";");
+                if (args.length > 1) writeAttribute("a href=\"" + args[1].replace("\"", "&quot;") + "\" target=\"_blank\"");
             }
         } catch (Exception e) {}
     }

@@ -13,6 +13,8 @@ import java.util.*;
  */
 public class TextElement {
     protected final LinkedList<TextElement> before = new LinkedList<TextElement>();
+    protected final LinkedList<TextElement> prepend = new LinkedList<TextElement>();
+    protected final LinkedList<TextElement> append = new LinkedList<TextElement>();
     protected final LinkedList<TextElement> after = new LinkedList<TextElement>();
     protected final ObjectMap<String> element;
 
@@ -43,11 +45,13 @@ public class TextElement {
     }
 
     /**
-     * Populate the <i>before</i> and <i>after</i> maps here
+     * Decode your text here
      */
     protected void load() {
-        for (ObjectMap<String> e : element.getMapList("pre", new LinkedList<ObjectMap<String>>())) before.add(new TextElement(e));
-        for (ObjectMap<String> e : element.getMapList("post", new LinkedList<ObjectMap<String>>())) after.add(new TextElement(e));
+        for (ObjectMap<String> e : element.getMapList("before", new LinkedList<ObjectMap<String>>())) before.add(new TextElement(e));
+        for (ObjectMap<String> e : element.getMapList("pre", new LinkedList<ObjectMap<String>>())) prepend.add(new TextElement(e));
+        for (ObjectMap<String> e : element.getMapList("post", new LinkedList<ObjectMap<String>>())) append.add(new TextElement(e));
+        for (ObjectMap<String> e : element.getMapList("after", new LinkedList<ObjectMap<String>>())) after.add(new TextElement(e));
     }
 
     /**
@@ -174,12 +178,12 @@ public class TextElement {
     }
 
     /**
-     * Prepend text elements to this element
+     * Place elements before this element
      *
      * @param elements Elements to prepend
      * @return Text Element
      */
-    public TextElement prepend(TextElement... elements) {
+    public TextElement before(TextElement... elements) {
         LinkedList<TextElement> before = new LinkedList<TextElement>();
         before.addAll(Arrays.asList(elements));
         Collections.reverse(before);
@@ -188,12 +192,37 @@ public class TextElement {
     }
 
     /**
-     * Append text elements to this element
+     * Place elements inside this element, but in front of the text
+     *
+     * @param elements Elements to insert
+     * @return Text Element
+     */
+    public TextElement prepend(TextElement... elements) {
+        LinkedList<TextElement> before = new LinkedList<TextElement>();
+        before.addAll(Arrays.asList(elements));
+        Collections.reverse(before);
+        for (TextElement element : before) this.prepend.addFirst(element);
+        return this;
+    }
+
+    /**
+     * Place elements inside this element, but behind the text
+     *
+     * @param elements Elements to insert
+     * @return Text Element
+     */
+    public TextElement append(TextElement... elements) {
+        append.addAll(Arrays.asList(elements));
+        return this;
+    }
+
+    /**
+     * Place elements after this element
      *
      * @param elements Elements to append
      * @return Text Element
      */
-    public TextElement append(TextElement... elements) {
+    public TextElement after(TextElement... elements) {
         after.addAll(Arrays.asList(elements));
         return this;
     }
@@ -206,28 +235,55 @@ public class TextElement {
     public ObjectMap<String> toRaw() {
         return toRaw(new ArrayList<TextElement>());
     }
-    private ObjectMap<String> toRaw(List<TextElement> past) {
+
+    /**
+     * Encode your text here
+     *
+     * @param past Text Elements we've already seen before
+     * @return Encoded Text
+     */
+    protected ObjectMap<String> toRaw(List<TextElement> past) {
         past.add(this);
 
         LinkedList<ObjectMap<String>> before = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.before) {
-            if (past.contains(e)) throw new IllegalStateException("Infinite text prepend loop");
+            if (past.contains(e)) throw new IllegalStateException("Infinite text before loop");
             List<TextElement> p = new ArrayList<TextElement>();
             p.addAll(past);
             before.add(e.toRaw(p));
         }
-        if (!before.isEmpty()) element.set("pre", before);
+        if (!before.isEmpty()) element.set("before", before);
+        else if (element.contains("before")) element.remove("before");
+
+        LinkedList<ObjectMap<String>> prepend = new LinkedList<ObjectMap<String>>();
+        for (TextElement e : this.prepend) {
+            if (past.contains(e)) throw new IllegalStateException("Infinite text prepend loop");
+            List<TextElement> p = new ArrayList<TextElement>();
+            p.addAll(past);
+            prepend.add(e.toRaw(p));
+        }
+        if (!prepend.isEmpty()) element.set("pre", prepend);
         else if (element.contains("pre")) element.remove("pre");
+
+        LinkedList<ObjectMap<String>> append = new LinkedList<ObjectMap<String>>();
+        for (TextElement e : this.append) {
+            if (past.contains(e)) throw new IllegalStateException("Infinite text append loop");
+            List<TextElement> p = new ArrayList<TextElement>();
+            p.addAll(past);
+            append.add(e.toRaw(p));
+        }
+        if (!append.isEmpty()) element.set("post", append);
+        else if (element.contains("post")) element.remove("post");
 
         LinkedList<ObjectMap<String>> after = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.after) {
-            if (past.contains(e)) throw new IllegalStateException("Infinite text append loop");
+            if (past.contains(e)) throw new IllegalStateException("Infinite text after loop");
             List<TextElement> p = new ArrayList<TextElement>();
             p.addAll(past);
             after.add(e.toRaw(p));
         }
-        if (!after.isEmpty()) element.set("post", after);
-        else if (element.contains("post")) element.remove("post");
+        if (!after.isEmpty()) element.set("after", after);
+        else if (element.contains("after")) element.remove("after");
 
         return element.clone();
     }

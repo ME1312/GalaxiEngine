@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * Console Text Element Builder Class
  */
-public class ConsoleTextElement extends TextElement {
+public class ConsoleText extends TextElement {
     private static final HashMap<String, Runnable> callbacks = new HashMap<String, Runnable>();
 
     /**
@@ -22,14 +22,16 @@ public class ConsoleTextElement extends TextElement {
      *
      * @param text Text
      */
-    public ConsoleTextElement(String text) {
+    public ConsoleText(String text) {
         super(text);
     }
 
     @Override
     protected void load() {
-        for (ObjectMap<String> e : element.getMapList("pre", new LinkedList<ObjectMap<String>>())) before.add(new ConsoleTextElement(e));
-        for (ObjectMap<String> e : element.getMapList("post", new LinkedList<ObjectMap<String>>())) after.add(new ConsoleTextElement(e));
+        for (ObjectMap<String> e : element.getMapList("before", new LinkedList<ObjectMap<String>>())) before.add(new ConsoleText(e));
+        for (ObjectMap<String> e : element.getMapList("pre", new LinkedList<ObjectMap<String>>())) prepend.add(new ConsoleText(e));
+        for (ObjectMap<String> e : element.getMapList("post", new LinkedList<ObjectMap<String>>())) append.add(new ConsoleText(e));
+        for (ObjectMap<String> e : element.getMapList("after", new LinkedList<ObjectMap<String>>())) after.add(new ConsoleText(e));
     }
 
     /**
@@ -37,28 +39,70 @@ public class ConsoleTextElement extends TextElement {
      *
      * @param element Raw Element
      */
-    public ConsoleTextElement(ObjectMap<String> element) {
+    public ConsoleText(ObjectMap<String> element) {
         super(element);
     }
 
     @Override
-    public ConsoleTextElement bold(boolean value) {
-        return (ConsoleTextElement) super.bold(value);
+    public ConsoleText bold(boolean value) {
+        return (ConsoleText) super.bold(value);
     }
 
     @Override
-    public ConsoleTextElement italic(boolean value) {
-        return (ConsoleTextElement) super.italic(value);
+    public ConsoleText italic(boolean value) {
+        return (ConsoleText) super.italic(value);
     }
 
     @Override
-    public ConsoleTextElement underline(boolean value) {
-        return (ConsoleTextElement) super.underline(value);
+    public ConsoleText underline(boolean value) {
+        return (ConsoleText) super.underline(value);
     }
 
     @Override
-    public ConsoleTextElement strikethrough(boolean value) {
-        return (ConsoleTextElement) super.strikethrough(value);
+    public ConsoleText strikethrough(boolean value) {
+        return (ConsoleText) super.strikethrough(value);
+    }
+
+    /**
+     * Set whether the text will be in superscript
+     *
+     * @param value Superscript Status
+     * @return Text Element
+     */
+    public ConsoleText superscript(boolean value) {
+        if (value && subscript()) subscript(false);
+        element.set("sup", value);
+        return this;
+    }
+
+    /**
+     * Whether the text will be in superscript
+     *
+     * @return Superscript Status
+     */
+    public boolean superscript() {
+        return element.getBoolean("sup", false);
+    }
+
+    /**
+     * Set whether the text will be in subscript
+     *
+     * @param value Subscript Status
+     * @return Text Element
+     */
+    public ConsoleText subscript(boolean value) {
+        if (value && superscript()) superscript(false);
+        element.set("sub", value);
+        return this;
+    }
+
+    /**
+     * Whether the text will be in subscript
+     *
+     * @return Subscript Status
+     */
+    public boolean subscript() {
+        return element.getBoolean("sub", false);
     }
 
     /**
@@ -67,7 +111,7 @@ public class ConsoleTextElement extends TextElement {
      * @param color 8-bit Text Color
      * @return Text Element
      */
-    public ConsoleTextElement color(int color) {
+    public ConsoleText color(int color) {
         if (Logger.writer != null) {
             color(Logger.writer.parse256(color));
             element.getMap("c").set("8", color);
@@ -76,8 +120,8 @@ public class ConsoleTextElement extends TextElement {
     }
 
     @Override
-    public ConsoleTextElement color(Color color) {
-        return (ConsoleTextElement) super.color(color);
+    public ConsoleText color(Color color) {
+        return (ConsoleText) super.color(color);
     }
 
 
@@ -87,7 +131,7 @@ public class ConsoleTextElement extends TextElement {
      * @param color 8-bit Background Color
      * @return Text Element
      */
-    public ConsoleTextElement backgroundColor(int color) {
+    public ConsoleText backgroundColor(int color) {
         if (Logger.writer != null) {
             backgroundColor(Logger.writer.parse256(color));
             element.getMap("bc").set("8", color);
@@ -101,7 +145,7 @@ public class ConsoleTextElement extends TextElement {
      * @param color Text Background Color (or null for default)
      * @return Text Element
      */
-    public ConsoleTextElement backgroundColor(Color color) {
+    public ConsoleText backgroundColor(Color color) {
         if (color == null) {
             element.set("bc", null);
         } else {
@@ -135,7 +179,7 @@ public class ConsoleTextElement extends TextElement {
      * @param value Code to run
      * @return Text Element
      */
-    public ConsoleTextElement onClick(Runnable value) {
+    public ConsoleText onClick(Runnable value) {
         String id;
         if (callbacks.values().contains(value)) {
             id = Util.getBackwards(callbacks, value).get(0);
@@ -153,7 +197,7 @@ public class ConsoleTextElement extends TextElement {
      * @param value Link to open
      * @return Text Element
      */
-    public ConsoleTextElement onClick(URL value) {
+    public ConsoleText onClick(URL value) {
         element.set("a", value);
         return this;
     }
@@ -174,12 +218,22 @@ public class ConsoleTextElement extends TextElement {
     }
 
     @Override
-    public ConsoleTextElement prepend(TextElement... elements) {
-        return (ConsoleTextElement) super.prepend(elements);
+    public ConsoleText before(TextElement... elements) {
+        return (ConsoleText) super.before(elements);
     }
 
     @Override
-    public ConsoleTextElement append(TextElement... elements) {
-        return (ConsoleTextElement) super.append(elements);
+    public ConsoleText prepend(TextElement... elements) {
+        return (ConsoleText) super.prepend(elements);
+    }
+
+    @Override
+    public ConsoleText append(TextElement... elements) {
+        return (ConsoleText) super.append(elements);
+    }
+
+    @Override
+    public ConsoleText after(TextElement... elements) {
+        return (ConsoleText) super.after(elements);
     }
 }

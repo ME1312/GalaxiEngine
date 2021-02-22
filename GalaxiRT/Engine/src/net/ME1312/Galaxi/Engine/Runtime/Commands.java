@@ -8,10 +8,9 @@ import net.ME1312.Galaxi.Event.Engine.GalaxiReloadEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Util;
-import net.ME1312.Galaxi.Log.ConsoleTextElement;
+import net.ME1312.Galaxi.Log.ConsoleText;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
-import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -206,7 +205,7 @@ class Commands {
 
                         formatted.append('\n');
                         blank.append('\n');
-                        sender.sendMessage(new ConsoleTextElement(formatted.toString()).backgroundColor(b));
+                        sender.sendMessage(new ConsoleText(formatted.toString()).backgroundColor(b));
                         for (Iterator<String> set = result.keySet().iterator(); set.hasNext();) {
                             String command = set.next(), text = result.get(command);
                             Command cmd = commands.get(command);
@@ -227,9 +226,9 @@ class Commands {
                             }
 
                             formatted.append('\n');
-                            sender.sendMessage(new ConsoleTextElement(formatted.toString()).backgroundColor((color)?a:b));
+                            sender.sendMessage(new ConsoleText(formatted.toString()).backgroundColor((color)?a:b));
                         }
-                        sender.sendMessage(new ConsoleTextElement(blank.toString()).backgroundColor((!color)?a:b));
+                        sender.sendMessage(new ConsoleText(blank.toString()).backgroundColor((!color)?a:b));
                     } else if (commands.keySet().contains((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase())) {
                         Command cmd = commands.get((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase());
                         String formatted = result.get(Util.getBackwards(commands, cmd).get(0));

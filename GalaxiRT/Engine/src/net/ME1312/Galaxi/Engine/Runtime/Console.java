@@ -99,6 +99,7 @@ class Console extends CommandParser {
             new Color(190,   0, 190),
             new Color(  0, 165, 220),
             new Color(204, 204, 204),
+
             new Color(128, 128, 128),
             new Color(255,   0,   0),
             new Color( 49, 231,  34),
@@ -112,12 +113,14 @@ class Console extends CommandParser {
         if (color < 16) {
             return ANSI_COLOR_MAP[color];
         } else if (color < 232) {
-            int r = (int) (Math.floor((color - 16) / 36d) * (255 / 5));
-            int g = (int) (Math.floor(((color - 16) % 36d) / 6d) * (255 / 5));
-            int b = (int) (Math.floor(((color - 16) % 36d) % 6d) * (255 / 5));
+            float x = color - 16;
+            int r = (int) (Math.floor(x / 36f) * 51);
+                  x =                (x % 36f)      ;
+            int g = (int) (Math.floor(x /  6f) * 51);
+            int b = (int) (Math.floor(x %  6f) * 51);
             return new Color(r, g, b);
         } else if (color < 256) {
-            int gray = (int) ((255 / 25d) * (color - 232 + 1));
+            int gray = (int) (10.2f * (color - 231));
             return new Color(gray, gray, gray);
         } else {
             throw new IllegalArgumentException("Invalid 8-bit color: " + color);

@@ -8,7 +8,7 @@ import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;
 import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Util;
-import net.ME1312.Galaxi.Log.ConsoleTextElement;
+import net.ME1312.Galaxi.Log.ConsoleText;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -43,6 +43,12 @@ public final class ConsoleWindow implements ConsoleUI {
             return Double.parseDouble(CONSOLE_WINDOW_SIZE.usr());
         }
     }, 0D) > 0)?Double.parseDouble(CONSOLE_WINDOW_SIZE.usr()):null;
+    private static final String HOST_NAME = Util.getDespiteException(new ExceptionReturnRunnable<String>() {
+        @Override
+        public String run() throws Throwable {
+            return new BufferedReader(new InputStreamReader(Runtime.getRuntime().exec("hostname").getInputStream())).readLine();
+        }
+    }, "");
     private HashMap<String, Runnable> events;
     private Console reader;
     private JFrame window;
@@ -508,8 +514,20 @@ public final class ConsoleWindow implements ConsoleUI {
                 if (HyperlinkEvent.EventType.ACTIVATED.equals(e.getEventType())) {
                     try {
                         switch (e.getURL().getProtocol().toLowerCase()) {
-                            case "file":
-                                Desktop.getDesktop().open(new File(e.getURL().toURI()));
+                            case "file": {
+                                String hostname = e.getURL().getHost();
+                                if (HOST_NAME.length() == 0 || HOST_NAME.equalsIgnoreCase("localhost") ||
+                                        hostname.length() == 0 || hostname.equalsIgnoreCase("localhost") || hostname.equalsIgnoreCase(HOST_NAME)) {
+                                    File file = new File(e.getURL().toURI());
+                                    if (file.exists()) {
+                                        Desktop.getDesktop().open(file);
+                                    } else {
+                                        Galaxi.getInstance().getAppInfo().getLogger().message.println("File \"" + file.toString() + "\" does not exist");
+                                    }
+                                } else {
+                                    Galaxi.getInstance().getAppInfo().getLogger().message.println("File \"" + e.getURL().getPath() + "\" exists on another device: " + hostname);
+                                }
+                            }
                                 break;
                             case "mailto":
                                 switch (e.getURL().getPath()) {
@@ -719,7 +737,7 @@ public final class ConsoleWindow implements ConsoleUI {
         });
 
         try {
-            events = Util.reflect(ConsoleTextElement.class.getDeclaredField("callbacks"), null);
+            events = Util.reflect(ConsoleText.class.getDeclaredField("callbacks"), null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
         }
