@@ -17,7 +17,6 @@ class HTMLogger extends AnsiOutputStream {
     private static final byte[] BYTES_NBSP = "\u00A0".getBytes(UTF_8);
     private static final byte[] BYTES_AMP = "&amp;".getBytes(UTF_8);
     private static final byte[] BYTES_LT = "&lt;".getBytes(UTF_8);
-    private static final byte[] BYTES_GT = "&gt;".getBytes(UTF_8);
     private LinkedList<String> closingAttributes = new LinkedList<String>();
     private LinkedList<String> queue = new LinkedList<String>();
     private OutputStream raw;
@@ -56,16 +55,13 @@ class HTMLogger extends AnsiOutputStream {
                 } else {
                     nbsp = false;
                     switch(data) {
-                        case 38:
+                        case '&':
                             raw.write(BYTES_AMP);
                             break;
-                        case 60:
+                        case '<':
                             raw.write(BYTES_LT);
                             break;
-                        case 62:
-                            raw.write(BYTES_GT);
-                            break;
-                        case 10:
+                        case '\n':
                             htm.closeAttributes();
                         default:
                             raw.write(data);
@@ -105,10 +101,9 @@ class HTMLogger extends AnsiOutputStream {
 
         // Close a tag that we've already written
         LinkedList<String> closedAttributes = new LinkedList<String>();
-        LinkedList<String> closingAttributes = new LinkedList<String>();
+        LinkedList<String> closingAttributes = new LinkedList<String>(this.closingAttributes);
         LinkedList<String> unclosedAttributes = new LinkedList<String>();
 
-        closingAttributes.addAll(this.closingAttributes);
         for (String attr : closingAttributes) {
             if (attr.toLowerCase().startsWith(s.toLowerCase())) {
                 for (String a : unclosedAttributes) {
@@ -209,8 +204,10 @@ class HTMLogger extends AnsiOutputStream {
         try {
             if (ansi && label == 8) {
                 closeAttribute("a");
-                String[] args = arg.split(";");
-                if (args.length > 1) writeAttribute("a href=\"" + args[1].replace("\"", "&quot;") + "\" target=\"_blank\"");
+                String[] args = arg.split(";", 3);
+                if (args.length > 1 && args[1].length() > 0) {
+                    writeAttribute("a href=\"" + args[1].replace("&", "&amp;").replace("<", "&lt;").replace("\"", "&quot;") + "\" target=\"_blank\"");
+                }
             }
         } catch (Exception e) {}
     }
