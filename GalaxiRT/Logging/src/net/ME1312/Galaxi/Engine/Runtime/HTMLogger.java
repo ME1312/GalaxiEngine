@@ -8,6 +8,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedList;
+import java.util.Locale;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -205,11 +206,19 @@ class HTMLogger extends AnsiOutputStream {
             if (ansi && label == 8) {
                 closeAttribute("a");
                 String[] args = arg.split(";", 3);
-                if (args.length > 1 && args[1].length() > 0) {
+                if (args.length > 1 && args[1].length() > 0 && allowHyperlink(args[1])) {
                     writeAttribute("a href=\"" + args[1].replace("&", "&amp;").replace("<", "&lt;").replace("\"", "&quot;") + "\" target=\"_blank\"");
                 }
             }
         } catch (Exception e) {}
+    }
+
+    protected boolean allowHyperlink(String link) {
+        if (link.toLowerCase(Locale.ENGLISH).startsWith("mailto:execute@galaxi.engine")) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override
@@ -252,6 +261,7 @@ class HTMLogger extends AnsiOutputStream {
         if (ansi) {
             processDefaultTextColor();
             writeAttribute("span style=\"color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
+            renderTextDecoration();
         }
     }
 
@@ -260,6 +270,7 @@ class HTMLogger extends AnsiOutputStream {
         if (ansi) {
             processDefaultTextColor();
             writeAttribute("span style=\"color:#" + parse256(index) + "\"");
+            renderTextDecoration();
         }
     }
 
@@ -268,6 +279,7 @@ class HTMLogger extends AnsiOutputStream {
         if (ansi) {
             processDefaultTextColor();
             writeAttribute("span style=\"color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
+            renderTextDecoration();
         }
     }
 

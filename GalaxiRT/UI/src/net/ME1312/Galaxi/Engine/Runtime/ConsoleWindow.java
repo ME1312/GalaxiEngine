@@ -522,10 +522,16 @@ public final class ConsoleWindow implements ConsoleUI {
                                     if (file.exists()) {
                                         Desktop.getDesktop().open(file);
                                     } else {
-                                        Galaxi.getInstance().getAppInfo().getLogger().message.println("File \"" + file.toString() + "\" does not exist");
+                                        JOptionPane.showMessageDialog(window,
+                                                "File \"" + file.toString() + "\" does not exist.\n",
+                                                "Hyperlink",
+                                                JOptionPane.INFORMATION_MESSAGE);
                                     }
                                 } else {
-                                    Galaxi.getInstance().getAppInfo().getLogger().message.println("File \"" + e.getURL().getPath() + "\" exists on another device: " + hostname);
+                                    JOptionPane.showMessageDialog(window,
+                                            "File \"" + e.getURL().getPath() + "\" does not exist on this device.\nTry looking for it on " + hostname + ".\n",
+                                            "Hyperlink",
+                                            JOptionPane.INFORMATION_MESSAGE);
                                 }
                             }
                                 break;
@@ -1061,6 +1067,11 @@ public final class ConsoleWindow implements ConsoleUI {
 
         private void ansi(boolean value) {
             ansi = value;
+        }
+
+        @Override
+        protected boolean allowHyperlink(String link) {
+            return true;
         }
 
         @Override

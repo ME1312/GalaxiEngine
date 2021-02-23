@@ -118,36 +118,6 @@ public final class LogStream {
             // Calculate Style Elements
             ConsoleText element = new ConsoleText(original.element);
             LinkedHashMap<StyleElement, String> style = new LinkedHashMap<>();
-            if (element.bold()) style.put(StyleElement.BOLD, "1");
-            if (element.italic()) style.put(StyleElement.ITALIC, "3");
-            if (element.underline()) style.put(StyleElement.UNDERLINE, "4");
-            if (element.strikethrough()) style.put(StyleElement.STRIKETHROUGH, "9");
-            if (element.subscript()) style.put(StyleElement.SCRIPT_SHIFT, "74");
-            if (element.superscript()) style.put(StyleElement.SCRIPT_SHIFT, "73");
-            if (element.element.contains("c")) {
-                ObjectMap<String> map = element.element.getMap("c");
-                int color = map.getInt("8", -1);
-                if (color != -1) {
-                    if (color < 8) {
-                        style.put(StyleElement.FG_COLOR, String.valueOf(30 + color));
-                    } else if (color < 16) {  //    90 + color - 8
-                        style.put(StyleElement.FG_COLOR, String.valueOf(82 + color));
-                    } else {
-                        style.put(StyleElement.FG_COLOR, "38;5;" + color);
-                    }
-                } else {
-                    int red = map.getInt("r");
-                    int green = map.getInt("g");
-                    int blue = map.getInt("b");
-                    float alpha = map.getInt("a") / 255f;
-
-                    red = Math.round(alpha * red);
-                    green = Math.round(alpha * green);
-                    blue = Math.round(alpha * blue);
-
-                    style.put(StyleElement.FG_COLOR, "38;2;" + red + ";" + green + ";" + blue);
-                }
-            }
             if (element.element.contains("bc")) {
                 ObjectMap<String> map = element.element.getMap("bc");
                 int color = map.getInt("8", -1);
@@ -160,18 +130,40 @@ public final class LogStream {
                         style.put(StyleElement.BG_COLOR, "48;5;" + color);
                     }
                 } else {
-                    int red = map.getInt("r");
-                    int green = map.getInt("g");
-                    int blue = map.getInt("b");
                     float alpha = map.getInt("a") / 255f;
-
-                    red = Math.round(alpha * red);
-                    green = Math.round(alpha * green);
-                    blue = Math.round(alpha * blue);
+                    int red = Math.round(alpha * map.getInt("r"));
+                    int green = Math.round(alpha * map.getInt("g"));
+                    int blue = Math.round(alpha * map.getInt("b"));
 
                     style.put(StyleElement.BG_COLOR, "48;2;" + red + ";" + green + ";" + blue);
                 }
             }
+            if (element.element.contains("c")) {
+                ObjectMap<String> map = element.element.getMap("c");
+                int color = map.getInt("8", -1);
+                if (color != -1) {
+                    if (color < 8) {
+                        style.put(StyleElement.FG_COLOR, String.valueOf(30 + color));
+                    } else if (color < 16) {  //    90 + color - 8
+                        style.put(StyleElement.FG_COLOR, String.valueOf(82 + color));
+                    } else {
+                        style.put(StyleElement.FG_COLOR, "38;5;" + color);
+                    }
+                } else {
+                    float alpha = map.getInt("a") / 255f;
+                    int red = Math.round(alpha * map.getInt("r"));
+                    int green = Math.round(alpha * map.getInt("g"));
+                    int blue = Math.round(alpha * map.getInt("b"));
+
+                    style.put(StyleElement.FG_COLOR, "38;2;" + red + ";" + green + ";" + blue);
+                }
+            }
+            if (element.bold()) style.put(StyleElement.BOLD, "1");
+            if (element.italic()) style.put(StyleElement.ITALIC, "3");
+            if (element.underline()) style.put(StyleElement.UNDERLINE, "4");
+            if (element.strikethrough()) style.put(StyleElement.STRIKETHROUGH, "9");
+            if (element.subscript()) style.put(StyleElement.SCRIPT_SHIFT, "74");
+            if (element.superscript()) style.put(StyleElement.SCRIPT_SHIFT, "73");
 
             // Remove Duplicate Style Elements
             if (existing.size() != 0) {
