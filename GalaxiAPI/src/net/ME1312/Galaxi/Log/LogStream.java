@@ -85,7 +85,9 @@ public final class LogStream {
     }
 
     private String convert(TextElement original) {
-        return convert(original, null, null);
+        StringBuilder result = new StringBuilder();
+        render(new LinkedList<>(), original, null, null, result);
+        return result.toString();
     }
 
     private static final class TextState {
@@ -117,173 +119,174 @@ public final class LogStream {
         }
     }
 
-    @SuppressWarnings({"unchecked", "StringConcatenationInsideStringBufferAppend"})
-    private String convert(TextElement original, TextState parent, TextState current) {
-        StringBuilder message = new StringBuilder();
-        if (original != null) {
-            boolean top = current == null;
-            if (top) current = new TextState();
+    @SuppressWarnings("unchecked")
+    private void render(LinkedList<TextElement> past, TextElement original, TextState parent, TextState current, StringBuilder result) {
+        if (past.contains(original)) {
+            getLogger().error.println(new IllegalStateException("Infinite text loop"));
+            return;
+        }
+        past.add(original);
 
-            // Write Before Queue
-            try {
-                for (TextElement e : original.before) message.append(convert(e, null, current));
-            } catch (Throwable e) {
-                getLogger().error.println(e);
-            }
+        try {
+            if (original != null) {
+                boolean top = current == null;
+                if (top) current = new TextState();
 
-            // Calculate Style/Meta Elements
-            ConsoleText element = new ConsoleText(original.element);
-            TextState text = (parent == null)? new TextState() : new TextState(parent);
-            if (element.element.contains("bc")) {
-                ObjectMap<String> map = element.element.getMap("bc");
-                int color = map.getInt("8", -1);
-                if (color != -1) {
-                    if (color < 8) {
-                        text.style.put(StyleElement.BG_COLOR, String.valueOf(40 + color));
-                    } else if (color < 16) {  //   100 + color - 8
-                        text.style.put(StyleElement.BG_COLOR, String.valueOf(92 + color));
-                    } else {
-                        text.style.put(StyleElement.BG_COLOR, "48;5;" + color);
-                    }
-                } else {
-                    float alpha = map.getInt("a") / 255f;
-                    int red = Math.round(alpha * map.getInt("r"));
-                    int green = Math.round(alpha * map.getInt("g"));
-                    int blue = Math.round(alpha * map.getInt("b"));
-
-                    text.style.put(StyleElement.BG_COLOR, "48;2;" + red + ";" + green + ";" + blue);
+                // Write Before Queue
+                for (TextElement e : original.before) if (e != null) {
+                    render(past, e, null, current, result);
                 }
-            }
-            if (element.element.contains("c")) {
-                ObjectMap<String> map = element.element.getMap("c");
-                int color = map.getInt("8", -1);
-                if (color != -1) {
-                    if (color < 8) {
-                        text.style.put(StyleElement.FG_COLOR, String.valueOf(30 + color));
-                    } else if (color < 16) {  //    90 + color - 8
-                        text.style.put(StyleElement.FG_COLOR, String.valueOf(82 + color));
+
+                // Calculate Style/Meta Elements
+                ConsoleText element = new ConsoleText(original.element);
+                TextState text = (parent == null)? new TextState() : new TextState(parent);
+                if (element.element.contains("bc")) {
+                    ObjectMap<String> map = element.element.getMap("bc");
+                    int color = map.getInt("8", -1);
+                    if (color != -1) {
+                        if (color < 8) {
+                            text.style.put(StyleElement.BG_COLOR, String.valueOf(40 + color));
+                        } else if (color < 16) {  //   100 + color - 8
+                            text.style.put(StyleElement.BG_COLOR, String.valueOf(92 + color));
+                        } else {
+                            text.style.put(StyleElement.BG_COLOR, "48;5;" + color);
+                        }
                     } else {
-                        text.style.put(StyleElement.FG_COLOR, "38;5;" + color);
+                        float alpha = map.getInt("a") / 255f;
+                        int red = Math.round(alpha * map.getInt("r"));
+                        int green = Math.round(alpha * map.getInt("g"));
+                        int blue = Math.round(alpha * map.getInt("b"));
+
+                        text.style.put(StyleElement.BG_COLOR, "48;2;" + red + ";" + green + ";" + blue);
                     }
-                } else {
-                    float alpha = map.getInt("a") / 255f;
-                    int red = Math.round(alpha * map.getInt("r"));
-                    int green = Math.round(alpha * map.getInt("g"));
-                    int blue = Math.round(alpha * map.getInt("b"));
-
-                    text.style.put(StyleElement.FG_COLOR, "38;2;" + red + ";" + green + ";" + blue);
                 }
-            }
-            if (element.bold()) text.style.put(StyleElement.BOLD, "1");
-            if (element.italic()) text.style.put(StyleElement.ITALIC, "3");
-            if (element.underline()) text.style.put(StyleElement.UNDERLINE, "4");
-            if (element.strikethrough()) text.style.put(StyleElement.STRIKETHROUGH, "9");
-            if (element.subscript()) text.style.put(StyleElement.SCRIPT_SHIFT, "74");
-            if (element.superscript()) text.style.put(StyleElement.SCRIPT_SHIFT, "73");
-            if (element.onClick() != null) text.hyperlink = element.onClick().toString();
+                if (element.element.contains("c")) {
+                    ObjectMap<String> map = element.element.getMap("c");
+                    int color = map.getInt("8", -1);
+                    if (color != -1) {
+                        if (color < 8) {
+                            text.style.put(StyleElement.FG_COLOR, String.valueOf(30 + color));
+                        } else if (color < 16) {  //    90 + color - 8
+                            text.style.put(StyleElement.FG_COLOR, String.valueOf(82 + color));
+                        } else {
+                            text.style.put(StyleElement.FG_COLOR, "38;5;" + color);
+                        }
+                    } else {
+                        float alpha = map.getInt("a") / 255f;
+                        int red = Math.round(alpha * map.getInt("r"));
+                        int green = Math.round(alpha * map.getInt("g"));
+                        int blue = Math.round(alpha * map.getInt("b"));
 
-            // Write Prepend Queue
-            try {
-                for (TextElement e : original.prepend) message.append(convert(e, text, current));
-            } catch (Throwable e) {
-                getLogger().error.println(e);
-            }
+                        text.style.put(StyleElement.FG_COLOR, "38;2;" + red + ";" + green + ";" + blue);
+                    }
+                }
+                if (element.bold()) text.style.put(StyleElement.BOLD, "1");
+                if (element.italic()) text.style.put(StyleElement.ITALIC, "3");
+                if (element.underline()) text.style.put(StyleElement.UNDERLINE, "4");
+                if (element.strikethrough()) text.style.put(StyleElement.STRIKETHROUGH, "9");
+                if (element.subscript()) text.style.put(StyleElement.SCRIPT_SHIFT, "74");
+                if (element.superscript()) text.style.put(StyleElement.SCRIPT_SHIFT, "73");
+                if (element.onClick() != null) text.hyperlink = element.onClick().toString();
 
-            if (element.message() != null && element.message().length() != 0) {
+                // Write Prepend Queue
+                for (TextElement e : original.prepend) if (e != null) {
+                    render(past, e, text, current, result);
+                }
+
 
                 // Recalculate Style Elements
-                Collection<String> sgr;
-                if (current.style.size() == 0) {
-                    sgr = text.style.values();
-                    current.style.putAll(text.style);
-                } else {
-                    sgr = new LinkedList<>();
-                    StyleElement[] open = current.style.keySet().toArray(new StyleElement[0]);
-                    for (int i = open.length; i > 0;) {
-                        StyleElement key = open[--i];
-                        if (!text.style.containsKey(key)) {
-                            sgr.add(key.reset);
-                            current.style.remove(key);
-                        }
-                    }
-
+                if (element.message() != null && element.message().length() != 0) {
+                    Collection<String> sgr;
                     if (current.style.size() == 0) {
-                        sgr.clear();
-                        if (text.style.size() == 0) {
-                            sgr.add("");
-                        } else {
-                            sgr.add("0");
-                            sgr.addAll(text.style.values());
-                            current.style.putAll(text.style);
-                        }
+                        sgr = text.style.values();
+                        current.style.putAll(text.style);
                     } else {
-                        Map.Entry<StyleElement, String>[] entries = text.style.entrySet().toArray(new Map.Entry[0]);
-                        for (Map.Entry<StyleElement, String> entry : entries) {
-                            if (!current.style.containsKey(entry.getKey()) || !current.style.get(entry.getKey()).equals(entry.getValue())) {
-                                sgr.add(entry.getValue());
-                                current.style.put(entry.getKey(), entry.getValue());
+                        sgr = new LinkedList<>();
+                        StyleElement[] open = current.style.keySet().toArray(new StyleElement[0]);
+                        for (int i = open.length; i > 0;) {
+                            StyleElement key = open[--i];
+                            if (!text.style.containsKey(key)) {
+                                sgr.add(key.reset);
+                                current.style.remove(key);
+                            }
+                        }
+
+                        if (current.style.size() == 0) {
+                            sgr.clear();
+                            if (text.style.size() == 0) {
+                                sgr.add("");
+                            } else {
+                                sgr.add("0");
+                                sgr.addAll(text.style.values());
+                                current.style.putAll(text.style);
+                            }
+                        } else {
+                            Map.Entry<StyleElement, String>[] entries = text.style.entrySet().toArray(new Map.Entry[0]);
+                            for (Map.Entry<StyleElement, String> entry : entries) {
+                                if (!current.style.containsKey(entry.getKey()) || !current.style.get(entry.getKey()).equals(entry.getValue())) {
+                                    sgr.add(entry.getValue());
+                                    current.style.put(entry.getKey(), entry.getValue());
+                                }
                             }
                         }
                     }
-                }
 
-                // Open Style Elements
-                if (sgr.size() != 0) {
-                    message.append("\u001B[");
-                    for (Iterator<String> i = sgr.iterator();;) {
-                        message.append(i.next());
-                        if (i.hasNext()) {
-                            message.append(';');
-                        } else {
-                            message.append('m');
-                            break;
+                    // Open Style Elements
+                    if (sgr.size() != 0) {
+                        result.append("\u001B[");
+                        for (Iterator<String> i = sgr.iterator();;) {
+                            result.append(i.next());
+                            if (i.hasNext()) {
+                                result.append(';');
+                            } else {
+                                result.append('m');
+                                break;
+                            }
                         }
                     }
-                }
 
-                // Open Meta Elements
-                if (text.hyperlink != null) {
-                    if (!text.hyperlink.equals(current.hyperlink)) {
-                        current.hyperlink = text.hyperlink;
-                        message.append("\033]8;;" + text.hyperlink + "\007");
+                    // Open Meta Elements
+                    if (text.hyperlink != null) {
+                        if (!text.hyperlink.equals(current.hyperlink)) {
+                            current.hyperlink = text.hyperlink;
+                            result.append("\033]8;;").append(text.hyperlink).append('\007');
+                        }
+                    } else if (current.hyperlink != null) {
+                        current.hyperlink = null;
+                        result.append("\033]8;;\007");
                     }
-                } else if (current.hyperlink != null) {
-                    current.hyperlink = null;
-                    message.append("\033]8;;\007");
+
+
+                    // Write Actual Text
+                    result.append(element.message());
                 }
 
 
-                // Write Actual Text
-                message.append(element.message());
+                // Write Append Queue
+                for (TextElement e : original.append) if (e != null) {
+                    render(past, e, text, current, result);
+                }
+
+                // Write After Queue
+                for (TextElement e : original.after) if (e != null) {
+                    render(past, e, null, current, result);
+                }
+
+                // Close Remaining Style/Meta Elements
+                if (top) {
+                    boolean newline = result.length() != 0 && result.codePointAt(result.codePointCount(0, result.length()) - 1) == '\n';
+                    Callback<String> insert = (newline)? s -> result.insert(result.length() - 1, s) : result::append;
+
+                    if (current.hyperlink != null) insert.run("\033]8;;\007");
+                    if (!newline && current.style.size() != 0) result.append("\u001B[m");
+                }
+            } else {
+                result.append("null");
             }
-
-
-            // Write Append Queue
-            try {
-                for (TextElement e : original.append) message.append(convert(e, text, current));
-            } catch (Throwable e) {
-                getLogger().error.println(e);
-            }
-
-            // Write After Queue
-            try {
-                for (TextElement e : original.after) message.append(convert(e, null, current));
-            } catch (Throwable e) {
-                getLogger().error.println(e);
-            }
-
-            // Close Remaining Style/Meta Elements
-            if (top) {
-                boolean newline = message.length() != 0 && message.codePointAt(message.codePointCount(0, message.length()) - 1) == '\n';
-                Callback<String> insert = (newline)? s -> message.insert(message.length() - 1, s) : message::append;
-
-                if (current.hyperlink != null) insert.run("\033]8;;\007");
-                if (!newline && current.style.size() != 0) message.append("\u001B[m");
-            }
-
-            return message.toString();
-        } else {
-            return "null";
+        } catch (Throwable e) {
+            getLogger().error.println(e);
+        } finally {
+            past.removeLast();
         }
     }
 
