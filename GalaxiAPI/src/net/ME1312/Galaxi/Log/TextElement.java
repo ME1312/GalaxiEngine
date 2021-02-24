@@ -20,26 +20,32 @@ public class TextElement {
 
     /**
      * Create a new Text Element
+     */
+    public TextElement() {
+        this((String) null);
+    }
+
+    /**
+     * Create a new Text Element
      *
      * @param text Text
      */
     public TextElement(String text) {
         this(generate(text));
     }
-    private static YAMLSection generate(String text) {
-        if (Util.isNull(text)) throw new NullPointerException();
-        YAMLSection element = new YAMLSection();
-        element.set("msg", text);
+    private static ObjectMap<String> generate(String text) {
+        ObjectMap<String> element = new ObjectMap<String>();
+        if (text != null) element.set("msg", text);
         return element;
     }
 
     /**
-     * Load a Text Element (Override this constructor to add properties)
+     * Load a Text Element
      *
      * @param element Raw Element
      */
     public TextElement(ObjectMap<String> element) {
-        if (Util.isNull(element.getRawString("msg", null))) throw new NullPointerException();
+        if (Util.isNull(element)) throw new NullPointerException();
         this.element = element;
         load();
     }

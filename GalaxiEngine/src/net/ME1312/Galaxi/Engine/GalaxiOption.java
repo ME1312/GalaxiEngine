@@ -24,6 +24,7 @@ public final class GalaxiOption<T> extends Value<T> {
     // Logging
     public static final GalaxiOption<Boolean> USE_LOG_FILE = new GalaxiOption<>("galaxi.log", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> USE_RAW_LOG = new GalaxiOption<>("galaxi.log.raw", usr -> usr.equalsIgnoreCase("true") || (usr.length() == 0 && GraphicsEnvironment.isHeadless()));
+    public static final GalaxiOption<Boolean> USE_RAW_LOG_ANSI = new GalaxiOption<>("galaxi.log.raw.ansi", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> SHOW_DEBUG_MESSAGES = new GalaxiOption<>("galaxi.log.debug", usr -> usr.equalsIgnoreCase("true"));
     public static final GalaxiOption<Boolean> COLOR_LOG_LEVELS = new GalaxiOption<>("galaxi.log.color_levels", usr -> usr.length() == 0 || usr.equalsIgnoreCase("true"));
 

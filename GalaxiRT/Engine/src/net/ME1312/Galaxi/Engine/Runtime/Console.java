@@ -14,7 +14,6 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.awt.*;
 import java.io.IOError;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +22,7 @@ import java.util.TreeMap;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 class Console extends CommandParser {
-    boolean jstatus;
+    volatile boolean jstatus;
     final LineReader jline;
     ConsoleUI window;
     final Thread thread;
@@ -50,7 +49,7 @@ class Console extends CommandParser {
         thread = new Thread(this::read, Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         SystemLogger.start(this);
         try {
-            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() <= 0 && SHOW_CONSOLE_WINDOW.app() && System.console() == null)) {
+            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() == 0 && SHOW_CONSOLE_WINDOW.app() && System.console() == null)) {
                 openWindow(!(SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") && System.console() != null));
             }
         } catch (Exception e) {
@@ -163,9 +162,9 @@ class Console extends CommandParser {
     }
 
     private void read() {
+        jstatus = true;
         try {
             boolean interrupted = false;
-            jstatus = true;
             do {
                 try {
                     String line;
@@ -281,7 +280,7 @@ class Console extends CommandParser {
             }
         } else {
             arg = arg.replace("\\", "\\\\").replace("\n", "\\n").replace("\'", "\\\'").replace("\"", "\\\"");
-            if (PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.app()))
+            if (PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() == 0 && PARSE_CONSOLE_VARIABLES.app()))
                 arg = arg.replace("$", "\\$").replace("%", "\\%");
             if (!whitespaced) {
                 if (append || arg.length() > 0) {
@@ -369,7 +368,7 @@ class Console extends CommandParser {
                                     continue;
                                 case '$': // Replace java system variables
                                     int varEnd;
-                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.app()))
+                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() == 0 && PARSE_CONSOLE_VARIABLES.app()))
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('$', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
@@ -392,7 +391,7 @@ class Console extends CommandParser {
                                     }
                                     continue;
                                 case '%': // Replace environment variables
-                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() <= 0 && PARSE_CONSOLE_VARIABLES.app()))
+                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() == 0 && PARSE_CONSOLE_VARIABLES.app()))
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('%', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
@@ -561,12 +560,12 @@ class Console extends CommandParser {
 
                 @Override
                 public int wordIndex() {
-                    return (MAPPINGS.size() <= 0)?0:MAPPINGS.size() - 1;
+                    return (MAPPINGS.size() == 0)?0:MAPPINGS.size() - 1;
                 }
 
                 @Override
                 public Pair<String, String> translation() {
-                    return (MAPPINGS.size() <= 0)?null:MAPPINGS.getLast();
+                    return (MAPPINGS.size() == 0)?null:MAPPINGS.getLast();
                 }
 
                 @Override

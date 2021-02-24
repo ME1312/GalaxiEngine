@@ -18,7 +18,7 @@ class HTMLogger extends AnsiOutputStream {
     private static final byte[] BYTES_NBSP = "\u00A0".getBytes(UTF_8);
     private static final byte[] BYTES_AMP = "&amp;".getBytes(UTF_8);
     private static final byte[] BYTES_LT = "&lt;".getBytes(UTF_8);
-    private LinkedList<String> closingAttributes = new LinkedList<String>();
+    private LinkedList<String> currentAttributes = new LinkedList<String>();
     private LinkedList<String> queue = new LinkedList<String>();
     private OutputStream raw;
     boolean ansi = true;
@@ -43,7 +43,7 @@ class HTMLogger extends AnsiOutputStream {
                     htm.queue = new LinkedList<>();
                     for (String attr : queue) {
                         htm.write('<' + attr + '>');
-                        htm.closingAttributes.addFirst(attr);
+                        htm.currentAttributes.addFirst(attr);
                     }
                 }
 
@@ -102,18 +102,18 @@ class HTMLogger extends AnsiOutputStream {
 
         // Close a tag that we've already written
         LinkedList<String> closedAttributes = new LinkedList<String>();
-        LinkedList<String> closingAttributes = new LinkedList<String>(this.closingAttributes);
+        LinkedList<String> currentAttributes = new LinkedList<String>(this.currentAttributes);
         LinkedList<String> unclosedAttributes = new LinkedList<String>();
 
-        for (String attr : closingAttributes) {
+        for (String attr : currentAttributes) {
             if (attr.toLowerCase().startsWith(s.toLowerCase())) {
                 for (String a : unclosedAttributes) {
                     closedAttributes.add(a);
-                    this.closingAttributes.removeFirst();
+                    this.currentAttributes.removeFirst();
                     write("</" + a.split(" ", 2)[0] + '>');
                 }
                 unclosedAttributes.clear();
-                this.closingAttributes.removeFirst();
+                this.currentAttributes.removeFirst();
                 write("</" + attr.split(" ", 2)[0] + '>');
                 break;
             } else {
@@ -130,13 +130,13 @@ class HTMLogger extends AnsiOutputStream {
     void closeAttributes() throws IOException {
         queue.clear();
 
-        for (String attr : closingAttributes) {
+        for (String attr : currentAttributes) {
             write("</" + attr.split(" ", 2)[0] + ">");
         }
 
         underline = false;
         strikethrough = false;
-        closingAttributes.clear();
+        currentAttributes.clear();
     }
 
     @Override

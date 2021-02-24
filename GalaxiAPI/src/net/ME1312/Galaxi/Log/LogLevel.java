@@ -4,13 +4,13 @@ package net.ME1312.Galaxi.Log;
  * Log Level Enum
  */
 public enum LogLevel {
-    DEBUG  ("\u001B[96m"),
-    MESSAGE("\u001B[90m"),
-    INFO   (    null    ),
-    SUCCESS("\u001B[92m"),
-    WARN   ("\u001B[93m"),
-    ERROR  ("\u001B[91m"),
-    SEVERE ("\u001B[91m"),
+    DEBUG  ("96"),
+    MESSAGE("90"),
+    INFO   (null),
+    SUCCESS("92"),
+    WARN   ("93"),
+    ERROR  ("91"),
+    SEVERE ("91"),
     ;
     private String name;
     private String color;

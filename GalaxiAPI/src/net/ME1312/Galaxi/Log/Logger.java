@@ -177,11 +177,11 @@ public final class Logger {
                         }
                     }
                     if (message.length() > 0) messages.add(message.toString());
-                    if (terminate && (terminate_with_prefix || messages.size() <= 0)) messages.add("");
+                    if (terminate && (terminate_with_prefix || messages.size() == 0)) messages.add("");
                 }
 
                 int i = 0;
-                boolean logged = messages.size() <= 0;
+                boolean logged = messages.size() == 0;
                 for (String message : messages) {
                     i++;
 
@@ -197,9 +197,22 @@ public final class Logger {
                     if (response == null || response == Boolean.TRUE) {
                         if (terminated || last != stream) {
                             if (!terminated) result.append('\n');
-                            if (color && stream.getLevel().getColor() != null) result.append(stream.getLevel().getColor());
+                            boolean colored = color && stream.getLevel().getColor() != null;
+                            result.append("\u001B[");
+                            if (colored) {
+                                result.append("0;");
+                                result.append(stream.getLevel().getColor());
+                            }
+                            result.append('m');
                             result.append(prefix);
-                            if (color && stream.getLevel().getColor() != null) result.append("\u001B[m");
+                            if (colored) {
+                                if (message.startsWith("\u001B[")) {
+                                    message = message.substring(2);
+                                    result.append("\u001B[0;");
+                                } else {
+                                    result.append("\u001B[m");
+                                }
+                            }
                         }
                         last = stream;
                         logged = true;

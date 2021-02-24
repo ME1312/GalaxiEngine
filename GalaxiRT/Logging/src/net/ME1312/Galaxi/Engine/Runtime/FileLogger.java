@@ -4,6 +4,9 @@ import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.LogMessenger;
 
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.AnsiString;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,7 +19,6 @@ import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
-import static net.ME1312.Galaxi.Engine.Runtime.ConsoleLogger.ansi;
 
 final class FileLogger implements LogMessenger {
     private FileOutputStream iwriter = null;
@@ -44,9 +46,9 @@ final class FileLogger implements LogMessenger {
             tmp.deleteOnExit();
             tmpwriter = new FileOutputStream(tmp);
 
-            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || (USE_LOG_FILE.usr().length() <= 0 && USE_LOG_FILE.app())) {
+            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || (USE_LOG_FILE.usr().length() == 0 && USE_LOG_FILE.app())) {
                 dir.mkdirs();
-                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || (USE_RAW_LOG.usr().length() <= 0 && USE_RAW_LOG.app())) {
+                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || (USE_RAW_LOG.usr().length() == 0 && USE_RAW_LOG.app())) {
                     file = new File(dir, name + ".log.txt");
 
                     writer = iwriter = new FileOutputStream(file);
@@ -63,13 +65,15 @@ final class FileLogger implements LogMessenger {
         }
     }
 
+    private final boolean ANSI = USE_RAW_LOG_ANSI.usr().equalsIgnoreCase("true") || (USE_RAW_LOG_ANSI.usr().length() == 0 && USE_ANSI.def());
     public void log(String s) throws IOException {
         child.log(s);
         if (writer instanceof HTMLogger) {
             writer.write(s.getBytes(UTF_8));
             writer.flush();
         } else if (writer != null) {
-            writer.write(ansi(s).getBytes(UTF_8));
+            if (ANSI) writer.write(s.getBytes(UTF_8));
+            else writer.write(((String) new AnsiString(s).getPlain()).getBytes(UTF_8));
             writer.flush();
         }
         if (tmpwriter != null) {
@@ -87,6 +91,7 @@ final class FileLogger implements LogMessenger {
         try {
             if (writer != null) {
                 if (writer instanceof HTMLogger) iwriter.write(("</body></html>").getBytes(UTF_8));
+                else if (ANSI) iwriter.write(Ansi.ansi().a(Ansi.Attribute.RESET).toString().getBytes(UTF_8));
                 writer.close();
             }
             if (file != null && compressed != null) {

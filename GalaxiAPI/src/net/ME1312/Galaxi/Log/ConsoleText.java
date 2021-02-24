@@ -19,6 +19,11 @@ public class ConsoleText extends TextElement {
 
     /**
      * Create a new Text Element
+     */
+    public ConsoleText() {}
+
+    /**
+     * Create a new Text Element
      *
      * @param text Text
      */
@@ -35,7 +40,7 @@ public class ConsoleText extends TextElement {
     }
 
     /**
-     * Load a Text Element (Override this constructor to add properties)
+     * Load a Text Element
      *
      * @param element Raw Element
      */

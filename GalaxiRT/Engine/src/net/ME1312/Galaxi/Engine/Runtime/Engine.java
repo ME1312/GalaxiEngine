@@ -70,7 +70,7 @@ class Engine extends GalaxiEngine {
         code.catalogLibrary(engine.get().getClass());
         code.catalogLibrary(this.app.get().getClass());
 
-        if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() <= 0 && SHOW_DEBUG_MESSAGES.app())))
+        if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() == 0 && SHOW_DEBUG_MESSAGES.app())))
             Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
         this.console = new Console(this);
 

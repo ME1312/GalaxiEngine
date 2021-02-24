@@ -1076,7 +1076,7 @@ public final class ConsoleWindow implements ConsoleUI {
 
         @Override
         protected void processChangeWindowTitle(String label) {
-            window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName() + ((label.length() <= 0)?"":" \u2014 " + label));
+            window.setTitle(Galaxi.getInstance().getAppInfo().getDisplayName() + ((label.length() == 0)?"":" \u2014 " + label));
         }
 
         @Override

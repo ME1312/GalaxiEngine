@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Log;
 
+import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -84,7 +85,21 @@ public final class LogStream {
     }
 
     private String convert(TextElement original) {
-        return convert(original, null);
+        return convert(original, null, null);
+    }
+
+    private static final class TextState {
+        private final Map<StyleElement, String> style;
+        private String hyperlink = null;
+
+        private TextState() {
+            style = new LinkedHashMap<>();
+        }
+
+        private TextState(TextState other) {
+            style = new LinkedHashMap<>(other.style);
+            hyperlink = other.hyperlink;
+        }
     }
 
     private enum StyleElement {
@@ -95,39 +110,40 @@ public final class LogStream {
         FG_COLOR("39"),
         BG_COLOR("49"),
         SCRIPT_SHIFT("75"),
-        HYPERLINK(null);
-
+        ;
         private final String reset;
         StyleElement(String reset) {
             this.reset = reset;
         }
     }
 
-    private String convert(TextElement original, LinkedHashMap<StyleElement, String> master) {
+    @SuppressWarnings({"unchecked", "StringConcatenationInsideStringBufferAppend"})
+    private String convert(TextElement original, TextState parent, TextState current) {
         StringBuilder message = new StringBuilder();
         if (original != null) {
-            Map<StyleElement, String> existing = (master == null)? Collections.emptyMap() : master;
+            boolean top = current == null;
+            if (top) current = new TextState();
 
             // Write Before Queue
             try {
-                for (TextElement e : original.before) message.append(convert(e));
+                for (TextElement e : original.before) message.append(convert(e, null, current));
             } catch (Throwable e) {
                 getLogger().error.println(e);
             }
 
-            // Calculate Style Elements
+            // Calculate Style/Meta Elements
             ConsoleText element = new ConsoleText(original.element);
-            LinkedHashMap<StyleElement, String> style = new LinkedHashMap<>();
+            TextState text = (parent == null)? new TextState() : new TextState(parent);
             if (element.element.contains("bc")) {
                 ObjectMap<String> map = element.element.getMap("bc");
                 int color = map.getInt("8", -1);
                 if (color != -1) {
                     if (color < 8) {
-                        style.put(StyleElement.BG_COLOR, String.valueOf(40 + color));
+                        text.style.put(StyleElement.BG_COLOR, String.valueOf(40 + color));
                     } else if (color < 16) {  //   100 + color - 8
-                        style.put(StyleElement.BG_COLOR, String.valueOf(92 + color));
+                        text.style.put(StyleElement.BG_COLOR, String.valueOf(92 + color));
                     } else {
-                        style.put(StyleElement.BG_COLOR, "48;5;" + color);
+                        text.style.put(StyleElement.BG_COLOR, "48;5;" + color);
                     }
                 } else {
                     float alpha = map.getInt("a") / 255f;
@@ -135,7 +151,7 @@ public final class LogStream {
                     int green = Math.round(alpha * map.getInt("g"));
                     int blue = Math.round(alpha * map.getInt("b"));
 
-                    style.put(StyleElement.BG_COLOR, "48;2;" + red + ";" + green + ";" + blue);
+                    text.style.put(StyleElement.BG_COLOR, "48;2;" + red + ";" + green + ";" + blue);
                 }
             }
             if (element.element.contains("c")) {
@@ -143,11 +159,11 @@ public final class LogStream {
                 int color = map.getInt("8", -1);
                 if (color != -1) {
                     if (color < 8) {
-                        style.put(StyleElement.FG_COLOR, String.valueOf(30 + color));
+                        text.style.put(StyleElement.FG_COLOR, String.valueOf(30 + color));
                     } else if (color < 16) {  //    90 + color - 8
-                        style.put(StyleElement.FG_COLOR, String.valueOf(82 + color));
+                        text.style.put(StyleElement.FG_COLOR, String.valueOf(82 + color));
                     } else {
-                        style.put(StyleElement.FG_COLOR, "38;5;" + color);
+                        text.style.put(StyleElement.FG_COLOR, "38;5;" + color);
                     }
                 } else {
                     float alpha = map.getInt("a") / 255f;
@@ -155,124 +171,114 @@ public final class LogStream {
                     int green = Math.round(alpha * map.getInt("g"));
                     int blue = Math.round(alpha * map.getInt("b"));
 
-                    style.put(StyleElement.FG_COLOR, "38;2;" + red + ";" + green + ";" + blue);
+                    text.style.put(StyleElement.FG_COLOR, "38;2;" + red + ";" + green + ";" + blue);
                 }
             }
-            if (element.bold()) style.put(StyleElement.BOLD, "1");
-            if (element.italic()) style.put(StyleElement.ITALIC, "3");
-            if (element.underline()) style.put(StyleElement.UNDERLINE, "4");
-            if (element.strikethrough()) style.put(StyleElement.STRIKETHROUGH, "9");
-            if (element.subscript()) style.put(StyleElement.SCRIPT_SHIFT, "74");
-            if (element.superscript()) style.put(StyleElement.SCRIPT_SHIFT, "73");
-
-            // Remove Duplicate Style Elements
-            if (existing.size() != 0) {
-                StyleElement[] keys = style.keySet().toArray(new StyleElement[0]);
-                for (StyleElement key : keys) {
-                    if (existing.containsKey(key) && existing.get(key).equals(style.get(key))) {
-                        style.remove(key);
-                    }
-                }
-            }
-
-            // Open Style Elements
-            boolean sgr = style.size() != 0;
-            if (sgr) {
-                message.append("\u001B[");
-                for (Iterator<String> i = style.values().iterator();;) {
-                    message.append(i.next());
-                    if (i.hasNext()) {
-                        message.append(';');
-                    } else {
-                        message.append('m');
-                        break;
-                    }
-                }
-            }
-
-            boolean hyperlink = false;
-            if (element.onClick() != null) {
-                String link = "\033]8;;" + element.onClick().toString() + "\007";
-                if (existing.size() == 0 || !link.equals(existing.getOrDefault(StyleElement.HYPERLINK, null))) {
-                    hyperlink = true;
-                    style.put(StyleElement.HYPERLINK, link);
-                    message.append(link);
-                }
-            }
-
-            // Merge Metadata with Master
-            LinkedHashMap<StyleElement, String> merged;
-            if (existing.size() == 0) {
-                merged = style;
-            } else {
-                merged = new LinkedHashMap<>(existing);
-                merged.putAll(style);
-            }
+            if (element.bold()) text.style.put(StyleElement.BOLD, "1");
+            if (element.italic()) text.style.put(StyleElement.ITALIC, "3");
+            if (element.underline()) text.style.put(StyleElement.UNDERLINE, "4");
+            if (element.strikethrough()) text.style.put(StyleElement.STRIKETHROUGH, "9");
+            if (element.subscript()) text.style.put(StyleElement.SCRIPT_SHIFT, "74");
+            if (element.superscript()) text.style.put(StyleElement.SCRIPT_SHIFT, "73");
+            if (element.onClick() != null) text.hyperlink = element.onClick().toString();
 
             // Write Prepend Queue
             try {
-                for (TextElement e : original.prepend) message.append(convert(e, merged));
+                for (TextElement e : original.prepend) message.append(convert(e, text, current));
             } catch (Throwable e) {
                 getLogger().error.println(e);
             }
 
+            if (element.message() != null && element.message().length() != 0) {
 
-            // Write Actual Text
-            message.append(element.message());
+                // Recalculate Style Elements
+                Collection<String> sgr;
+                if (current.style.size() == 0) {
+                    sgr = text.style.values();
+                    current.style.putAll(text.style);
+                } else {
+                    sgr = new LinkedList<>();
+                    StyleElement[] open = current.style.keySet().toArray(new StyleElement[0]);
+                    for (int i = open.length; i > 0;) {
+                        StyleElement key = open[--i];
+                        if (!text.style.containsKey(key)) {
+                            sgr.add(key.reset);
+                            current.style.remove(key);
+                        }
+                    }
+
+                    if (current.style.size() == 0) {
+                        sgr.clear();
+                        if (text.style.size() == 0) {
+                            sgr.add("");
+                        } else {
+                            sgr.add("0");
+                            sgr.addAll(text.style.values());
+                            current.style.putAll(text.style);
+                        }
+                    } else {
+                        Map.Entry<StyleElement, String>[] entries = text.style.entrySet().toArray(new Map.Entry[0]);
+                        for (Map.Entry<StyleElement, String> entry : entries) {
+                            if (!current.style.containsKey(entry.getKey()) || !current.style.get(entry.getKey()).equals(entry.getValue())) {
+                                sgr.add(entry.getValue());
+                                current.style.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+                    }
+                }
+
+                // Open Style Elements
+                if (sgr.size() != 0) {
+                    message.append("\u001B[");
+                    for (Iterator<String> i = sgr.iterator();;) {
+                        message.append(i.next());
+                        if (i.hasNext()) {
+                            message.append(';');
+                        } else {
+                            message.append('m');
+                            break;
+                        }
+                    }
+                }
+
+                // Open Meta Elements
+                if (text.hyperlink != null) {
+                    if (!text.hyperlink.equals(current.hyperlink)) {
+                        current.hyperlink = text.hyperlink;
+                        message.append("\033]8;;" + text.hyperlink + "\007");
+                    }
+                } else if (current.hyperlink != null) {
+                    current.hyperlink = null;
+                    message.append("\033]8;;\007");
+                }
+
+
+                // Write Actual Text
+                message.append(element.message());
+            }
 
 
             // Write Append Queue
             try {
-                for (TextElement e : original.append) message.append(convert(e, merged));
+                for (TextElement e : original.append) message.append(convert(e, text, current));
             } catch (Throwable e) {
                 getLogger().error.println(e);
-            }
-
-
-            // Close Style Elements
-            boolean newline = master == null && message.toString().contains("\n");
-
-            if (hyperlink) {
-                message.append(existing.getOrDefault(StyleElement.HYPERLINK, "\033]8;;\007"));
-            }
-
-            if (sgr && !newline) {
-                boolean individual = false;
-                for (StyleElement key : existing.keySet()) if (key.reset != null) {
-                    individual = true;
-                    break;
-                }
-
-                if (individual) {
-                    LinkedList<String> codes = new LinkedList<>();
-                    for (StyleElement key : style.keySet()) {
-                        if (key.reset != null && (!existing.containsKey(key) || !existing.get(key).equals(style.get(key)))) {
-                            codes.add(existing.getOrDefault(key, key.reset));
-                        }
-                    }
-
-                    if (codes.size() != 0) {
-                        message.append("\u001B[");
-                        for (Iterator<String> i = codes.iterator(); ; ) {
-                            message.append(i.next());
-                            if (i.hasNext()) {
-                                message.append(';');
-                            } else {
-                                message.append('m');
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    message.append("\u001B[m");
-                }
             }
 
             // Write After Queue
             try {
-                for (TextElement e : original.after) message.append(convert(e));
+                for (TextElement e : original.after) message.append(convert(e, null, current));
             } catch (Throwable e) {
                 getLogger().error.println(e);
+            }
+
+            // Close Remaining Style/Meta Elements
+            if (top) {
+                boolean newline = message.length() != 0 && message.codePointAt(message.codePointCount(0, message.length()) - 1) == '\n';
+                Callback<String> insert = (newline)? s -> message.insert(message.length() - 1, s) : message::append;
+
+                if (current.hyperlink != null) insert.run("\033]8;;\007");
+                if (!newline && current.style.size() != 0) message.append("\u001B[m");
             }
 
             return message.toString();
