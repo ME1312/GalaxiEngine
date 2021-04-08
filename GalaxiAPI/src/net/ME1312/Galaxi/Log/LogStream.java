@@ -120,12 +120,12 @@ public final class LogStream {
     }
 
     @SuppressWarnings("unchecked")
-    private void render(LinkedList<TextElement> past, TextElement original, TextState parent, TextState current, StringBuilder result) {
-        if (past.contains(original)) {
+    private void render(LinkedList<TextElement> stack, TextElement original, TextState parent, TextState current, StringBuilder result) {
+        if (stack.contains(original)) {
             getLogger().error.println(new IllegalStateException("Infinite text loop"));
             return;
         }
-        past.add(original);
+        stack.add(original);
 
         try {
             if (original != null) {
@@ -134,7 +134,7 @@ public final class LogStream {
 
                 // Write Before Queue
                 for (TextElement e : original.before) if (e != null) {
-                    render(past, e, null, current, result);
+                    render(stack, e, null, current, result);
                 }
 
                 // Calculate Style/Meta Elements
@@ -190,7 +190,7 @@ public final class LogStream {
 
                 // Write Prepend Queue
                 for (TextElement e : original.prepend) if (e != null) {
-                    render(past, e, text, current, result);
+                    render(stack, e, text, current, result);
                 }
 
 
@@ -264,12 +264,12 @@ public final class LogStream {
 
                 // Write Append Queue
                 for (TextElement e : original.append) if (e != null) {
-                    render(past, e, text, current, result);
+                    render(stack, e, text, current, result);
                 }
 
                 // Write After Queue
                 for (TextElement e : original.after) if (e != null) {
-                    render(past, e, null, current, result);
+                    render(stack, e, null, current, result);
                 }
 
                 // Close Remaining Style/Meta Elements
@@ -283,10 +283,10 @@ public final class LogStream {
             } else {
                 result.append("null");
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             getLogger().error.println(e);
         } finally {
-            past.removeLast();
+            stack.removeLast();
         }
     }
 

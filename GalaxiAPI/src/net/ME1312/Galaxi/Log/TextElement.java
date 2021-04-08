@@ -245,17 +245,17 @@ public class TextElement {
     /**
      * Encode your text here
      *
-     * @param past Text Elements we've already seen before
+     * @param stack Text Elements we've already seen before
      * @return Encoded Text
      */
-    protected ObjectMap<String> toRaw(List<TextElement> past) {
-        past.add(this);
+    protected ObjectMap<String> toRaw(List<TextElement> stack) {
+        stack.add(this);
 
         LinkedList<ObjectMap<String>> before = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.before) {
-            if (past.contains(e)) throw new IllegalStateException("Infinite text before loop");
+            if (stack.contains(e)) throw new IllegalStateException("Infinite text before loop");
             List<TextElement> p = new ArrayList<TextElement>();
-            p.addAll(past);
+            p.addAll(stack);
             before.add(e.toRaw(p));
         }
         if (!before.isEmpty()) element.set("before", before);
@@ -263,9 +263,9 @@ public class TextElement {
 
         LinkedList<ObjectMap<String>> prepend = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.prepend) {
-            if (past.contains(e)) throw new IllegalStateException("Infinite text prepend loop");
+            if (stack.contains(e)) throw new IllegalStateException("Infinite text prepend loop");
             List<TextElement> p = new ArrayList<TextElement>();
-            p.addAll(past);
+            p.addAll(stack);
             prepend.add(e.toRaw(p));
         }
         if (!prepend.isEmpty()) element.set("pre", prepend);
@@ -273,9 +273,9 @@ public class TextElement {
 
         LinkedList<ObjectMap<String>> append = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.append) {
-            if (past.contains(e)) throw new IllegalStateException("Infinite text append loop");
+            if (stack.contains(e)) throw new IllegalStateException("Infinite text append loop");
             List<TextElement> p = new ArrayList<TextElement>();
-            p.addAll(past);
+            p.addAll(stack);
             append.add(e.toRaw(p));
         }
         if (!append.isEmpty()) element.set("post", append);
@@ -283,9 +283,9 @@ public class TextElement {
 
         LinkedList<ObjectMap<String>> after = new LinkedList<ObjectMap<String>>();
         for (TextElement e : this.after) {
-            if (past.contains(e)) throw new IllegalStateException("Infinite text after loop");
+            if (stack.contains(e)) throw new IllegalStateException("Infinite text after loop");
             List<TextElement> p = new ArrayList<TextElement>();
-            p.addAll(past);
+            p.addAll(stack);
             after.add(e.toRaw(p));
         }
         if (!after.isEmpty()) element.set("after", after);

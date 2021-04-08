@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
 public enum Platform {
     WINDOWS("Windows", new File((System.getenv("APPDATALOCAL") != null)?System.getenv("APPDATALOCAL"):System.getenv("APPDATA"), "GalaxiEngine")),
     MAC_OS("Mac OS", new File(System.getProperty("user.home"), "Library/Application Support/GalaxiEngine")),
-    OTHER("Alt OS", new File(System.getProperty("user.home"), ".GalaxiEngine"))
+    LINUX("Linux", new File(System.getProperty("user.home"), ".GalaxiEngine")),
+    UNIX("Unix", new File(System.getProperty("user.home"), ".GalaxiEngine"))
     ;
     private static final Platform OS;
     private static final String OS_NAME;
@@ -125,7 +126,7 @@ public enum Platform {
 
     static {
         final String osversion = System.getProperty("os.version");
-        final String osname = System.getProperty("os.name", OTHER.name);
+        final String osname = System.getProperty("os.name", "Unknown OS");
         final String os = osname.toLowerCase(Locale.ENGLISH);
         if (os.startsWith("mac") || os.startsWith("darwin")) {
             OS = MAC_OS;
@@ -144,7 +145,11 @@ public enum Platform {
                 OS_VERSION = osversion;
             }
         } else {
-            OS = OTHER;
+            if (os.contains("nux")) {
+                OS = LINUX;
+            } else {
+                OS = UNIX;
+            }
             OS_NAME = osname;
             OS_VERSION = osversion;
         }
