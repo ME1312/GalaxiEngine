@@ -65,7 +65,7 @@ class Console extends CommandParser {
         } else {
             if (!GraphicsEnvironment.isHeadless()) {
                 this.window = window = Util.getDespiteException(() -> (ConsoleUI) Class.forName("net.ME1312.Galaxi.Engine.Runtime.ConsoleWindow").getConstructor(Console.class, boolean.class).newInstance(this, exit), null);
-                window.open();
+                if (window != null) window.open();
             }
         }
         return window;
