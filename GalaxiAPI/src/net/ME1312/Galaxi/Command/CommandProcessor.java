@@ -13,6 +13,16 @@ public abstract class CommandProcessor {
     protected abstract void closeWindow(boolean exit);
 
     /**
+     * Galaxi Command Status Class
+     */
+    public enum Status {
+        SUCCESS,
+        ERROR,
+        UNKNOWN,
+        CANCELLED
+    }
+
+    /**
      * Complete a command
      *
      * @param command Command
@@ -25,8 +35,9 @@ public abstract class CommandProcessor {
      *
      * @param sender Command Sender
      * @param command Command
+     * @return Whether the command was run
      */
-    public abstract void runCommand(CommandSender sender, String command);
+    public abstract Status runCommand(CommandSender sender, String command);
 
     /**
      * Escapes a command

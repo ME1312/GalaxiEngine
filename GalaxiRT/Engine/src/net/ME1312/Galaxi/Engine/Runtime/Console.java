@@ -199,20 +199,20 @@ class Console extends CommandParser {
             ConsoleCommandSender sender = ConsoleCommandSender.get();
             if (sender instanceof InputSender && !line.startsWith("/")) {
                 sender.chat(Util.unescapeJavaString(line));
-            } else {
-                runCommand(sender, line);
+            } else if (runCommand(sender, line) == Status.UNKNOWN) {
+                engine.getAppInfo().getLogger().message.println("Unknown Command: " + line);
             }
         }
     }
 
     @Override
-    public void runCommand(CommandSender sender, String command) {
+    public Status runCommand(CommandSender sender, String command) {
         if (Util.isNull(sender, command)) throw new NullPointerException();
-        runCommand(sender, parseCommand(command));
+        return runCommand(sender, parseCommand(command));
     }
 
     @Override
-    public void runCommand(CommandSender sender, Parsed command) {
+    public Status runCommand(CommandSender sender, Parsed command) {
         if (Util.isNull(sender, command)) throw new NullPointerException();
 
         LinkedList<String> arguments = command.words();
@@ -229,12 +229,16 @@ class Console extends CommandParser {
             if (commands.keySet().contains(label.toLowerCase())) {
                 try {
                     commands.get(label.toLowerCase()).command(sender, label, args);
+                    return Status.SUCCESS;
                 } catch (Exception e) {
                     engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Unhandled exception while running command"));
+                    return Status.ERROR;
                 }
             } else {
-                engine.getAppInfo().getLogger().message.println("Unknown Command: " + escapeCommand(label, args));
+                return Status.UNKNOWN;
             }
+        } else {
+            return Status.CANCELLED;
         }
     }
 

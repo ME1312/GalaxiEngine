@@ -25,8 +25,9 @@ public abstract class CommandParser extends CommandProcessor {
      *
      * @param sender Command Sender
      * @param command Parsed Command
+     * @return Whether the command was run
      */
-    public abstract void runCommand(CommandSender sender, Parsed command);
+    public abstract Status runCommand(CommandSender sender, Parsed command);
 
     /**
      * Parses a command
