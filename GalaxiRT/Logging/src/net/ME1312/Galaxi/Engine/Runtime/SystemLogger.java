@@ -30,7 +30,7 @@ final class SystemLogger extends OutputStream {
 
     static void start(Console console) throws Exception {
         Util.reflect(Logger.class.getDeclaredField("writer"), null, file = new FileLogger(new ConsoleLogger(console)));
-        Util.reflect(Logger.class.getDeclaredField("color"), null, COLOR_LOG_LEVELS.usr().equalsIgnoreCase("true") || (COLOR_LOG_LEVELS.usr().length() == 0 && COLOR_LOG_LEVELS.app()));
+        Util.reflect(Logger.class.getDeclaredField("color"), null, COLOR_LOG_LEVELS.value());
         Util.reflect(Logger.class.getDeclaredField("service"), null, service = Executors.newSingleThreadExecutor(r -> new Thread(r, Engine.getInstance().getEngineInfo().getName() + "::Log_Spooler")));
 
         System.setOut(new PrintStream(new SystemLogger(false), false, UTF_8.name()));

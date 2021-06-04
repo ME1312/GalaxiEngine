@@ -31,7 +31,7 @@ final class FileLogger implements LogMessenger {
     FileLogger(ConsoleLogger child) throws IOException {
         this.child = child;
         if (tmpwriter == null) {
-            File dir = LOG_DIRECTORY.app();
+            File dir = LOG_DIRECTORY.value();
             int i = 1;
             if (dir.isDirectory()) try {
                 for (File file : dir.listFiles()) {
@@ -46,9 +46,9 @@ final class FileLogger implements LogMessenger {
             tmp.deleteOnExit();
             tmpwriter = new FileOutputStream(tmp);
 
-            if (USE_LOG_FILE.usr().equalsIgnoreCase("true") || (USE_LOG_FILE.usr().length() == 0 && USE_LOG_FILE.app())) {
+            if (USE_LOG_FILE.value()) {
                 dir.mkdirs();
-                if (USE_RAW_LOG.usr().equalsIgnoreCase("true") || (USE_RAW_LOG.usr().length() == 0 && USE_RAW_LOG.app())) {
+                if (USE_RAW_LOG.value()) {
                     file = new File(dir, name + ".log.txt");
 
                     writer = iwriter = new FileOutputStream(file);
@@ -65,7 +65,7 @@ final class FileLogger implements LogMessenger {
         }
     }
 
-    private final boolean ANSI = USE_RAW_LOG_ANSI.usr().equalsIgnoreCase("true") || (USE_RAW_LOG_ANSI.usr().length() == 0 && USE_ANSI.def());
+    private final boolean ANSI = (USE_RAW_LOG_ANSI.value() == Boolean.TRUE) || (USE_RAW_LOG_ANSI.value() == null && USE_ANSI.value());
     public void log(String s) throws IOException {
         child.log(s);
         if (writer instanceof HTMLogger) {

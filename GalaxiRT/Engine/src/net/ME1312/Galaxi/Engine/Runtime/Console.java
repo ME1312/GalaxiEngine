@@ -33,8 +33,8 @@ class Console extends CommandParser {
         this.engine = engine;
 
         TerminalBuilder jtb = TerminalBuilder.builder();
-        if (!USE_JLINE.def()) jtb.dumb(true);
-        if (!USE_ANSI.def()) jtb.jansi(false);
+        if (!USE_JLINE.value()) jtb.dumb(true);
+        if (!USE_ANSI.value()) jtb.jansi(false);
         this.jstatus = false;
         this.jline = LineReaderBuilder.builder()
                 .appName(engine.getAppInfo().getName())
@@ -49,8 +49,8 @@ class Console extends CommandParser {
         thread = new Thread(this::read, Galaxi.getInstance().getEngineInfo().getName() + "::Console_Reader");
         SystemLogger.start(this);
         try {
-            if (SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") || (SHOW_CONSOLE_WINDOW.usr().length() == 0 && SHOW_CONSOLE_WINDOW.app() && System.console() == null)) {
-                openWindow(!(SHOW_CONSOLE_WINDOW.usr().equalsIgnoreCase("true") && System.console() != null));
+            if (SHOW_CONSOLE_WINDOW.value()) {
+                openWindow(SHOW_CONSOLE_WINDOW.def());
             }
         } catch (Exception e) {
             engine.getAppInfo().getLogger().error.println(e);
@@ -168,7 +168,7 @@ class Console extends CommandParser {
             do {
                 try {
                     String line;
-                    while (engine.running && (line = jline.readLine((USE_JLINE.def())?">":"")) != null) {
+                    while (engine.running && (line = jline.readLine((USE_JLINE.value())?">":"")) != null) {
                         if (!engine.running || line.replaceAll("\\s", "").length() == 0) continue;
                         jstatus = false;
                         read(line);
@@ -284,7 +284,7 @@ class Console extends CommandParser {
             }
         } else {
             arg = arg.replace("\\", "\\\\").replace("\n", "\\n").replace("\'", "\\\'").replace("\"", "\\\"");
-            if (PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() == 0 && PARSE_CONSOLE_VARIABLES.app()))
+            if (PARSE_CONSOLE_VARIABLES.value())
                 arg = arg.replace("$", "\\$").replace("%", "\\%");
             if (!whitespaced) {
                 if (append || arg.length() > 0) {
@@ -372,7 +372,7 @@ class Console extends CommandParser {
                                     continue;
                                 case '$': // Replace java system variables
                                     int varEnd;
-                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() == 0 && PARSE_CONSOLE_VARIABLES.app()))
+                                    if ((PARSE_CONSOLE_VARIABLES.value())
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('$', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;
@@ -395,7 +395,7 @@ class Console extends CommandParser {
                                     }
                                     continue;
                                 case '%': // Replace environment variables
-                                    if ((PARSE_CONSOLE_VARIABLES.usr().equalsIgnoreCase("true") || (PARSE_CONSOLE_VARIABLES.usr().length() == 0 && PARSE_CONSOLE_VARIABLES.app()))
+                                    if ((PARSE_CONSOLE_VARIABLES.value())
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('%', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
                                         String replacement;

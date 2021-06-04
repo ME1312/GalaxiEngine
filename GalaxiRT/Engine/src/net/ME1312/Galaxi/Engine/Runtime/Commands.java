@@ -136,7 +136,7 @@ class Commands {
                 "  /version",
                 "  /version ExamplePlugin"
         ).register("ver", "version");
-        if (GalaxiOption.ENABLE_RELOAD.app()) new Command(engine.getEngineInfo()) {
+        if (GalaxiOption.ENABLE_RELOAD.value()) new Command(engine.getEngineInfo()) {
             @Override
             public void command(CommandSender sender, String handle, String[] args) {
                 if (sender.hasPermission("galaxi.command.reload")) {

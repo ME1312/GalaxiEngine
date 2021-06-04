@@ -32,7 +32,7 @@ final class ConsoleLogger {
                     buffer.append(s);
                 }
 
-                if (USE_ANSI.def()) {
+                if (USE_ANSI.value()) {
                     buffer.append(Ansi.ansi().a(Ansi.Attribute.RESET));
                     console.jline.printAbove(buffer.toString());
                 } else console.jline.printAbove((String) new AnsiString(buffer.toString()).getPlain());

@@ -32,7 +32,7 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 @App(name = "GalaxiEngine", version = "3.6.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 class Engine extends GalaxiEngine {
-    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.app());
+    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.value());
     private final UniversalFile idir;
 
     private final PluginInfo app;
@@ -56,10 +56,10 @@ class Engine extends GalaxiEngine {
         this.engine = PluginInfo.load(this);
         this.app = (app == null)?engine:app;
 
-        if (APPDATA_DIRECTORY.app() == Platform.getSystem().getAppDataDirectory()) APPDATA_DIRECTORY.value(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
+        if (APPDATA_DIRECTORY.app() == null) APPDATA_DIRECTORY.value(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
         Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
 
-        this.idir = new UniversalFile(APPDATA_DIRECTORY.app());
+        this.idir = new UniversalFile(APPDATA_DIRECTORY.value());
 
         Manifest manifest = new Manifest(Engine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
@@ -70,7 +70,7 @@ class Engine extends GalaxiEngine {
         code.catalogLibrary(engine.get().getClass());
         code.catalogLibrary(this.app.get().getClass());
 
-        if (!(SHOW_DEBUG_MESSAGES.usr().equalsIgnoreCase("true") || (SHOW_DEBUG_MESSAGES.usr().length() == 0 && SHOW_DEBUG_MESSAGES.app())))
+        if (!SHOW_DEBUG_MESSAGES.value())
             Logger.addStaticFilter((stream, message) -> (stream.getLevel() != LogLevel.DEBUG)?null:false);
         this.console = new Console(this);
 

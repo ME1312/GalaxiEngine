@@ -31,18 +31,8 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.CONSOLE_WINDOW_SIZE;
 import static net.ME1312.Galaxi.Engine.GalaxiOption.MAX_CONSOLE_WINDOW_SCROLLBACK;
 
 public final class ConsoleWindow implements ConsoleUI {
-    private static final int MAX_SCROLLBACK = (Util.getDespiteException(new ExceptionReturnRunnable<Integer>() {
-        @Override
-        public Integer run() throws Throwable {
-            return Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr());
-        }
-    }, 0) > 0)?Integer.parseInt(MAX_CONSOLE_WINDOW_SCROLLBACK.usr()):MAX_CONSOLE_WINDOW_SCROLLBACK.app();
-    private static final Double USER_WINDOW_SIZE = (Util.getDespiteException(new ExceptionReturnRunnable<Double>() {
-        @Override
-        public Double run() throws Throwable {
-            return Double.parseDouble(CONSOLE_WINDOW_SIZE.usr());
-        }
-    }, 0D) > 0)?Double.parseDouble(CONSOLE_WINDOW_SIZE.usr()):null;
+    private static final int MAX_SCROLLBACK = (MAX_CONSOLE_WINDOW_SCROLLBACK.value() > 0)?MAX_CONSOLE_WINDOW_SCROLLBACK.value():MAX_CONSOLE_WINDOW_SCROLLBACK.def();
+    private static final Double USER_WINDOW_SIZE = (CONSOLE_WINDOW_SIZE.value() != null && CONSOLE_WINDOW_SIZE.value() > 0)?CONSOLE_WINDOW_SIZE.value():null;
     private static final String HOST_NAME = Util.getDespiteException(new ExceptionReturnRunnable<String>() {
         @Override
         public String run() throws Throwable {
