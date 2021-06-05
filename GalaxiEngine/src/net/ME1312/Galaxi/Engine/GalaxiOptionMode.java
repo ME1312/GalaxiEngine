@@ -11,59 +11,72 @@ enum GalaxiOptionMode {
     APP(null),
     DEF(null),
 
-    USR_DEF((usr, app, def) -> select(new Object[]{usr, def}, new GalaxiOptionMode[]{USR, DEF})),
-    DEF_USR((usr, app, def) -> select(new Object[]{def, usr}, new GalaxiOptionMode[]{DEF, USR})),
-    APP_DEF((usr, app, def) -> select(new Object[]{app, def}, new GalaxiOptionMode[]{APP, DEF})),
-    DEF_APP((usr, app, def) -> select(new Object[]{def, app}, new GalaxiOptionMode[]{DEF, APP})),
+    USR_DEF((usr, app, def) -> new Object[] {usr, def}, USR, DEF),
+    DEF_USR((usr, app, def) -> new Object[] {def, usr}, DEF, USR),
+    APP_DEF((usr, app, def) -> new Object[] {app, def}, APP, DEF),
+    DEF_APP((usr, app, def) -> new Object[] {def, app}, DEF, APP),
+    USR_APP((usr, app, def) -> new Object[] {usr, app}, USR, APP),
 
-    USR_APP_DEF((usr, app, def) -> select(new Object[]{usr, app, def}, new GalaxiOptionMode[]{USR, APP, DEF})),
-    USR_DEF_APP((usr, app, def) -> select(new Object[]{usr, def, app}, new GalaxiOptionMode[]{USR, DEF, APP})),
-    DEF_USR_APP((usr, app, def) -> select(new Object[]{def, usr, app}, new GalaxiOptionMode[]{DEF, USR, APP})),
+    USR_APP_DEF((usr, app, def) -> new Object[] {usr, app, def}, USR, APP, DEF),
+    USR_DEF_APP((usr, app, def) -> new Object[] {usr, def, app}, USR, DEF, APP),
+    DEF_USR_APP((usr, app, def) -> new Object[] {def, usr, app}, DEF, USR, APP),
     ;
-    private final OptionSelector selector;
-    private GalaxiOptionMode(OptionSelector selector) {
-        this.selector = selector;
+    private final Reorderer reorderer;
+    private final GalaxiOptionMode[] order;
+    private GalaxiOptionMode(Reorderer reorderer, GalaxiOptionMode... order) {
+        this.reorderer = reorderer;
+        this.order = order;
     }
 
-    private interface OptionSelector {
-        GalaxiOptionMode select(Object usr, Object app, Object def);
+    private interface Reorderer {
+        Object[] reorder(Object usr, Object app, Object def);
     }
 
-    public GalaxiOptionMode select(Object usr, Object app, Object def) {
-        return (selector == null)? this : selector.select(usr, app, def);
-    }
+    @SuppressWarnings("unchecked")
+    public <T> T select(T usr, T app, T def) {
+        if (reorderer == null) {
+            switch (this) {
+                case USR:
+                    return usr;
+                case APP:
+                    return app;
+                case DEF:
+                    return def;
+                default:
+                    return null;
+            }
+        } else {
+            Object[] objects = reorderer.reorder(usr, app, def);
 
-    private static GalaxiOptionMode select(Object[] objects, GalaxiOptionMode[] results) {
-        if (objects.length != results.length) throw new IllegalArgumentException();
+            Object l = objects[0];
+            GalaxiOptionMode lt = order[0];
+            for (int i = 1; i < objects.length && (l == null || lt == DEF); ++i) {
+                Object c = objects[i];
+                GalaxiOptionMode ct = order[i];
 
-        Object l = objects[0];
-        GalaxiOptionMode lt = results[0];
-        for (int i = 1; i < objects.length && (l == null || lt == DEF); ++i) {
-            Object c = objects[i];
-            GalaxiOptionMode ct = results[i];
-
-            if (lt == DEF) {
-                if (l instanceof Boolean && c instanceof Boolean) {
-                    if (((Boolean) l).compareTo((Boolean) c) > 0) {
-                        l = c;
-                        lt = ct;
+                if (lt == DEF) {
+                    if (l instanceof Boolean && c instanceof Boolean) {
+                        if (((Boolean) l).compareTo((Boolean) c) > 0) {
+                            l = c;
+                            lt = ct;
+                            break;
+                        }
+                    } else if (l != null) {
                         break;
                     }
-                } else if (l != null) {
-                    break;
+                }
+
+                if (c == null) {
+                    // no input
+                } else if (c instanceof Number && ((Number) c).longValue() < 0) {
+                    // invalid input
+                } else {
+                    l = c;
+                    lt = ct;
                 }
             }
 
-            if (c == null) {
-                // no input
-            } else if (c instanceof Number && ((Number) c).longValue() < 0) {
-                // invalid input
-            } else {
-                l = c;
-                lt = ct;
-            }
+            return (T) l;
         }
-
-        return lt;
     }
 }

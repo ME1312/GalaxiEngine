@@ -19,29 +19,29 @@ import static net.ME1312.Galaxi.Engine.GalaxiOptionMode.*;
 public final class GalaxiOption<T> extends Value<T> {
 
     // Directories
-    public static final GalaxiOption<File> APPDATA_DIRECTORY = $(Platform.getSystem().getAppDataDirectory());
-    public static final GalaxiOption<File> RUNTIME_DIRECTORY = $("user.dir", File::new, (File) null, USR);
-    public static final GalaxiOption<File> LOG_DIRECTORY = $(new File(RUNTIME_DIRECTORY.value(), "Logs"));
+    public static final GalaxiOption<File> APPDATA_DIRECTORY = $(APP);
+    public static final GalaxiOption<File> RUNTIME_DIRECTORY = $("user.dir", File::new, USR);
+    public static final GalaxiOption<File> LOG_DIRECTORY = $(new File(RUNTIME_DIRECTORY.value(), "Logs"), APP_DEF);
 
     // Logging
-    public static final GalaxiOption<Boolean> USE_LOG_FILE = $("galaxi.log", Boolean::parseBoolean, true);
-    public static final GalaxiOption<Boolean> USE_RAW_LOG = $("galaxi.log.raw", Boolean::parseBoolean, GraphicsEnvironment.isHeadless());
-    public static final GalaxiOption<Boolean> USE_RAW_LOG_ANSI = $("galaxi.log.raw.ansi", Boolean::parseBoolean, (Boolean) null);
-    public static final GalaxiOption<Boolean> SHOW_DEBUG_MESSAGES = $("galaxi.log.debug", Boolean::parseBoolean, false);
-    public static final GalaxiOption<Boolean> COLOR_LOG_LEVELS = $("galaxi.log.color_levels", Boolean::parseBoolean, true);
+    public static final GalaxiOption<Boolean> USE_LOG_FILE = $("galaxi.log", Boolean::parseBoolean, true, USR_APP_DEF);
+    public static final GalaxiOption<Boolean> USE_RAW_LOG = $("galaxi.log.raw", Boolean::parseBoolean, GraphicsEnvironment.isHeadless(), USR_APP_DEF);
+    public static final GalaxiOption<Boolean> USE_RAW_LOG_ANSI = $("galaxi.log.raw.ansi", Boolean::parseBoolean, USR_APP);
+    public static final GalaxiOption<Boolean> SHOW_DEBUG_MESSAGES = $("galaxi.log.debug", Boolean::parseBoolean, false, USR_APP_DEF);
+    public static final GalaxiOption<Boolean> COLOR_LOG_LEVELS = $("galaxi.log.color_levels", Boolean::parseBoolean, true, USR_APP_DEF);
 
     // Console
-    public static final GalaxiOption<Boolean> SHOW_CONSOLE_WINDOW = $("galaxi.console", Boolean::parseBoolean, System.console() == null);
-    public static final GalaxiOption<Boolean> PARSE_CONSOLE_VARIABLES = $("galaxi.console.parse_vars", Boolean::parseBoolean, false);
-    public static final GalaxiOption<Integer> MAX_CONSOLE_WINDOW_SCROLLBACK = $("galaxi.console.max_scrollback", Integer::parseInt, 15000);
-    public static final GalaxiOption<Double> CONSOLE_WINDOW_SIZE = $("galaxi.console.scaling", Double::parseDouble, (Double) null, USR);
+    public static final GalaxiOption<Boolean> SHOW_CONSOLE_WINDOW = $("galaxi.console", Boolean::parseBoolean, System.console() == null, USR_APP_DEF);
+    public static final GalaxiOption<Boolean> PARSE_CONSOLE_VARIABLES = $("galaxi.console.parse_vars", Boolean::parseBoolean, false, USR_APP_DEF);
+    public static final GalaxiOption<Integer> MAX_CONSOLE_WINDOW_SCROLLBACK = $("galaxi.console.max_scrollback", Integer::parseInt, 15000, USR_APP_DEF);
+    public static final GalaxiOption<Double> CONSOLE_WINDOW_SIZE = $("galaxi.console.scaling", Double::parseDouble, USR);
 
     // Terminal
     public static final GalaxiOption<Boolean> USE_ANSI = $("galaxi.terminal.ansi", Boolean::parseBoolean, true, USR_DEF);
     public static final GalaxiOption<Boolean> USE_JLINE = $("galaxi.terminal.jline", Boolean::parseBoolean, true, USR_DEF);
 
     // Everything Else
-    public static final GalaxiOption<Boolean> ENABLE_RELOAD = $(false);
+    public static final GalaxiOption<Boolean> ENABLE_RELOAD = $(false, APP_DEF);
 
     private T app;
     private T value;
@@ -103,49 +103,29 @@ public final class GalaxiOption<T> extends Value<T> {
     public T value() {
         if (uninitialized) {
             uninitialized = false;
-            switch (mode.select(usr, app, def)) {
-                case USR:
-                    value = usr;
-                    break;
-                case APP:
-                    value = app;
-                    break;
-                case DEF:
-                    value = def;
-                    break;
-            }
+            value = mode.select(usr, app, def);
         }
         return value;
     }
 
 
-    // These are all shorthand constructors
-    private static <T> GalaxiOption<T> $(T def) {
-        return $(def, APP_DEF);
+    private static <T> GalaxiOption<T> $(GalaxiOptionMode mode) {
+        return $((T) null, mode);
     }
     private static <T> GalaxiOption<T> $(T def, GalaxiOptionMode mode) {
         return new GalaxiOption<T>(null, def, mode);
     }
-    private static <T> GalaxiOption<T> $(ExceptionReturnRunnable<T> def) {
-        return $(def, APP_DEF);
-    }
     private static <T> GalaxiOption<T> $(ExceptionReturnRunnable<T> def, GalaxiOptionMode mode) {
         return $(Util.getDespiteException(def, null), mode);
     }
-    private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, T def) {
-        return $(usr, type, def, USR_APP_DEF);
+    private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, GalaxiOptionMode mode) {
+        return $(usr, type, (T) null, mode);
     }
     private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, T def, GalaxiOptionMode mode) {
-        return new GalaxiOption<T>(parse(usr, type), def, mode);
-    }
-    private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, ExceptionReturnRunnable<T> def) {
-        return $(usr, type, def, USR_APP_DEF);
+        String value = System.getProperty(usr);
+        return new GalaxiOption<T>((value != null)?Util.getDespiteException(() -> type.run(value), null):null, def, mode);
     }
     private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, ExceptionReturnRunnable<T> def, GalaxiOptionMode mode) {
         return $(usr, type, Util.getDespiteException(def, null), mode);
-    }
-    private static <T> T parse(String usr, ExceptionReturnCallback<String, T> type) {
-        String value = System.getProperty(usr);
-        return (value != null)? Util.getDespiteException(() -> type.run(value), null): null;
     }
 }
