@@ -200,7 +200,7 @@ class Console extends CommandParser {
             if (sender instanceof InputSender && !line.startsWith("/")) {
                 sender.chat(Util.unescapeJavaString(line));
             } else if (runCommand(sender, line) == Status.UNKNOWN) {
-                engine.getAppInfo().getLogger().message.println("Unknown Command: " + line);
+                engine.getAppInfo().getLogger().message.println("Unknown Command: " + ((line.startsWith("/"))?"":"/") + line);
             }
         }
     }
