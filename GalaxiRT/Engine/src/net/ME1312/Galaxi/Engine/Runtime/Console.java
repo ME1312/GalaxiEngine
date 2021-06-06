@@ -137,7 +137,7 @@ class Console extends CommandParser {
         if (Util.isNull(sender, command)) throw new NullPointerException();
 
         LinkedList<String> candidates = new LinkedList<String>();
-        if (command != null && command.line().codePoints().count() > 0 && (!(sender instanceof InputSender) || !(command instanceof ParsedInput) || ((ParsedInput) command).isCommand())) {
+        if (command != null && command.line().codePoints().count() > 0 && (!(command instanceof ParsedInput) || ((ParsedInput) command).isCommand())) {
             LinkedList<String> arguments = command.words();
             String label = arguments.getFirst();
             arguments.removeFirst();
@@ -150,7 +150,7 @@ class Console extends CommandParser {
                     for (String handle : commands.keySet())
                         if (handle.startsWith(label.toLowerCase()))
                             candidates.add(handle);
-            } else if (commands.keySet().contains(label.toLowerCase())) {
+            } else if (commands.containsKey(label.toLowerCase())) {
                 CompletionHandler autocompletor = commands.get(label.toLowerCase()).autocomplete();
                 if (autocompletor != null)
                     for (String autocomplete : autocompletor.complete(sender, label, args))
@@ -312,10 +312,15 @@ class Console extends CommandParser {
         return parser.parse(input, (int) input.codePoints().count(), command);
     }
 
+    ParsedInput parse(String input) {
+        if (Util.isNull(input)) throw new NullPointerException();
+        return parser.parse(input, (int) input.codePoints().count(), null);
+    }
+
     private final class Parser implements org.jline.reader.Parser {
         @Override
         public ParsedInput parse(final String LINE, final int CURSOR, ParseContext ctx) throws SyntaxError {
-            return parse(LINE, CURSOR, false);
+            return parse(LINE, CURSOR, !(ConsoleCommandSender.get() instanceof InputSender));
         }
 
         public ParsedInput parse(final String LINE, final int CURSOR, boolean command) throws SyntaxError {

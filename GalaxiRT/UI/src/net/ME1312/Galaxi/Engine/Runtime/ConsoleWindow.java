@@ -176,7 +176,7 @@ public final class ConsoleWindow implements ConsoleUI {
                             List<CharSequence> candidates = new LinkedList<CharSequence>();
                             if (icache == null || iauto == Boolean.FALSE) {
                                 ConsoleCommandSender sender = ConsoleCommandSender.get();
-                                ParsedInput command = reader.parse((input.getText().startsWith(">"))?input.getText().substring(1):input.getText(), sender instanceof InputSender);
+                                ParsedInput command = reader.parse((input.getText().startsWith(">"))?input.getText().substring(1):input.getText());
                                 candidates.add(command.line());
                                 for (String candidate : reader.complete(sender, command))
                                     candidates.add(command.line().substring(0, command.line().length() - command.rawWordLength()) + command.escape(candidate, true));
