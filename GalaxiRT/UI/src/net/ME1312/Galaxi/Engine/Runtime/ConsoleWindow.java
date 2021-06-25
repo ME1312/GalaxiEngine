@@ -788,7 +788,6 @@ public final class ConsoleWindow implements ConsoleUI {
 
     @Override
     public void log(final String s) throws IOException {
-        String message;
         int begin = 0;
         int end, i, bytes;
         do {
