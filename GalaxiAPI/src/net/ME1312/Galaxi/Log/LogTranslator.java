@@ -54,16 +54,6 @@ final class LogTranslator extends Handler {
         }
     }
 
-    private String convert(Object obj) {
-        if (obj instanceof Throwable) {
-            StringWriter sw = new StringWriter();
-            ((Throwable) obj).printStackTrace(new PrintWriter(sw));
-            return sw.toString();
-        } else {
-            return Util.getDespiteException(() -> (obj == null)?"null":obj.toString(), "err");
-        }
-    }
-
     @Override
     public void flush() {
         // do nothing

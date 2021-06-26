@@ -304,7 +304,7 @@ public final class Util {
 
     public static void zip(File file, OutputStream zip) {
         File dir = (file.isFile())?file.getParentFile():file;
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[4096];
 
         try{
             ZipOutputStream zos = new ZipOutputStream(zip);
@@ -332,7 +332,7 @@ public final class Util {
     }
 
     public static void unzip(InputStream zip, File dir) {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[4096];
         try{
             ZipInputStream zis = new ZipInputStream(zip);
             ZipEntry ze;
