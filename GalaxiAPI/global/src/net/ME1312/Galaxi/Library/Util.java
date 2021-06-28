@@ -287,6 +287,16 @@ public final class Util {
         }
     }
 
+    /**
+     * Search a Directory
+     *
+     * @param folder Location
+     * @return List of all found file paths
+     */
+    public static List<String> searchDirectory(File folder) {
+        return zipsearch(folder, folder);
+    }
+
     private static List<String> zipsearch(File origin, File file) {
         List<String> list = new LinkedList<String>();
         if (file.isFile()) {

@@ -37,7 +37,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                 File file = new File(source.toURI());
 
                 if (file.isDirectory()) {
-                    for (String entry : Util.<List<String>>getDespiteException(() -> Util.reflect(Util.class.getDeclaredMethod("zipsearch", File.class, File.class), null, file, file), null)) {
+                    for (String entry : Util.searchDirectory(file)) {
                         if (!(new File(file.getAbsolutePath() + File.separator + entry).isDirectory()) && entry.endsWith(".class")) {
                             String e = entry.substring(0, entry.length() - 6).replace(File.separatorChar, '.');
                             if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());

@@ -13,5 +13,5 @@ These are some quick links for common resources of GalaxiEngine.
 > [https://dev.me1312.net/jenkins/job/GalaxiEngine](https://dev.me1312.net/jenkins/job/GalaxiEngine)
 
 ### Javadocs for Developers
-> [https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiAPI/](https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiAPI/)<br>
-> [https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiEngine/](https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiEngine/)<br>
+> [https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiAPI](https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiAPI)<br>
+> [https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiEngine](https://dev.me1312.net/jenkins/job/GalaxiEngine/javadoc/GalaxiEngine)<br>
