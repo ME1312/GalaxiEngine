@@ -316,18 +316,15 @@ public final class Util {
         File dir = (file.isFile())?file.getParentFile():file;
         byte[] buffer = new byte[4096];
 
-        try{
+        try {
             ZipOutputStream zos = new ZipOutputStream(zip);
 
-            for(String next : zipsearch(file, file)){
-
-                ZipEntry ze= new ZipEntry(next.replace(File.separatorChar, '/'));
-                zos.putNextEntry(ze);
-
+            for (String next : zipsearch(file, file)) {
+                zos.putNextEntry(new ZipEntry(next.replace(File.separatorChar, '/')));
                 FileInputStream in = new FileInputStream(dir.getAbsolutePath() + File.separator + next);
 
                 int len;
-                while ((len = in.read(buffer)) > 0) {
+                while ((len = in.read(buffer)) != -1) {
                     zos.write(buffer, 0, len);
                 }
 
@@ -336,7 +333,7 @@ public final class Util {
 
             zos.closeEntry();
             zos.close();
-        } catch(IOException ex){
+        } catch(IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -363,7 +360,7 @@ public final class Util {
                 }
                 FileOutputStream fos = new FileOutputStream(newFile);
                 int len;
-                while ((len = zis.read(buffer)) > 0) {
+                while ((len = zis.read(buffer)) != -1) {
                     fos.write(buffer, 0, len);
                 }
 
@@ -371,7 +368,7 @@ public final class Util {
             }
             zis.closeEntry();
             zis.close();
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
