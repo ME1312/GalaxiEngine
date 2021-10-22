@@ -97,7 +97,7 @@ public class ObjectMap<K> {
      *
      * @return Values
      */
-    public Collection<ObjectMapValue<K>> getValues() {
+    public Collection<? extends ObjectMapValue<K>> getValues() {
         return map.values();
     }
 
@@ -332,7 +332,7 @@ public class ObjectMap<K> {
      * @param handle Handle
      * @return Object
      */
-    public List<ObjectMapValue<K>> getList(K handle) {
+    public List<? extends ObjectMapValue<K>> getList(K handle) {
         if (Util.isNull(handle)) throw new NullPointerException();
         return map.get(handle).asList();
     }
@@ -344,7 +344,7 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object List
      */
-    public List<ObjectMapValue<K>> getList(K handle, Collection<?> def) {
+    public List<? extends ObjectMapValue<K>> getList(K handle, Collection<?> def) {
         if (Util.isNull(handle)) throw new NullPointerException();
         if (map.get(handle) != null) {
             return getList(handle);
@@ -364,7 +364,7 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object List
      */
-    public List<ObjectMapValue<K>> getList(K handle, List<? extends ObjectMapValue<K>> def) {
+    public List<? extends ObjectMapValue<K>> getList(K handle, List<? extends ObjectMapValue<K>> def) {
         if (Util.isNull(handle)) throw new NullPointerException();
         if (map.get(handle) != null) {
             return getList(handle);
@@ -500,7 +500,7 @@ public class ObjectMap<K> {
      * @param handle Handle
      * @return Object Map List
      */
-    public List<ObjectMap<K>> getMapList(K handle) {
+    public List<? extends ObjectMap<K>> getMapList(K handle) {
         return get(handle, x).asMapList();
     }
 
@@ -511,7 +511,7 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object Map List
      */
-    public List<ObjectMap<K>> getMapList(K handle, Collection<? extends Map<? extends K, ?>> def) {
+    public List<? extends ObjectMap<K>> getMapList(K handle, Collection<? extends Map<? extends K, ?>> def) {
         return get(handle, def).asMapList();
     }
 
@@ -522,7 +522,7 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object Map List
      */
-    public List<ObjectMap<K>> getMapList(K handle, List<? extends ObjectMap<? extends K>> def) {
+    public List<? extends ObjectMap<K>> getMapList(K handle, List<? extends ObjectMap<? extends K>> def) {
         if (Util.isNull(handle)) throw new NullPointerException();
         if (map.get(handle) != null) {
             return get(handle).asMapList();

@@ -26,6 +26,7 @@ public abstract class Value<T> {
         return String.valueOf(value());
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean equals(Object object) {
         if (object instanceof Value) {

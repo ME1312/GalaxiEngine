@@ -24,9 +24,10 @@ public abstract class Pair<K, V> extends Value<V> {
 
     @Override
     public String toString() {
-        return '[' + String.valueOf(key()) + ", " + String.valueOf(value()) + ')';
+        return '[' + String.valueOf(key()) + ", " + super.toString() + ')';
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean equals(Object object) {
         if (object instanceof Pair) {
