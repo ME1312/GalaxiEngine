@@ -129,13 +129,13 @@ class Console extends CommandParser {
 
     @Override
     public List<String> complete(CommandSender sender, String command) {
-        if (Util.isNull(sender, command)) throw new NullPointerException();
+        Util.nullpo(sender, command);
         return complete(sender, parseCommand(command));
     }
 
     @Override
     public List<String> complete(CommandSender sender, Parsed command) {
-        if (Util.isNull(sender, command)) throw new NullPointerException();
+        Util.nullpo(sender, command);
 
         LinkedList<String> candidates = new LinkedList<String>();
         if (command != null && command.line().codePoints().count() > 0 && (!(command instanceof ParsedInput) || ((ParsedInput) command).isCommand())) {
@@ -155,7 +155,7 @@ class Console extends CommandParser {
                 CompletionHandler autocompletor = commands.get(label.toLowerCase()).autocomplete();
                 if (autocompletor != null)
                     for (String autocomplete : autocompletor.complete(sender, label, args))
-                        if (!Util.isNull(autocomplete) && autocomplete.length() > 0)
+                        if (autocomplete != null && autocomplete.length() > 0)
                             candidates.add(autocomplete);
             }
         }
@@ -192,7 +192,7 @@ class Console extends CommandParser {
         jstatus = false;
     }
     void read(String line) {
-        if (Util.isNull(line)) throw new NullPointerException();
+        Util.nullpo(line);
 
         ConsoleInputEvent ie = new ConsoleInputEvent(engine, line);
         engine.code.executeEvent(ie);
@@ -208,13 +208,13 @@ class Console extends CommandParser {
 
     @Override
     public Status runCommand(CommandSender sender, String command) {
-        if (Util.isNull(sender, command)) throw new NullPointerException();
+        Util.nullpo(sender, command);
         return runCommand(sender, parseCommand(command));
     }
 
     @Override
     public Status runCommand(CommandSender sender, Parsed command) {
-        if (Util.isNull(sender, command)) throw new NullPointerException();
+        Util.nullpo(sender, command);
 
         LinkedList<String> arguments = command.words();
         String label = arguments.getFirst();
@@ -245,7 +245,7 @@ class Console extends CommandParser {
 
     @Override
     public String escapeCommand(String label, String[] args, boolean literal, boolean whitespaced) {
-        if (Util.isNull(label, args)) throw new NullPointerException();
+        Util.nullpo(label, args);
 
         StringBuilder builder = new StringBuilder();
         builder.append('/');
@@ -259,7 +259,7 @@ class Console extends CommandParser {
 
     @Override
     public String escapeArguments(String[] args, boolean literal, boolean whitespaced) {
-        if (Util.isNull((Object) args)) throw new NullPointerException();
+        Util.nullpo((Object) args);
 
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < args.length; i++) {
@@ -270,7 +270,7 @@ class Console extends CommandParser {
     }
 
     private String escapeArgument(Pair<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
-        if (Util.isNull((Object) arg)) throw new NullPointerException();
+        Util.nullpo((Object) arg);
         boolean append = start != null && arg.startsWith(start.value());
         if (append) arg = arg.substring(start.value().length());
 
@@ -304,17 +304,17 @@ class Console extends CommandParser {
 
     @Override
     public ParsedInput parseCommand(String command) {
-        if (Util.isNull(command)) throw new NullPointerException();
+        Util.nullpo(command);
         return parser.parse(command, (int) command.codePoints().count(), true);
     }
 
     ParsedInput parse(String input, boolean command) {
-        if (Util.isNull(input)) throw new NullPointerException();
+        Util.nullpo(input);
         return parser.parse(input, (int) input.codePoints().count(), command);
     }
 
     ParsedInput parse(String input) {
-        if (Util.isNull(input)) throw new NullPointerException();
+        Util.nullpo(input);
         return parser.parse(input, (int) input.codePoints().count(), null);
     }
 

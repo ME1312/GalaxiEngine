@@ -31,7 +31,7 @@ public abstract class PluginManager {
      * @return PluginInfo
      */
     public PluginInfo getPlugin(String name) {
-        if (Util.isNull(name)) throw new NullPointerException();
+        Util.nullpo(name);
         return getPlugins().get(name.toLowerCase());
     }
 
@@ -42,7 +42,7 @@ public abstract class PluginManager {
      * @return PluginInfo
      */
     public PluginInfo getPlugin(Class<?> main) {
-        if (Util.isNull(main)) throw new NullPointerException();
+        Util.nullpo(main);
         return PluginInfo.get(main);
     }
 
@@ -53,7 +53,7 @@ public abstract class PluginManager {
      * @return PluginInfo
      */
     public PluginInfo getPlugin(Object main) {
-        if (Util.isNull(main)) throw new NullPointerException();
+        Util.nullpo(main);
         return PluginInfo.get(main);
     }
 
@@ -89,7 +89,8 @@ public abstract class PluginManager {
      */
     @SuppressWarnings("unchecked")
     public void registerListeners(PluginInfo plugin, Object... listeners) {
-        if (plugin == null || Util.isNull(listeners)) throw new NullPointerException();
+        Util.nullpo(plugin);
+        Util.nullpo(listeners);
         synchronized (this.listeners) {
             LinkedList<Class<? extends Event>> update = new LinkedList<>();
             for (Object listener : listeners) {
@@ -147,7 +148,8 @@ public abstract class PluginManager {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @SafeVarargs
     public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<? extends T>... listeners) {
-        if (Util.isNull(plugin, event) || Util.isNull((Object[]) listeners)) throw new NullPointerException();
+        Util.nullpo(plugin, event, listeners);
+        Util.nullpo((Object[]) listeners);
         synchronized (this.listeners) {
             for (Listener listener : listeners) {
                 try {
@@ -198,7 +200,8 @@ public abstract class PluginManager {
      * @param listeners Listeners
      */
     public void unregisterListeners(PluginInfo plugin, Object... listeners) {
-        if (plugin == null || (listeners != null && Util.isNull(listeners))) throw new NullPointerException();
+        Util.nullpo(plugin, listeners);
+        Util.nullpo(listeners);
         synchronized (this.listeners) {
             LinkedList<Class<? extends Event>> update = new LinkedList<>();
             for (Map.Entry<Class<? extends Event>, Map<Short, Map<PluginInfo, Map<Object, List<BakedListener>>>>> event : this.listeners.entrySet()) {
@@ -290,7 +293,7 @@ public abstract class PluginManager {
      */
     @SuppressWarnings("unchecked")
     public <T extends Event> void executeEvent(Class<T> type, T event) {
-        if (Util.isNull(event)) throw new NullPointerException();
+        Util.nullpo(event);
         if (!type.isInstance(event)) throw new ClassCastException(event.getClass().getCanonicalName() + " cannot be cast to " + type.getCanonicalName());
         List<BakedListener> listeners = this.baked.get(type);
 

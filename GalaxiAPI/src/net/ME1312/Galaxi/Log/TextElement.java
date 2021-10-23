@@ -45,7 +45,7 @@ public class TextElement {
      * @param element Raw Element
      */
     public TextElement(ObjectMap<String> element) {
-        if (Util.isNull(element)) throw new NullPointerException();
+        Util.nullpo(element);
         this.element = element;
         load();
     }

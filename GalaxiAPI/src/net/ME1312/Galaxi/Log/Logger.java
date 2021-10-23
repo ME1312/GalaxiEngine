@@ -30,7 +30,7 @@ public final class Logger {
      * @param prefix Log Prefix
      */
     public Logger(String prefix) {
-        if (Util.isNull(prefix)) throw new NullPointerException();
+        Util.nullpo(prefix);
         if (prefix.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty prefix");
         debug = new LogStream(this, DEBUG);
         message = new LogStream(this, MESSAGE);
@@ -106,7 +106,7 @@ public final class Logger {
      * @param filter Log Filter
      */
     public void addFilter(LogFilter filter) {
-        if (Util.isNull(filter)) throw new NullPointerException();
+        Util.nullpo(filter);
         lFilters.add(filter);
     }
 
@@ -126,7 +126,7 @@ public final class Logger {
      * @param filter Static Log Filter
      */
     public static void addStaticFilter(LogFilter filter) {
-        if (Util.isNull(filter)) throw new NullPointerException();
+        Util.nullpo(filter);
         gFilters.add(filter);
     }
 

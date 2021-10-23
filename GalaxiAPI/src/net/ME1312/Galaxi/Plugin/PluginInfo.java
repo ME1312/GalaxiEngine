@@ -64,7 +64,7 @@ public class PluginInfo implements ExtraDataHandler {
          * @param required Required Status
          */
         protected Dependency(String name, Version minversion, Version maxversion, boolean required) {
-            if (Util.isNull(name, required)) throw new NullPointerException();
+            Util.nullpo(name, required);
             this.name = name;
             this.minversion = minversion;
             this.maxversion = maxversion;
@@ -208,7 +208,7 @@ public class PluginInfo implements ExtraDataHandler {
      * @param dependencies Dependencies List
      */
     protected PluginInfo(Object plugin, String name, Version version, List<String> authors, String description, URL website, List<String> loadBefore, List<Dependency> dependencies) {
-        if (Util.isNull(plugin, name, version, authors)) throw new NullPointerException();
+        Util.nullpo(plugin, name, version, authors);
         if (name.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty name");
         if (version.toString().length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty version");
         if (authors.size() == 0) throw new ArrayIndexOutOfBoundsException("Cannot use an empty authors list");
@@ -460,7 +460,7 @@ public class PluginInfo implements ExtraDataHandler {
      * @param value Value
      */
     public void setLogger(Logger value) {
-        if (Util.isNull(value)) throw new NullPointerException();
+        Util.nullpo(value);
         logger = value;
     }
 
@@ -504,19 +504,19 @@ public class PluginInfo implements ExtraDataHandler {
 
     @Override
     public void addExtra(String handle, Object value) {
-        if (Util.isNull(handle, value)) throw new NullPointerException();
+        Util.nullpo(handle, value);
         extra.set(handle, value);
     }
 
     @Override
     public boolean hasExtra(String handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return extra.getKeys().contains(handle);
     }
 
     @Override
     public ObjectMapValue<String> getExtra(String handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return extra.get(handle);
     }
 
@@ -527,7 +527,7 @@ public class PluginInfo implements ExtraDataHandler {
 
     @Override
     public void removeExtra(String handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         extra.remove(handle);
     }
 }

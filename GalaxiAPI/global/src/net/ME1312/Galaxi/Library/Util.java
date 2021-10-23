@@ -14,6 +14,30 @@ import java.util.function.Supplier;
 public final class Util {
     private Util(){}
 
+
+    /**
+     * Checks values to make sure they're not null
+     *
+     * @param value Values to check
+     * @throws NullPointerException if any are null
+     */
+    public static <T> T nullpo(T value) {
+        if (value == null) throw new NullPointerException("Illegal null value");
+        return value;
+    }
+
+    /**
+     * Checks values to make sure they're not null
+     *
+     * @param values Values to check
+     * @throws NullPointerException if any are null
+     */
+    public static void nullpo(Object... values) {
+        for (int i = 0; i < values.length; ++i) {
+            if (values[i] == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
+        }
+    }
+
     /**
      * Checks values to make sure they're not null
      *
@@ -27,31 +51,6 @@ public final class Util {
             }
         }
         return false;
-    }
-
-
-    /**
-     * Checks values to make sure they're not null
-     *
-     * @param value Values to check
-     * @throws NullPointerException if any are null
-     */
-    public static <T> T nullpo(T value) {
-        if (value == null) throw new NullPointerException("Illegal null value");
-        return value;
-    }
-
-
-    /**
-     * Checks values to make sure they're not null
-     *
-     * @param values Values to check
-     * @throws NullPointerException if any are null
-     */
-    public static void nullpo(Object... values) {
-        for (int i = 0; i < values.length; ++i) {
-            if (values[i] == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
-        }
     }
 
     /**

@@ -22,7 +22,7 @@ public abstract class GalaxiEngine extends Galaxi {
      * @return The GalaxiEngine
      */
     public static GalaxiEngine init(Object app) throws Exception {
-        if (Util.isNull(app)) throw new NullPointerException();
+        Util.nullpo(app);
         if (instance == null) {
             return Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.Runtime.Engine").getDeclaredConstructor(PluginInfo.class), PluginInfo.load(app));
         } else throw new IllegalStateException("Engine already initialized");
@@ -35,7 +35,7 @@ public abstract class GalaxiEngine extends Galaxi {
      * @return The GalaxiEngine
      */
     public static GalaxiEngine init(PluginInfo app) throws Exception {
-        if (Util.isNull(app)) throw new NullPointerException();
+        Util.nullpo(app);
         if (instance == null) {
             return Util.reflect(Class.forName("net.ME1312.Galaxi.Engine.Runtime.Engine").getDeclaredConstructor(PluginInfo.class), app);
         } else throw new IllegalStateException("Engine already initialized");
