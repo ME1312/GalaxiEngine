@@ -81,19 +81,19 @@ public class ConsoleCommandSender implements CommandSender {
 
     @Override
     public void addExtra(String handle, Object value) {
-        if (Util.isNull(handle, value)) throw new NullPointerException();
+        Util.nullpo(handle, value);
         extra.set(handle, value);
     }
 
     @Override
     public boolean hasExtra(String handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return extra.getKeys().contains(handle);
     }
 
     @Override
     public ObjectMapValue<String> getExtra(String handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return extra.get(handle);
     }
 
@@ -104,7 +104,7 @@ public class ConsoleCommandSender implements CommandSender {
 
     @Override
     public void removeExtra(String handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         extra.remove(handle);
     }
 }

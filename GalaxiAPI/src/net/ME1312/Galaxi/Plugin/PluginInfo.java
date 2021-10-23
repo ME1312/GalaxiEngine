@@ -1,7 +1,6 @@
 package net.ME1312.Galaxi.Plugin;
 
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.ExtraDataHandler;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
@@ -20,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Plugin Info Class
@@ -47,7 +47,7 @@ public class PluginInfo implements ExtraDataHandler {
     private File dir = new File(System.getProperty("user.dir"));
     private Logger logger = null;
     private boolean enabled = false;
-    private ReturnRunnable<Boolean> updateChecker = null;
+    private Supplier<Boolean> updateChecker = null;
     private final ObjectMap<String> extra = new ObjectMap<String>();
 
     public static class Dependency {
@@ -117,7 +117,7 @@ public class PluginInfo implements ExtraDataHandler {
      */
     public static PluginInfo load(Object main) throws InvocationTargetException {
         Class<?> mainClass = main.getClass();
-        if (!pluginMap.keySet().contains(mainClass)) {
+        if (!pluginMap.containsKey(mainClass)) {
             try {
                 if (mainClass.isAnnotationPresent(Plugin.class)) {
                     String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
@@ -479,7 +479,7 @@ public class PluginInfo implements ExtraDataHandler {
      *
      * @return Update Checker
      */
-    public ReturnRunnable<Boolean> getUpdateChecker() {
+    public Supplier<Boolean> getUpdateChecker() {
         return updateChecker;
     }
 
@@ -488,7 +488,7 @@ public class PluginInfo implements ExtraDataHandler {
      *
      * @param checker Value (return true when an update is available)
      */
-    public void setUpdateChecker(ReturnRunnable<Boolean> checker) {
+    public void setUpdateChecker(Supplier<Boolean> checker) {
         this.updateChecker = checker;
     }
 

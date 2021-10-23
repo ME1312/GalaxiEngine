@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Library.Config;
 
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 
 import org.yaml.snakeyaml.DumperOptions;
@@ -27,7 +28,7 @@ public class YAMLConfig {
      */
     @SuppressWarnings("unchecked")
     public YAMLConfig(File file) throws IOException, YAMLException {
-        if (Util.isNull(file)) throw new NullPointerException();
+        Util.nullpo(file);
         this.file = file;
         this.yaml = new Yaml(getDumperOptions());
         if (file.exists()) {
@@ -54,7 +55,7 @@ public class YAMLConfig {
      * @param value Value
      */
     public void set(YAMLSection value) {
-        if (Util.isNull(value)) throw new NullPointerException();
+        Util.nullpo(value);
         config = value;
     }
 
@@ -105,10 +106,10 @@ public class YAMLConfig {
 
     static DumperOptions getDumperOptions() {
         DumperOptions options = new DumperOptions();
-        Util.isException(() -> options.setAllowUnicode(false));
-        Util.isException(() -> options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK));
-        Util.isException(() -> options.setSplitLines(false));
-        Util.isException(() -> options.setIndent(2));
+        Try.all.run(() -> options.setAllowUnicode(false));
+        Try.all.run(() -> options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK));
+        Try.all.run(() -> options.setSplitLines(false));
+        Try.all.run(() -> options.setIndent(2));
 
         return options;
     }

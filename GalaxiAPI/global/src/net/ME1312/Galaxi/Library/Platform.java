@@ -1,11 +1,10 @@
 package net.ME1312.Galaxi.Library;
 
-import net.ME1312.Galaxi.Library.Callback.ReturnCallback;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Locale;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -193,7 +192,7 @@ public enum Platform {
         }
 
         String jarch = System.getProperty("sun.arch.data.model", "unknown");
-        if (Util.isException(() -> Long.parseLong(jarch))) {
+        if (!Try.all.run(() -> Long.parseLong(jarch))) {
             JAVA_ARCH = jarch;
         } else if (x86 && jarch.equals("32")) {
             JAVA_ARCH = "x86";
@@ -212,8 +211,8 @@ public enum Platform {
         }
     }
 
-    private static boolean isArch(String[] array, ReturnCallback<String, Boolean> operation) {
-        for (String object : array) if (object != null && operation.run(object.toLowerCase(Locale.ENGLISH))) {
+    private static boolean isArch(String[] array, Function<String, Boolean> operation) {
+        for (String object : array) if (object != null && operation.apply(object.toLowerCase(Locale.ENGLISH))) {
             return true;
         }
         return false;

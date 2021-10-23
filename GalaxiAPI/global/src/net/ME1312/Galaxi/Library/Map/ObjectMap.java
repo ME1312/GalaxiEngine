@@ -215,7 +215,7 @@ public class ObjectMap<K> {
      * @param value Value
      */
     public synchronized void set(K handle, Object value) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         map.put(handle, wrap(handle, value));
     }
 
@@ -226,7 +226,7 @@ public class ObjectMap<K> {
      * @param value Value
      */
     public void safeSet(K handle, Object value) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         if (!contains(handle)) set(handle, value);
     }
 
@@ -236,7 +236,7 @@ public class ObjectMap<K> {
      * @param values Map to set
      */
     public void setAll(Map<? extends K, ?> values) {
-        if (Util.isNull(values)) throw new NullPointerException();
+        Util.nullpo(values);
         for (K value : values.keySet()) {
             set(value, values.get(value));
         }
@@ -248,7 +248,7 @@ public class ObjectMap<K> {
      * @param values Map to set
      */
     public void safeSetAll(Map<? extends K, ?> values) {
-        if (Util.isNull(values)) throw new NullPointerException();
+        Util.nullpo(values);
         for (K value : values.keySet()) {
             safeSet(value, values.get(value));
         }
@@ -260,7 +260,7 @@ public class ObjectMap<K> {
      * @param values Object Map to merge
      */
     public void setAll(ObjectMap<? extends K> values) {
-        if (Util.isNull(values)) throw new NullPointerException();
+        Util.nullpo(values);
         setAll(values.map);
     }
 
@@ -270,7 +270,7 @@ public class ObjectMap<K> {
      * @param values Object Map to merge
      */
     public void safeSetAll(ObjectMap<? extends K> values) {
-        if (Util.isNull(values)) throw new NullPointerException();
+        Util.nullpo(values);
         safeSetAll(values.map);
     }
 
@@ -280,7 +280,7 @@ public class ObjectMap<K> {
      * @param handle Handle
      */
     public synchronized void remove(K handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         map.remove(handle);
     }
 
@@ -298,7 +298,7 @@ public class ObjectMap<K> {
      * @return Object
      */
     public ObjectMapValue<K> get(K handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return map.get(handle);
     }
 
@@ -310,7 +310,7 @@ public class ObjectMap<K> {
      * @return Object
      */
     public ObjectMapValue<K> get(K handle, Object def) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return (map.get(handle) != null)? map.get(handle):wrap(handle, def);
     }
 
@@ -322,7 +322,7 @@ public class ObjectMap<K> {
      * @return Object
      */
     public ObjectMapValue<K> get(K handle, ObjectMapValue<K> def) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return (map.get(handle) != null)? map.get(handle):def;
     }
 
@@ -333,7 +333,7 @@ public class ObjectMap<K> {
      * @return Object
      */
     public List<? extends ObjectMapValue<K>> getList(K handle) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         return map.get(handle).asList();
     }
 
@@ -345,7 +345,7 @@ public class ObjectMap<K> {
      * @return Object List
      */
     public List<? extends ObjectMapValue<K>> getList(K handle, Collection<?> def) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         if (map.get(handle) != null) {
             return getList(handle);
         } else if (def != null) {
@@ -365,7 +365,7 @@ public class ObjectMap<K> {
      * @return Object List
      */
     public List<? extends ObjectMapValue<K>> getList(K handle, List<? extends ObjectMapValue<K>> def) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         if (map.get(handle) != null) {
             return getList(handle);
         } else if (def != null) {
@@ -486,7 +486,7 @@ public class ObjectMap<K> {
      * @return Object Map
      */
     public ObjectMap<K> getMap(K handle, ObjectMap<? extends K> def) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         if (map.get(handle) != null) {
             return getMap(handle);
         } else if (def != null) {
@@ -523,7 +523,7 @@ public class ObjectMap<K> {
      * @return Object Map List
      */
     public List<? extends ObjectMap<K>> getMapList(K handle, List<? extends ObjectMap<? extends K>> def) {
-        if (Util.isNull(handle)) throw new NullPointerException();
+        Util.nullpo(handle);
         if (map.get(handle) != null) {
             return get(handle).asMapList();
         } else if (def != null) {

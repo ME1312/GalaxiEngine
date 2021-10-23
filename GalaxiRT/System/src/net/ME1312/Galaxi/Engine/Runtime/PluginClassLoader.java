@@ -21,7 +21,7 @@ class PluginClassLoader extends URLClassLoader {
     }
 
     static PluginClassLoader get(ClassLoader parent, File file) {
-        if (!loaders.keySet().contains(file)) loaders.put(file, new PluginClassLoader(parent, file));
+        if (!loaders.containsKey(file)) loaders.put(file, new PluginClassLoader(parent, file));
         return loaders.get(file);
     }
 

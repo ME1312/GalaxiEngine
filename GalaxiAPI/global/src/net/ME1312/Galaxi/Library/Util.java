@@ -1,20 +1,12 @@
 package net.ME1312.Galaxi.Library;
 
-import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
-import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;
-import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
-
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.function.Supplier;
 
 /**
  * Random Utility Class
@@ -29,11 +21,37 @@ public final class Util {
      * @return If any are null
      */
     public static boolean isNull(Object... values) {
-        boolean ret = false;
         for (Object value : values) {
-            if (value == null) ret = true;
+            if (value == null) {
+                return true;
+            }
         }
-        return ret;
+        return false;
+    }
+
+
+    /**
+     * Checks values to make sure they're not null
+     *
+     * @param value Values to check
+     * @throws NullPointerException if any are null
+     */
+    public static <T> T nullpo(T value) {
+        if (value == null) throw new NullPointerException("Illegal null value");
+        return value;
+    }
+
+
+    /**
+     * Checks values to make sure they're not null
+     *
+     * @param values Values to check
+     * @throws NullPointerException if any are null
+     */
+    public static void nullpo(Object... values) {
+        for (int i = 0; i < values.length; ++i) {
+            if (values[i] == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
+        }
     }
 
     /**
@@ -70,7 +88,7 @@ public final class Util {
     public static <V> V getCaseInsensitively(Map<String, V> map, String key) {
         HashMap<String, String> insensitivity = new HashMap<String, String>();
         for (String item : map.keySet()) insensitivity.put(item.toLowerCase(), item);
-        if (insensitivity.keySet().contains(key.toLowerCase())) {
+        if (insensitivity.containsKey(key.toLowerCase())) {
             return map.get(insensitivity.get(key.toLowerCase()));
         } else {
             return null;
@@ -85,10 +103,10 @@ public final class Util {
      * @param <V> Variable Type
      * @return Variable
      */
-    public static <V> V getNew(Collection<? extends V> existing, ReturnRunnable<V> generator) {
+    public static <V> V getNew(Collection<? extends V> existing, Supplier<V> generator) {
         V result = null;
         while (result == null) {
-            V tmp = generator.run();
+            V tmp = generator.get();
             if (!existing.contains(tmp)) result = tmp;
         }
         return result;
@@ -204,173 +222,6 @@ public final class Util {
         value = (R) constructor.newInstance(arguments);
         constructor.setAccessible(false);
         return value;
-    }
-
-    /**
-     * Get a variable from a method which may throw an exception
-     *
-     * @param runnable Runnable
-     * @param def Default value when an exception is thrown
-     * @param <R> Variable Type
-     * @return Returns value or default depending on if an exception is thrown
-     */
-    public static <R> R getDespiteException(ExceptionReturnRunnable<R> runnable, R def) {
-        try {
-            return runnable.run();
-        } catch (Throwable e) {
-            return def;
-        }
-    }
-
-    /**
-     * Determines if an Exception will occur
-     *
-     * @param runnable Runnable
-     * @return If an Exception occured
-     */
-    public static boolean isException(ExceptionRunnable runnable) {
-        try {
-            runnable.run();
-            return false;
-        } catch (Throwable e) {
-            return true;
-        }
-    }
-
-    /**
-     * Delete Directory
-     *
-     * @param folder Location
-     */
-    public static void deleteDirectory(File folder) {
-        File[] files = folder.listFiles();
-        if(files!=null) {
-            for(File f : files) {
-                if(f.isDirectory() && !Files.isSymbolicLink(f.toPath())) {
-                    deleteDirectory(f);
-                } else try {
-                    Files.delete(f.toPath());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        folder.delete();
-    }
-
-    /**
-     * Copy a Directory
-     *
-     * @param from Source
-     * @param to Destination
-     */
-    public static void copyDirectory(File from, File to) {
-        if (from.isDirectory() && !Files.isSymbolicLink(from.toPath())) {
-            if (!to.exists()) {
-                to.mkdirs();
-            }
-
-            String files[] = from.list();
-
-            for (String file : files) {
-                File srcFile = new File(from, file);
-                File destFile = new File(to, file);
-
-                copyDirectory(srcFile, destFile);
-            }
-        } else {
-            try {
-                if (!to.exists()) Files.copy(from.toPath(), to.toPath(), LinkOption.NOFOLLOW_LINKS);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Search a Directory
-     *
-     * @param folder Location
-     * @return List of all found file paths
-     */
-    public static List<String> searchDirectory(File folder) {
-        return zipsearch(folder, folder);
-    }
-
-    private static List<String> zipsearch(File origin, File file) {
-        List<String> list = new LinkedList<String>();
-        if (file.isFile()) {
-            if (origin == file) {
-                list.add(file.getName());
-            } else {
-                list.add(file.getAbsolutePath().substring(origin.getAbsolutePath().length()+1));
-            }
-        }
-        if (file.isDirectory()) for (File next : file.listFiles()) {
-            list.addAll(zipsearch(origin, next));
-        }
-        return list;
-    }
-
-    public static void zip(File file, OutputStream zip) {
-        File dir = (file.isFile())?file.getParentFile():file;
-        byte[] buffer = new byte[4096];
-
-        try {
-            ZipOutputStream zos = new ZipOutputStream(zip);
-
-            for (String next : zipsearch(file, file)) {
-                zos.putNextEntry(new ZipEntry(next.replace(File.separatorChar, '/')));
-                FileInputStream in = new FileInputStream(dir.getAbsolutePath() + File.separator + next);
-
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    zos.write(buffer, 0, len);
-                }
-
-                in.close();
-            }
-
-            zos.closeEntry();
-            zos.close();
-        } catch(IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public static void unzip(InputStream zip, File dir) {
-        byte[] buffer = new byte[4096];
-        try{
-            ZipInputStream zis = new ZipInputStream(zip);
-            ZipEntry ze;
-            while ((ze = zis.getNextEntry()) != null) {
-                File newFile = new File(dir + File.separator + ze.getName().replace('/', File.separatorChar));
-                if (newFile.exists()) {
-                    if (newFile.isDirectory()) {
-                        Util.deleteDirectory(newFile);
-                    } else {
-                        newFile.delete();
-                    }
-                }
-                if (ze.isDirectory()) {
-                    newFile.mkdirs();
-                    continue;
-                } else if (!newFile.getParentFile().exists()) {
-                    newFile.getParentFile().mkdirs();
-                }
-                FileOutputStream fos = new FileOutputStream(newFile);
-                int len;
-                while ((len = zis.read(buffer)) != -1) {
-                    fos.write(buffer, 0, len);
-                }
-
-                fos.close();
-            }
-            zis.closeEntry();
-            zis.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
     }
 
     /**

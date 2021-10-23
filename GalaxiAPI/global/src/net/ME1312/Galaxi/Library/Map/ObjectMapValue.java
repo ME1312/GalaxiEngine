@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Library.Map;
 
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
@@ -360,7 +361,7 @@ public class ObjectMapValue<K> {
      * @return UUID Status
      */
     public boolean isUUID() {
-        return (obj instanceof String && !Util.isException(() -> UUID.fromString(asRawString())));
+        return (obj instanceof String && Try.all.run(() -> UUID.fromString(asRawString())));
     }
 
     @Override

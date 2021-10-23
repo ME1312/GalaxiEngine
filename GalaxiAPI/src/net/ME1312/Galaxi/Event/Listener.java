@@ -1,6 +1,5 @@
 package net.ME1312.Galaxi.Event;
 
-import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 /**
@@ -11,7 +10,7 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
  * @see net.ME1312.Galaxi.Plugin.PluginManager#registerListener(PluginInfo, Class, Number, Listener[])
  * @param <T> Event Type
  */
-public interface Listener<T extends Event> extends Callback<T> {
+public interface Listener<T extends Event> {
 
     /**
      * Listen for an Event

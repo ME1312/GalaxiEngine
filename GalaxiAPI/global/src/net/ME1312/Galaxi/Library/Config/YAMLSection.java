@@ -35,7 +35,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @throws YAMLException
      */
     public YAMLSection(InputStream stream) throws YAMLException {
-        if (Util.isNull(stream)) throw new NullPointerException();
+        Util.nullpo(stream);
         setAll((LinkedHashMap<String, Object>) (this.yaml = new Yaml(YAMLConfig.getDumperOptions())).loadAs(stream, LinkedHashMap.class));
     }
 
@@ -46,7 +46,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @throws YAMLException
      */
     public YAMLSection(Reader reader) throws YAMLException {
-        if (Util.isNull(reader)) throw new NullPointerException();
+        Util.nullpo(reader);
         setAll((LinkedHashMap<String, Object>) (this.yaml = new Yaml(YAMLConfig.getDumperOptions())).loadAs(reader, LinkedHashMap.class));
     }
 
@@ -57,7 +57,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @throws YAMLException
      */
     public YAMLSection(String str) throws YAMLException {
-        if (Util.isNull(str)) throw new NullPointerException();
+        Util.nullpo(str);
         setAll((LinkedHashMap<String, Object>) (this.yaml = new Yaml(YAMLConfig.getDumperOptions())).loadAs(str, LinkedHashMap.class));
     }
 

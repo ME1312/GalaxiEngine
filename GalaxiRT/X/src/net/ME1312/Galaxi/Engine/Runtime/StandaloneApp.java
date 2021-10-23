@@ -2,7 +2,7 @@ package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Engine.GalaxiEngine;
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Log.Logger;
 
 import java.io.File;
@@ -25,7 +25,7 @@ public class StandaloneApp {
 
     private static void start() {
         try {
-            if (Util.isException(GalaxiEngine::getInstance)) {
+            if (!Try.handle(IllegalStateException.class).run(GalaxiEngine::getInstance)) {
                 Engine engine = new Engine(null);
                 Logger log = engine.getAppInfo().getLogger();
 

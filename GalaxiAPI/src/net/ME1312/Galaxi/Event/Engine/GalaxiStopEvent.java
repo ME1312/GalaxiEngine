@@ -19,7 +19,7 @@ public class GalaxiStopEvent extends CancellableEvent {
      * @param code Exit Code
      */
     public GalaxiStopEvent(Galaxi engine, int code) {
-        if (Util.isNull(engine)) throw new NullPointerException();
+        Util.nullpo(engine);
         this.code = code;
     }
 

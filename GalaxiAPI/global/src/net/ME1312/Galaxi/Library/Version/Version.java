@@ -56,7 +56,7 @@ public class Version implements Serializable, Comparable<Version> {
      * @param string Version String
      */
     public Version(Version parent, VersionType type, String string) {
-        if (Util.isNull(string, type)) throw new NullPointerException();
+        Util.nullpo(string, type);
         this.parent = parent;
         this.type = type;
         this.string = string;
@@ -99,7 +99,7 @@ public class Version implements Serializable, Comparable<Version> {
      * @param ints Version Numbers (Will be separated with dots)
      */
     public Version(Version parent, VersionType type, int... ints) {
-        if (Util.isNull(type)) throw new NullPointerException();
+        Util.nullpo(type);
         this.parent = parent;
         this.type = type;
         String string = Integer.toString(ints[0]);

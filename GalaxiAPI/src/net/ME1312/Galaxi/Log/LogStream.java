@@ -1,12 +1,12 @@
 package net.ME1312.Galaxi.Log;
 
-import net.ME1312.Galaxi.Library.Callback.Callback;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
-import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Library.Try;
 
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -21,7 +21,7 @@ public final class LogStream {
     LogStream(Logger logger, LogLevel level) {
         this.logger = logger;
         this.level = level;
-        this.primitive = Util.getDespiteException(() -> new PrintStream(new OutputStream() {
+        this.primitive = Try.all.get(() -> new PrintStream(new OutputStream() {
             final ByteArrayOutputStream pending = new ByteArrayOutputStream();
 
             @Override
@@ -36,7 +36,7 @@ public final class LogStream {
                     pending.reset();
                 }
             }
-        }, true, UTF_8.name()), null);
+        }, true, UTF_8.name()));
     }
 
     interface MessageHandler {
@@ -275,9 +275,9 @@ public final class LogStream {
                 // Close Remaining Style/Meta Elements
                 if (top) {
                     boolean newline = result.length() != 0 && result.codePointAt(result.codePointCount(0, result.length()) - 1) == '\n';
-                    Callback<String> insert = (newline)? s -> result.insert(result.length() - 1, s) : result::append;
+                    Consumer<String> insert = (newline)? s -> result.insert(result.length() - 1, s) : result::append;
 
-                    if (current.hyperlink != null) insert.run("\033]8;;\007");
+                    if (current.hyperlink != null) insert.accept("\033]8;;\007");
                     if (!newline && current.style.size() != 0) result.append("\u001B[m");
                 }
             } else {

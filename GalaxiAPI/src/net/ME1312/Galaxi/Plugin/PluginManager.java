@@ -4,11 +4,13 @@ import net.ME1312.Galaxi.Command.Command;
 import net.ME1312.Galaxi.Event.*;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container.Container;
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Supplier;
 
 public abstract class PluginManager {
     private final Map<Class<? extends Event>, Map<Short, Map<PluginInfo, Map<Object, List<BakedListener>>>>> listeners = new HashMap<>();
@@ -293,7 +295,7 @@ public abstract class PluginManager {
         List<BakedListener> listeners = this.baked.get(type);
 
         if (listeners != null && listeners.size() != 0) {
-            Container<PluginInfo> plugin = Util.getDespiteException(() -> Util.reflect(Event.class.getDeclaredField("plugin"), event), new Container<>());
+            Container<PluginInfo> plugin = Try.all.getEither(() -> Util.reflect(Event.class.getDeclaredField("plugin"), event), (Supplier<Container<PluginInfo>>) Container::new);
             for (BakedListener listener : listeners) {
                 plugin.value = listener.plugin;
                 if (!(event instanceof Cancellable) || !((Cancellable) event).isCancelled() || listener.override) {

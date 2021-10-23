@@ -14,6 +14,6 @@ public class GalaxiStartEvent extends Event {
      * @param engine GalaxiEngine
      */
     public GalaxiStartEvent(Galaxi engine) {
-        if (Util.isNull(engine)) throw new NullPointerException();
+        Util.nullpo(engine);
     }
 }

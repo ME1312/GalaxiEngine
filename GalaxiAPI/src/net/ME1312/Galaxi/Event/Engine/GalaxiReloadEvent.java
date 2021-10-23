@@ -14,6 +14,6 @@ public class GalaxiReloadEvent extends Event {
      * @param engine GalaxiEngine
      */
     public GalaxiReloadEvent(Galaxi engine) {
-        if (Util.isNull(engine)) throw new NullPointerException();
+        Util.nullpo(engine);
     }
 }

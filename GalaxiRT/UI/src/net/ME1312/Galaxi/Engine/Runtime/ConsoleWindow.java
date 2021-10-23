@@ -1,12 +1,10 @@
 package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Command.ConsoleCommandSender;
-import net.ME1312.Galaxi.Command.InputSender;
 import net.ME1312.Galaxi.Engine.Runtime.Console.ParsedInput;
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
-import net.ME1312.Galaxi.Library.Callback.ExceptionRunnable;
 import net.ME1312.Galaxi.Library.Container.ContainedPair;
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.ConsoleText;
 
@@ -33,7 +31,7 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.MAX_CONSOLE_WINDOW_SCROLLBAC
 public final class ConsoleWindow implements ConsoleUI {
     private static final int MAX_SCROLLBACK = (MAX_CONSOLE_WINDOW_SCROLLBACK.value() > 0)?MAX_CONSOLE_WINDOW_SCROLLBACK.value():MAX_CONSOLE_WINDOW_SCROLLBACK.def();
     private static final Double USER_WINDOW_SIZE = (CONSOLE_WINDOW_SIZE.value() != null && CONSOLE_WINDOW_SIZE.value() > 0)?CONSOLE_WINDOW_SIZE.value():null;
-    private static final String HOST_NAME = Util.getDespiteException(new ExceptionReturnRunnable<String>() {
+    private static final String HOST_NAME = Try.all.get(new Try.Supplier<String>() {
         @Override
         public String run() throws Throwable {
             return new BufferedReader(new InputStreamReader(Runtime.getRuntime().exec("hostname").getInputStream())).readLine();
@@ -431,7 +429,7 @@ public final class ConsoleWindow implements ConsoleUI {
         window.setJMenuBar(jMenu);
         window.setContentPane(panel);
         window.pack();
-        Util.isException(new ExceptionRunnable() {
+        Try.all.run(new Try.Runnable() {
             @Override
             public void run() throws Throwable {
                 window.setIconImage(((Galaxi.getInstance().getAppInfo().getIcon() == null)?Galaxi.getInstance().getEngineInfo():Galaxi.getInstance().getAppInfo()).getIcon());

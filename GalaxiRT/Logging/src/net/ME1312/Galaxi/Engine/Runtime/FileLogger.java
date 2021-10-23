@@ -1,6 +1,7 @@
 package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Galaxi;
+import net.ME1312.Galaxi.Library.Directories;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.LogMessenger;
 
@@ -96,7 +97,7 @@ final class FileLogger implements LogMessenger {
             }
             if (file != null && compressed != null) {
                 FileOutputStream fos = new FileOutputStream(compressed);
-                Util.zip(file, fos);
+                Directories.zip(file, fos);
                 fos.flush();
                 fos.close();
                 file.delete();

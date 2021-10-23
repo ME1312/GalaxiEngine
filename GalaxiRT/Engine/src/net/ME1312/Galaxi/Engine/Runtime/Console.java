@@ -7,6 +7,7 @@ import net.ME1312.Galaxi.Event.Engine.ConsoleInputEvent;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Container.ContainedPair;
 import net.ME1312.Galaxi.Library.Container.Pair;
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 
 import org.jline.reader.*;
@@ -64,7 +65,7 @@ class Console extends CommandParser {
             window.open();
         } else {
             if (!GraphicsEnvironment.isHeadless()) {
-                this.window = window = Util.getDespiteException(() -> (ConsoleUI) Class.forName("net.ME1312.Galaxi.Engine.Runtime.ConsoleWindow").getConstructor(Console.class, boolean.class).newInstance(this, exit), null);
+                this.window = window = Try.all.get(() -> (ConsoleUI) Class.forName("net.ME1312.Galaxi.Engine.Runtime.ConsoleWindow").getConstructor(Console.class, boolean.class).newInstance(this, exit));
                 if (window != null) window.open();
             }
         }
@@ -226,7 +227,7 @@ class Console extends CommandParser {
         if (!event.isCancelled()) {
             TreeMap<String, Command> commands = engine.code.commands;
 
-            if (commands.keySet().contains(label.toLowerCase())) {
+            if (commands.containsKey(label.toLowerCase())) {
                 try {
                     commands.get(label.toLowerCase()).command(sender, label, args);
                     return Status.SUCCESS;

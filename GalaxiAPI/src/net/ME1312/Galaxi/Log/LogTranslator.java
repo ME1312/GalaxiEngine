@@ -1,9 +1,5 @@
 package net.ME1312.Galaxi.Log;
 
-import net.ME1312.Galaxi.Library.Util;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;

@@ -24,7 +24,7 @@ public class CommandEvent extends CancellableEvent {
      * @param args Command Arguments
      */
     public CommandEvent(Galaxi engine, CommandSender sender, String raw, String label, String... args) {
-        if (Util.isNull(engine, sender, raw, label, args)) throw new NullPointerException();
+        Util.nullpo(engine, sender, raw, label, args);
         this.sender = sender;
         this.raw = raw;
         this.label = label;

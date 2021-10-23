@@ -21,7 +21,7 @@ public abstract class Command implements CommandHandler {
      * @param plugin Plugin
      */
     public Command(PluginInfo plugin) {
-        if (Util.isNull(plugin)) throw new NullPointerException();
+        Util.nullpo(plugin);
         this.plugin = plugin;
     }
 
@@ -32,7 +32,7 @@ public abstract class Command implements CommandHandler {
      * @param executor Executor
      */
     public static Command create(PluginInfo plugin, CommandHandler executor) {
-        if (Util.isNull(plugin, executor)) throw new NullPointerException();
+        Util.nullpo(plugin, executor);
         return new Command(plugin) {
             @Override
             public void command(CommandSender sender, String handle, String[] args) {

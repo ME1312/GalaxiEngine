@@ -1,10 +1,7 @@
 package net.ME1312.Galaxi.Engine;
 
-import net.ME1312.Galaxi.Library.Callback.ExceptionReturnCallback;
-import net.ME1312.Galaxi.Library.Callback.ExceptionReturnRunnable;
 import net.ME1312.Galaxi.Library.Container.Value;
-import net.ME1312.Galaxi.Library.Platform;
-import net.ME1312.Galaxi.Library.Util;
+import net.ME1312.Galaxi.Library.Try;
 
 import java.awt.*;
 import java.io.File;
@@ -115,17 +112,17 @@ public final class GalaxiOption<T> extends Value<T> {
     private static <T> GalaxiOption<T> $(T def, GalaxiOptionMode mode) {
         return new GalaxiOption<T>(null, def, mode);
     }
-    private static <T> GalaxiOption<T> $(ExceptionReturnRunnable<T> def, GalaxiOptionMode mode) {
-        return $(Util.getDespiteException(def, null), mode);
+    private static <T> GalaxiOption<T> $(Try.Supplier<T> def, GalaxiOptionMode mode) {
+        return $(Try.all.get(def), mode);
     }
-    private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, GalaxiOptionMode mode) {
+    private static <T> GalaxiOption<T> $(String usr, Try.Function<String, T> type, GalaxiOptionMode mode) {
         return $(usr, type, (T) null, mode);
     }
-    private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, T def, GalaxiOptionMode mode) {
+    private static <T> GalaxiOption<T> $(String usr, Try.Function<String, T> type, T def, GalaxiOptionMode mode) {
         String value = System.getProperty(usr);
-        return new GalaxiOption<T>((value != null)?Util.getDespiteException(() -> type.run(value), null):null, def, mode);
+        return new GalaxiOption<T>((value != null)?Try.all.get(() -> type.run(value)):null, def, mode);
     }
-    private static <T> GalaxiOption<T> $(String usr, ExceptionReturnCallback<String, T> type, ExceptionReturnRunnable<T> def, GalaxiOptionMode mode) {
-        return $(usr, type, Util.getDespiteException(def, null), mode);
+    private static <T> GalaxiOption<T> $(String usr, Try.Function<String, T> type, Try.Supplier<T> def, GalaxiOptionMode mode) {
+        return $(usr, type, Try.all.get(def), mode);
     }
 }

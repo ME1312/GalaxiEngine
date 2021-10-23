@@ -1,6 +1,6 @@
 package net.ME1312.Galaxi.Engine;
 
-/**
+/*
  * GalaxiOption Behaviour Definition Enum
  *
  * This enum follows the following format:

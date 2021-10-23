@@ -7,6 +7,7 @@ import net.ME1312.Galaxi.Event.Engine.GalaxiStopEvent;
 import net.ME1312.Galaxi.Library.Config.YAMLSection;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Platform;
+import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
@@ -30,7 +31,7 @@ import java.util.jar.Manifest;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
-@App(name = "GalaxiEngine", version = "3.6.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
+@App(name = "GalaxiEngine", version = "3.7.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 class Engine extends GalaxiEngine {
     private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.value());
     private final UniversalFile idir;
@@ -65,8 +66,8 @@ class Engine extends GalaxiEngine {
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
             engine.setBuild(new Version(manifest.getMainAttributes().getValue("Implementation-Version")));
 
-        Util.isException(() -> engine.setIcon(Engine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiIcon.png")));
-        Util.isException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
+        Try.all.run(() -> engine.setIcon(Engine.class.getResourceAsStream("/net/ME1312/Galaxi/Engine/Runtime/Files/GalaxiIcon.png")));
+        Try.all.run(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
         code.catalogLibrary(engine.get().getClass());
         code.catalogLibrary(this.app.get().getClass());
 
@@ -118,8 +119,8 @@ class Engine extends GalaxiEngine {
                 @Override
                 public void run() {
                     try {
-                        if (engine.getUpdateChecker() != null) engine.getUpdateChecker().run();
-                        if (engine != app && app.getUpdateChecker() != null) app.getUpdateChecker().run();
+                        if (engine.getUpdateChecker() != null) engine.getUpdateChecker().get();
+                        if (engine != app && app.getUpdateChecker() != null) app.getUpdateChecker().get();
                     } catch (Exception e) {}
                 }
             }, 0, TimeUnit.DAYS.toMillis(2));
@@ -154,7 +155,7 @@ class Engine extends GalaxiEngine {
         }
 
         running = false;
-        Util.isException(SystemLogger::stop);
+        Try.all.run(SystemLogger::stop);
         System.exit(code);
     }
 

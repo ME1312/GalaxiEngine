@@ -19,7 +19,7 @@ public class ConsoleInputEvent extends CancellableEvent {
      * @param input Input
      */
     public ConsoleInputEvent(Galaxi engine, String input) {
-        if (Util.isNull(engine, input)) throw new NullPointerException();
+        Util.nullpo(engine, input);
         this.input = input;
     }
 

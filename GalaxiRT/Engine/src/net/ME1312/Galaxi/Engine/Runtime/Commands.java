@@ -6,15 +6,14 @@ import net.ME1312.Galaxi.Command.ConsoleCommandSender;
 import net.ME1312.Galaxi.Engine.GalaxiOption;
 import net.ME1312.Galaxi.Event.Engine.GalaxiReloadEvent;
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Callback.ReturnRunnable;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.ConsoleText;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Default Command Class
@@ -79,7 +78,7 @@ class Commands {
 
                         if (!checking) {
                             checking = true;
-                            LinkedList<ReturnRunnable<Boolean>> checks = new LinkedList<>();
+                            LinkedList<Supplier<Boolean>> checks = new LinkedList<>();
 
                             if (engine.getEngineInfo().getUpdateChecker() != null) checks.add(engine.getEngineInfo().getUpdateChecker());
                             if (engine.getEngineInfo() != engine.getAppInfo() && engine.getAppInfo().getUpdateChecker() != null) checks.add(engine.getAppInfo().getUpdateChecker());
@@ -92,8 +91,8 @@ class Commands {
                                 sender.sendMessage("");
                                 new Thread(() -> {
                                     boolean updated = true;
-                                    for (ReturnRunnable<Boolean> check : checks) try {
-                                        updated = check.run() != Boolean.TRUE && updated;
+                                    for (Supplier<Boolean> check : checks) try {
+                                        updated = check.get() != Boolean.TRUE && updated;
                                     } catch (Throwable e) {
                                         engine.getAppInfo().getLogger().error.println(new InvocationTargetException(e, "Unhandled exception while checking version"));
                                     }
@@ -229,7 +228,7 @@ class Commands {
                             sender.sendMessage(new ConsoleText(formatted.toString()).backgroundColor((color)?a:b));
                         }
                         sender.sendMessage(new ConsoleText(blank.toString()).backgroundColor((!color)?a:b));
-                    } else if (commands.keySet().contains((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase())) {
+                    } else if (commands.containsKey((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase())) {
                         Command cmd = commands.get((args[0].startsWith("/"))?args[0].toLowerCase().substring(1):args[0].toLowerCase());
                         String formatted = result.get(Util.getBackwards(commands, cmd).get(0));
                         sender.sendMessage(formatted.substring(0, formatted.length() - 1));

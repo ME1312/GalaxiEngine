@@ -2,6 +2,7 @@ package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Command.Command;
 import net.ME1312.Galaxi.Library.Container.ContainedPair;
+import net.ME1312.Galaxi.Library.Directories;
 import net.ME1312.Galaxi.Library.Exception.IllegalPluginException;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
@@ -37,10 +38,10 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                 File file = new File(source.toURI());
 
                 if (file.isDirectory()) {
-                    for (String entry : Util.searchDirectory(file)) {
+                    for (String entry : Directories.search(file)) {
                         if (!(new File(file.getAbsolutePath() + File.separator + entry).isDirectory()) && entry.endsWith(".class")) {
                             String e = entry.substring(0, entry.length() - 6).replace(File.separatorChar, '.');
-                            if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());
+                            if (!knownClasses.containsKey(e)) knownClasses.put(e, clazz.getClassLoader());
                             if (!classes.contains(e)) classes.add(e);
                         }
                     }
@@ -53,7 +54,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                         JarEntry entry = entries.nextElement();
                         if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
                             String e = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
-                            if (!knownClasses.keySet().contains(e)) knownClasses.put(e, clazz.getClassLoader());
+                            if (!knownClasses.containsKey(e)) knownClasses.put(e, clazz.getClassLoader());
                             if (!classes.contains(e)) classes.add(e);
                         }
                     }
@@ -95,7 +96,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                             try {
                                 Class<?> clazz = loader.loadClass(cname);
                                 if (clazz.isAnnotationPresent(Plugin.class)) {
-                                    ContainedPair<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.keySet().contains(loader))?classes.get(loader):new ContainedPair<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
+                                    ContainedPair<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.containsKey(loader))?classes.get(loader):new ContainedPair<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
                                     for (Dependency dependency : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.key().add(dependency.name());
                                     jarmap.value().put(clazz.getAnnotation(Plugin.class).name(), cname);
                                     classes.put(loader, jarmap);
@@ -130,7 +131,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                     for (String name : classes.get(loader).value().keySet()) {
                         boolean load = true;
                         for (String depend : classes.get(loader).key()) {
-                            if (!plugins.keySet().contains(depend.toLowerCase())) {
+                            if (!plugins.containsKey(depend.toLowerCase())) {
                                 load = progress <= 0;
                             }
                         }
@@ -145,7 +146,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                                 Object obj = clazz.getConstructor().newInstance();
                                 try {
                                     PluginInfo plugin = PluginInfo.load(obj);
-                                    if (plugins.keySet().contains(plugin.getName().toLowerCase())) {
+                                    if (plugins.containsKey(plugin.getName().toLowerCase())) {
                                         if (engine.getEngineInfo().getName().equalsIgnoreCase(plugin.getName())) {
                                             throw new IllegalStateException("Plugin name cannot be the same as the Engine's name");
                                         } else if (engine.getAppInfo().getName().equalsIgnoreCase(plugin.getName())) {
@@ -199,7 +200,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
              */
             for (PluginInfo plugin : plugins.values()) {
                 for (String loadbefore : plugin.getLoadBefore()) {
-                    if (plugins.keySet().contains(loadbefore.toLowerCase())) {
+                    if (plugins.containsKey(loadbefore.toLowerCase())) {
                         List<String> loadafter = plugins.get(loadbefore.toLowerCase()).getExtra("galaxi.plugin.loadafter").asRawStringList();
                         loadafter.add(plugin.getName().toLowerCase());
                         plugins.get(loadbefore.toLowerCase()).addExtra("galaxi.plugin.loadafter", loadafter);
@@ -220,7 +221,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                         boolean load = true;
                         for (PluginInfo.Dependency depend : plugin.getDependencies()) {
                             IllegalStateException e = null;
-                            if (plugins.keySet().contains(depend.getName().toLowerCase())) {
+                            if (plugins.containsKey(depend.getName().toLowerCase())) {
                                 int dsv = (depend.isRequired())?2:3;
                                 if (unstick < dsv) {
                                     load = false;
@@ -228,7 +229,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                                 } else if (unstick == dsv) {
                                     e = new IllegalStateException("Infinite" + ((depend.isRequired())?"":" soft") + " dependency loop: " + plugin.getName() + " -> " + depend.getName());
                                 }
-                            } else if (engine.getEngineInfo().getName().equalsIgnoreCase(depend.getName()) || engine.getAppInfo().getName().equalsIgnoreCase(depend.getName()) || this.plugins.keySet().contains(depend.getName().toLowerCase())) {
+                            } else if (engine.getEngineInfo().getName().equalsIgnoreCase(depend.getName()) || engine.getAppInfo().getName().equalsIgnoreCase(depend.getName()) || this.plugins.containsKey(depend.getName().toLowerCase())) {
                                 Version version = (engine.getEngineInfo().getName().equalsIgnoreCase(depend.getName()))?engine.getEngineInfo().getVersion():((engine.getAppInfo().getName().equalsIgnoreCase(depend.getName()))?engine.getAppInfo().getVersion():this.plugins.get(depend.getName().toLowerCase()).getVersion());
                                 if (depend.getMinVersion() == null || version.compareTo(depend.getMinVersion()) >= 0) {
                                     if (!(depend.getMaxVersion() == null || version.compareTo(depend.getMaxVersion()) < 0)) {
@@ -259,7 +260,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                             }
                         }
                         for (String loadafter : plugin.getExtra("galaxi.plugin.loadafter").asRawStringList()) {
-                            if (plugins.keySet().contains(loadafter.toLowerCase())) {
+                            if (plugins.containsKey(loadafter.toLowerCase())) {
                                 if (unstick < 1) {
                                     load = false;
                                     break;
