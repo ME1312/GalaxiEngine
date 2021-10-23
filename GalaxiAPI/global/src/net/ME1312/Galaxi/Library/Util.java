@@ -16,9 +16,9 @@ public final class Util {
 
 
     /**
-     * Checks values to make sure they're not null
+     * Checks a value to make sure it's not null
      *
-     * @param value Values to check
+     * @param value Value to check
      * @throws NullPointerException if any are null
      */
     public static <T> T nullpo(T value) {
@@ -36,6 +36,16 @@ public final class Util {
         for (int i = 0; i < values.length; ++i) {
             if (values[i] == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
         }
+    }
+
+    /**
+     * Checks a value to make sure it's not null
+     *
+     * @param value Value to check
+     * @return If any are null
+     */
+    public static boolean isNull(Object value) {
+        return value == null;
     }
 
     /**
