@@ -2,9 +2,10 @@ package net.ME1312.Galaxi;
 
 import net.ME1312.Galaxi.Command.CommandProcessor;
 import net.ME1312.Galaxi.Command.ConsoleCommandSender;
-import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 import net.ME1312.Galaxi.Plugin.PluginManager;
+
+import java.io.File;
 
 /**
  * Galaxi API Class
@@ -48,14 +49,14 @@ public abstract class Galaxi {
      *
      * @return Runtime Directory
      */
-    public abstract UniversalFile getRuntimeDirectory();
+    public abstract File getRuntimeDirectory();
 
     /**
      * Gets the AppData Directory
      *
      * @return AppData Directory
      */
-    public abstract UniversalFile getAppDataDirectory();
+    public abstract File getAppDataDirectory();
 
     /**
      * Gets the Galaxi Engine Info

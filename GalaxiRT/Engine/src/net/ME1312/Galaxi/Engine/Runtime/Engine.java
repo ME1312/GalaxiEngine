@@ -8,7 +8,6 @@ import net.ME1312.Galaxi.Library.Config.YAMLSection;
 import net.ME1312.Galaxi.Library.Map.ObjectMap;
 import net.ME1312.Galaxi.Library.Platform;
 import net.ME1312.Galaxi.Library.Try;
-import net.ME1312.Galaxi.Library.UniversalFile;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 import net.ME1312.Galaxi.Log.LogLevel;
@@ -33,8 +32,8 @@ import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 @App(name = "GalaxiEngine", version = "3.7.0a", authors = "ME1312", description = "An engine for command line Java applications", website = "https://github.com/ME1312/GalaxiEngine")
 class Engine extends GalaxiEngine {
-    private final UniversalFile dir = new UniversalFile(RUNTIME_DIRECTORY.value());
-    private final UniversalFile idir;
+    private final File dir = RUNTIME_DIRECTORY.value();
+    private final File idir;
 
     private final PluginInfo app;
     private final PluginInfo engine;
@@ -60,7 +59,7 @@ class Engine extends GalaxiEngine {
         if (APPDATA_DIRECTORY.app() == null) APPDATA_DIRECTORY.value(new File(Platform.getSystem().getAppDataDirectory(), this.getAppInfo().getName()));
         Util.reflect(GalaxiOption.class.getDeclaredField("lock"), null, true);
 
-        this.idir = new UniversalFile(APPDATA_DIRECTORY.value());
+        this.idir = APPDATA_DIRECTORY.value();
 
         Manifest manifest = new Manifest(Engine.class.getResourceAsStream("/META-INF/GalaxiEngine.MF"));
         if (manifest.getMainAttributes().getValue("Implementation-Version") != null && manifest.getMainAttributes().getValue("Implementation-Version").length() > 0)
@@ -170,12 +169,12 @@ class Engine extends GalaxiEngine {
     }
 
     @Override
-    public UniversalFile getAppDataDirectory() {
+    public File getAppDataDirectory() {
         return idir;
     }
 
     @Override
-    public UniversalFile getRuntimeDirectory() {
+    public File getRuntimeDirectory() {
         return dir;
     }
 
