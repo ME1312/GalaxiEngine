@@ -128,7 +128,7 @@ public final class Try {
      * @param fallback Code to run for handling exceptions
      * @return The return value of that code (or null in the event of an exception)
      */
-    public <T> T getEither(Supplier<T> value, java.util.function.Consumer<Throwable> fallback) {
+    public <T> T getOrHandle(Supplier<T> value, java.util.function.Consumer<Throwable> fallback) {
         Util.nullpo(fallback);
         try {
             return value.run();
@@ -146,7 +146,7 @@ public final class Try {
      * @param def Code to run for generating the default value in the event of an exception
      * @return The return value of either code block
      */
-    public <T> T getEither(Supplier<T> value, java.util.function.Supplier<? extends T> def) {
+    public <T> T getOrSupply(Supplier<T> value, java.util.function.Supplier<? extends T> def) {
         Util.nullpo(def);
         try {
             return value.run();
@@ -163,7 +163,7 @@ public final class Try {
      * @param def Code to run for handling exceptions and/or generating the default value in the event of an exception
      * @return The return value of either code block
      */
-    public <T> T getEither(Supplier<T> value, java.util.function.Function<Throwable, ? extends T> def) {
+    public <T> T getOrFunction(Supplier<T> value, java.util.function.Function<Throwable, ? extends T> def) {
         Util.nullpo(def);
         try {
             return value.run();
@@ -181,7 +181,7 @@ public final class Try {
      * @param def Code to run for generating the default value in the event of an exception
      * @return The return value of either code block
      */
-    public <T> T getEither(Supplier<T> value, java.util.function.Consumer<Throwable> fallback, java.util.function.Supplier<? extends T> def) {
+    public <T> T getOrFunction(Supplier<T> value, java.util.function.Consumer<Throwable> fallback, java.util.function.Supplier<? extends T> def) {
         Util.nullpo(fallback, def);
         try {
             return value.run();
