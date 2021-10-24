@@ -128,7 +128,7 @@ public final class Try {
      * @param fallback Code to run for handling exceptions
      * @return The return value of that code (or null in the event of an exception)
      */
-    public <T> T getOrHandle(Supplier<T> value, java.util.function.Consumer<Throwable> fallback) {
+    public <T> T getOrConsume(Supplier<T> value, java.util.function.Consumer<Throwable> fallback) {
         Util.nullpo(fallback);
         try {
             return value.run();
