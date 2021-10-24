@@ -11,12 +11,17 @@ public final class Try {
     /**
      * Handle all exceptions
      */
-    public static final Try all = new Try();
+    public static final Try all = new Try(true);
+
+    /**
+     * Handle no exceptions (api for sneaky throwing)
+     */
+    public static final Try none = new Try(false);
 
     @SuppressWarnings("unchecked")
-    private Try() {
+    private Try(boolean suppress) {
         this.types = new Class[0];
-        this.suppress = true;
+        this.suppress = suppress;
     }
 
     /**
@@ -26,7 +31,7 @@ public final class Try {
      * @return Exception Handler
      */
     @SafeVarargs
-    public static Try handle(Class<? extends Throwable>... exceptions) {
+    public static Try expect(Class<? extends Throwable>... exceptions) {
         return new Try(exceptions);
     }
 
@@ -56,17 +61,17 @@ public final class Try {
      * Run some code
      *
      * @param code Code to run
-     * @param fallback Code to run for handling exceptions
+     * @param err Code to run for handling exceptions
      * @return true if the code was run successfully (without exceptions)
      */
-    public boolean run(Runnable code, java.util.function.Consumer<Throwable> fallback) {
-        Util.nullpo(fallback);
+    public boolean run(Runnable code, java.util.function.Consumer<Throwable> err) {
+        Util.nullpo(err);
         try {
             code.run();
             return true;
         } catch (Throwable e) {
             suppress(e);
-            fallback.accept(e);
+            err.accept(e);
             return false;
         }
     }
@@ -106,17 +111,17 @@ public final class Try {
      * Get a value despite exceptions
      *
      * @param value Code to run
-     * @param fallback Code to run for handling exceptions
+     * @param err Code to run for handling exceptions
      * @param def Default value
      * @return The return value of that code (or def in the event of an exception)
      */
-    public <T> T get(Supplier<T> value, java.util.function.Consumer<Throwable> fallback, T def) {
-        Util.nullpo(fallback);
+    public <T> T get(Supplier<T> value, java.util.function.Consumer<Throwable> err, T def) {
+        Util.nullpo(err);
         try {
             return value.run();
         } catch (Throwable e) {
             suppress(e);
-            fallback.accept(e);
+            err.accept(e);
             return def;
         }
     }
@@ -125,16 +130,16 @@ public final class Try {
      * Get a value despite exceptions
      *
      * @param value Code to run
-     * @param fallback Code to run for handling exceptions
+     * @param err Code to run for handling exceptions
      * @return The return value of that code (or null in the event of an exception)
      */
-    public <T> T getOrConsume(Supplier<T> value, java.util.function.Consumer<Throwable> fallback) {
-        Util.nullpo(fallback);
+    public <T> T getOrConsume(Supplier<T> value, java.util.function.Consumer<Throwable> err) {
+        Util.nullpo(err);
         try {
             return value.run();
         } catch (Throwable e) {
             suppress(e);
-            fallback.accept(e);
+            err.accept(e);
             return null;
         }
     }
@@ -177,17 +182,17 @@ public final class Try {
      * Get a value despite exceptions
      *
      * @param value Code to run
-     * @param fallback Code to run for handling exceptions
+     * @param err Code to run for handling exceptions
      * @param def Code to run for generating the default value in the event of an exception
      * @return The return value of either code block
      */
-    public <T> T getOrFunction(Supplier<T> value, java.util.function.Consumer<Throwable> fallback, java.util.function.Supplier<? extends T> def) {
-        Util.nullpo(fallback, def);
+    public <T> T getOrFunction(Supplier<T> value, java.util.function.Consumer<Throwable> err, java.util.function.Supplier<? extends T> def) {
+        Util.nullpo(err, def);
         try {
             return value.run();
         } catch (Throwable e) {
             suppress(e);
-            fallback.accept(e);
+            err.accept(e);
             return def.get();
         }
     }

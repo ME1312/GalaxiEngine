@@ -25,7 +25,7 @@ public class StandaloneApp {
 
     private static void start() {
         try {
-            if (!Try.handle(IllegalStateException.class).run(GalaxiEngine::getInstance)) {
+            if (!Try.expect(IllegalStateException.class).run(GalaxiEngine::getInstance)) {
                 Engine engine = new Engine(null);
                 Logger log = engine.getAppInfo().getLogger();
 
