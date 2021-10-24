@@ -13,8 +13,7 @@ import java.util.regex.Pattern;
 /**
  * Version Class
  */
-@SuppressWarnings("serial")
-public class Version implements Serializable, Comparable<Version> {
+public final class Version implements Serializable, Comparable<Version> {
     private final Version parent;
     private final VersionType type;
     private final String string;

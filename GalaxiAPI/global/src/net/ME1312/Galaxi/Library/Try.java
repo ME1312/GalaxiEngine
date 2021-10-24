@@ -36,7 +36,7 @@ public final class Try {
     }
 
     private Try(Class<? extends Throwable>[] exceptions) {
-        Util.nullpo((Object) exceptions);
+        Util.nullpo((Object[]) exceptions);
         this.types = exceptions;
         this.suppress = false;
     }

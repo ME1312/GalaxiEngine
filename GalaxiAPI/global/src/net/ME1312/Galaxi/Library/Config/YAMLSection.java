@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * YAML Config Section Class
@@ -137,6 +138,17 @@ public class YAMLSection extends ObjectMap<String> {
     }
 
     /**
+     * Get a YAML Section by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map
+     */
+    public YAMLSection getSection(String handle, Supplier<? extends ObjectMap<? extends String>> def) {
+        return (YAMLSection) super.getMap(handle, def);
+    }
+
+    /**
      * Get a YAML Section List by Handle
      *
      * @param handle Handle
@@ -165,6 +177,17 @@ public class YAMLSection extends ObjectMap<String> {
      * @return Object Map List
      */
     public List<YAMLSection> getSectionList(String handle, List<? extends ObjectMap<? extends String>> def) {
+        return (List<YAMLSection>) (List) super.getMapList(handle, def);
+    }
+
+    /**
+     * Get a YAML Section List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map List
+     */
+    public List<YAMLSection> getSectionList(String handle, Supplier<? extends List<? extends ObjectMap<? extends String>>> def) {
         return (List<YAMLSection>) (List) super.getMapList(handle, def);
     }
 

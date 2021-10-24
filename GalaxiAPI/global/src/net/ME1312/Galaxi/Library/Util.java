@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 public final class Util {
     private Util(){}
 
-
     /**
      * Checks a value to make sure it's not null
      *
@@ -33,6 +32,7 @@ public final class Util {
      * @throws NullPointerException if any are null
      */
     public static void nullpo(Object... values) {
+        if (values == null) throw new NullPointerException("Illegal null array");
         for (int i = 0; i < values.length; ++i) {
             if (values[i] == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
         }

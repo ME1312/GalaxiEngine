@@ -202,37 +202,12 @@ public class ObjectMapValue<K> {
     }
 
     /**
-     * Get Object as Unparsed String
-     *
-     * @return Unparsed String
-     */
-    public String asRawString() {
-        if (obj != null) return obj.toString();
-        else return null;
-    }
-
-    /**
-     * Get Object as Unparsed String List
-     *
-     * @return Unparsed String List
-     */
-    public List<String> asRawStringList() {
-        if (obj != null) {
-            List<String> values = new LinkedList<>();
-            for (Object value : (List<?>) obj) {
-                values.add((value == null)?null:value.toString());
-            }
-            return values;
-        } else return null;
-    }
-
-    /**
      * Get Object as String
      *
      * @return String
      */
     public String asString() {
-        if (obj != null) return Util.unescapeJavaString(asRawString());
+        if (obj != null) return obj.toString();
         else return null;
     }
 
@@ -243,9 +218,9 @@ public class ObjectMapValue<K> {
      */
     public List<String> asStringList() {
         if (obj != null) {
-            List<String> values = new ArrayList<String>();
-            for (String value : asRawStringList()) {
-                values.add((value == null)?null:Util.unescapeJavaString(value));
+            List<String> values = new LinkedList<>();
+            for (Object value : (List<?>) obj) {
+                values.add((value == null)?null:value.toString());
             }
             return values;
         } else return null;
@@ -257,7 +232,7 @@ public class ObjectMapValue<K> {
      * @return UUID
      */
     public UUID asUUID() {
-        if (obj != null) return UUID.fromString(asRawString());
+        if (obj != null) return UUID.fromString(asString());
         else return null;
     }
 
@@ -269,7 +244,7 @@ public class ObjectMapValue<K> {
     public List<UUID> asUUIDList() {
         if (obj != null) {
             List<UUID> values = new ArrayList<UUID>();
-            for (String value : asRawStringList()) {
+            for (String value : asStringList()) {
                 values.add((value == null)?null:UUID.fromString(value));
             }
             return values;
@@ -282,7 +257,7 @@ public class ObjectMapValue<K> {
      * @return Version
      */
     public Version asVersion() {
-        if (obj != null) return Version.fromString(asRawString());
+        if (obj != null) return Version.fromString(asString());
         else return null;
     }
 
@@ -294,7 +269,7 @@ public class ObjectMapValue<K> {
     public List<Version> asVersionList() {
         if (obj != null) {
             List<Version> values = new ArrayList<Version>();
-            for (String value : asRawStringList()) {
+            for (String value : asStringList()) {
                 values.add((value == null)?null:Version.fromString(value));
             }
             return values;
@@ -361,7 +336,7 @@ public class ObjectMapValue<K> {
      * @return UUID Status
      */
     public boolean isUUID() {
-        return (obj instanceof String && Try.all.run(() -> UUID.fromString(asRawString())));
+        return (obj instanceof String && Try.all.run(() -> UUID.fromString(asString())));
     }
 
     @Override

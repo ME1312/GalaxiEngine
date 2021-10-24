@@ -201,7 +201,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
             for (PluginInfo plugin : plugins.values()) {
                 for (String loadbefore : plugin.getLoadBefore()) {
                     if (plugins.containsKey(loadbefore.toLowerCase())) {
-                        List<String> loadafter = plugins.get(loadbefore.toLowerCase()).getExtra("galaxi.plugin.loadafter").asRawStringList();
+                        List<String> loadafter = plugins.get(loadbefore.toLowerCase()).getExtra("galaxi.plugin.loadafter").asStringList();
                         loadafter.add(plugin.getName().toLowerCase());
                         plugins.get(loadbefore.toLowerCase()).addExtra("galaxi.plugin.loadafter", loadafter);
                     }
@@ -259,7 +259,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                                 }
                             }
                         }
-                        for (String loadafter : plugin.getExtra("galaxi.plugin.loadafter").asRawStringList()) {
+                        for (String loadafter : plugin.getExtra("galaxi.plugin.loadafter").asStringList()) {
                             if (plugins.containsKey(loadafter.toLowerCase())) {
                                 if (unstick < 1) {
                                     load = false;

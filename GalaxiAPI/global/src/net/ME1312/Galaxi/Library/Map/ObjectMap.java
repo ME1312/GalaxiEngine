@@ -4,6 +4,7 @@ import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Object Map Class
@@ -321,6 +322,18 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object
      */
+    public ObjectMapValue<K> get(K handle, Supplier<?> def) {
+        Util.nullpo(handle, def);
+        return (map.get(handle) != null)? map.get(handle):wrap(handle, def.get());
+    }
+
+    /**
+     * Get an Object by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object
+     */
     public ObjectMapValue<K> get(K handle, ObjectMapValue<K> def) {
         Util.nullpo(handle);
         return (map.get(handle) != null)? map.get(handle):def;
@@ -364,6 +377,26 @@ public class ObjectMap<K> {
      * @param def Default
      * @return Object List
      */
+    public List<? extends ObjectMapValue<K>> getList(K handle, Supplier<? extends Collection<?>> def) {
+        Util.nullpo(handle, def);
+        if (map.get(handle) != null) {
+            return getList(handle);
+        } else if (def != null) {
+            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
+            for (Object value : def.get()) {
+                values.add(wrap(null, value));
+            }
+            return values;
+        } else return null;
+    }
+
+    /**
+     * Get a List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object List
+     */
     public List<? extends ObjectMapValue<K>> getList(K handle, List<? extends ObjectMapValue<K>> def) {
         Util.nullpo(handle);
         if (map.get(handle) != null) {
@@ -374,7 +407,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Get a Object by Handle
+     * Get an Object by Handle
      *
      * @param handle Handle
      * @return Object
@@ -384,7 +417,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Get a Object by Handle
+     * Get an Object by Handle
      *
      * @param handle Handle
      * @param def Default
@@ -395,7 +428,18 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Get a Object List by Handle
+     * Get an Object by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object
+     */
+    public Object getObject(K handle, Supplier<?> def) {
+        return get(handle, def).asObject();
+    }
+
+    /**
+     * Get an Object List by Handle
      *
      * @param handle Handle
      * @return Object List
@@ -405,13 +449,24 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Get a Object List by Handle
+     * Get an Object List by Handle
      *
      * @param handle Handle
      * @param def Default
      * @return Object List
      */
     public List<?> getObjectList(K handle, List<?> def) {
+        return get(handle, def).asObjectList();
+    }
+
+    /**
+     * Get an Object List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object List
+     */
+    public List<?> getObjectList(K handle, Supplier<? extends List<?>> def) {
         return get(handle, def).asObjectList();
     }
 
@@ -437,6 +492,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a Boolean by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Boolean
+     */
+    public Boolean getBoolean(K handle, Supplier<Boolean> def) {
+        return get(handle, def).asBoolean();
+    }
+
+    /**
      * Get a Boolean List by Handle
      *
      * @param handle Handle
@@ -454,6 +520,17 @@ public class ObjectMap<K> {
      * @return Boolean List
      */
     public List<Boolean> getBooleanList(K handle, List<Boolean> def) {
+        return get(handle, def).asBooleanList();
+    }
+
+    /**
+     * Get a Boolean List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Boolean List
+     */
+    public List<Boolean> getBooleanList(K handle, Supplier<? extends List<Boolean>> def) {
         return get(handle, def).asBooleanList();
     }
 
@@ -495,6 +572,22 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get an Object Map by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map
+     */
+    public ObjectMap<K> getMap(K handle, Supplier<? extends ObjectMap<? extends K>> def) {
+        Util.nullpo(handle, def);
+        if (map.get(handle) != null) {
+            return getMap(handle);
+        } else if (def != null) {
+            return (ObjectMap<K>) def.get();
+        } else return null;
+    }
+
+    /**
      * Get an Object Map List by Handle
      *
      * @param handle Handle
@@ -532,6 +625,22 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get an Object Map List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Object Map List
+     */
+    public List<? extends ObjectMap<K>> getMapList(K handle, Supplier<? extends List<? extends ObjectMap<? extends K>>> def) {
+        Util.nullpo(handle, def);
+        if (map.get(handle) != null) {
+            return get(handle).asMapList();
+        } else if (def != null) {
+            return (List<ObjectMap<K>>) def.get();
+        } else return null;
+    }
+
+    /**
      * Get a Double by Handle
      *
      * @param handle Handle
@@ -549,6 +658,17 @@ public class ObjectMap<K> {
      * @return Double
      */
     public Double getDouble(K handle, Double def) {
+        return get(handle, def).asDouble();
+    }
+
+    /**
+     * Get a Double by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Double
+     */
+    public Double getDouble(K handle, Supplier<Double> def) {
         return get(handle, def).asDouble();
     }
 
@@ -574,6 +694,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a Double List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Double List
+     */
+    public List<Double> getDoubleList(K handle, Supplier<? extends List<Double>> def) {
+        return get(handle, def).asDoubleList();
+    }
+
+    /**
      * Get a Float by Handle
      *
      * @param handle Handle
@@ -591,6 +722,17 @@ public class ObjectMap<K> {
      * @return Float
      */
     public Float getFloat(K handle, Float def) {
+        return get(handle, def).asFloat();
+    }
+
+    /**
+     * Get a Float by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Float
+     */
+    public Float getFloat(K handle, Supplier<Float> def) {
         return get(handle, def).asFloat();
     }
 
@@ -616,6 +758,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a Float List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Float List
+     */
+    public List<Float> getFloatList(K handle, Supplier<? extends List<Float>> def) {
+        return get(handle, def).asFloatList();
+    }
+
+    /**
      * Get an Integer by Handle
      *
      * @param handle Handle
@@ -633,6 +786,17 @@ public class ObjectMap<K> {
      * @return Integer
      */
     public Integer getInt(K handle, Integer def) {
+        return get(handle, def).asInt();
+    }
+
+    /**
+     * Get an Integer by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Integer
+     */
+    public Integer getInt(K handle, Supplier<Integer> def) {
         return get(handle, def).asInt();
     }
 
@@ -658,6 +822,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get an Integer List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Integer List
+     */
+    public List<Integer> getIntList(K handle, Supplier<? extends List<Integer>> def) {
+        return get(handle, def).asIntList();
+    }
+
+    /**
      * Get a Long by Handle
      *
      * @param handle Handle
@@ -675,6 +850,17 @@ public class ObjectMap<K> {
      * @return Long
      */
     public Long getLong(K handle, Long def) {
+        return get(handle, def).asLong();
+    }
+
+    /**
+     * Get a Long by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Long
+     */
+    public Long getLong(K handle, Supplier<Long> def) {
         return get(handle, def).asLong();
     }
 
@@ -700,6 +886,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a Long List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Long List
+     */
+    public List<Long> getLongList(K handle, Supplier<? extends List<Long>> def) {
+        return get(handle, def).asLongList();
+    }
+
+    /**
      * Get a Short by Handle
      *
      * @param handle Handle
@@ -717,6 +914,17 @@ public class ObjectMap<K> {
      * @return Short
      */
     public Short getShort(K handle, Short def) {
+        return get(handle, def).asShort();
+    }
+
+    /**
+     * Get a Short by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Short
+     */
+    public Short getShort(K handle, Supplier<Short> def) {
         return get(handle, def).asShort();
     }
 
@@ -742,45 +950,14 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Get an Unparsed String by Handle
-     *
-     * @param handle Handle
-     * @return Unparsed String
-     */
-    public String getRawString(K handle) {
-        return get(handle, x).asRawString();
-    }
-
-    /**
-     * Get an Unparsed String by Handle
+     * Get a Short List by Handle
      *
      * @param handle Handle
      * @param def Default
-     * @return Unparsed String
+     * @return Short List
      */
-    public String getRawString(K handle, String def) {
-        return get(handle, def).asRawString();
-    }
-
-    /**
-     * Get an Unparsed String List by Handle
-     *
-     * @param handle Handle
-     * @return Unparsed String List
-     */
-    public List<String> getRawStringList(K handle) {
-        return get(handle, x).asRawStringList();
-    }
-
-    /**
-     * Get an Unparsed String List by Handle
-     *
-     * @param handle Handle
-     * @param def Default
-     * @return Unparsed String List
-     */
-    public List<String> getRawStringList(K handle, List<String> def) {
-        return get(handle, def).asRawStringList();
+    public List<Short> getShortList(K handle, Supplier<? extends List<Short>> def) {
+        return get(handle, def).asShortList();
     }
 
     /**
@@ -801,6 +978,17 @@ public class ObjectMap<K> {
      * @return String
      */
     public String getString(K handle, String def) {
+        return get(handle, def).asString();
+    }
+
+    /**
+     * Get a String by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return String
+     */
+    public String getString(K handle, Supplier<String> def) {
         return get(handle, def).asString();
     }
 
@@ -826,6 +1014,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a String List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return String List
+     */
+    public List<String> getStringList(K handle, Supplier<? extends List<String>> def) {
+        return get(handle, def).asStringList();
+    }
+
+    /**
      * Get a UUID by Handle
      *
      * @param handle Handle
@@ -843,6 +1042,17 @@ public class ObjectMap<K> {
      * @return UUID
      */
     public UUID getUUID(K handle, UUID def) {
+        return get(handle, def).asUUID();
+    }
+
+    /**
+     * Get a UUID by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return UUID
+     */
+    public UUID getUUID(K handle, Supplier<UUID> def) {
         return get(handle, def).asUUID();
     }
 
@@ -868,6 +1078,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a UUID List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return UUID List
+     */
+    public List<UUID> getUUIDList(K handle, Supplier<? extends List<UUID>> def) {
+        return get(handle, def).asUUIDList();
+    }
+
+    /**
      * Get a Version by Handle
      *
      * @param handle Handle
@@ -889,6 +1110,17 @@ public class ObjectMap<K> {
     }
 
     /**
+     * Get a Version by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Version
+     */
+    public Version getVersion(K handle, Supplier<Version> def) {
+        return get(handle, def).asVersion();
+    }
+
+    /**
      * Get a Version List by Handle
      *
      * @param handle Handle
@@ -906,6 +1138,17 @@ public class ObjectMap<K> {
      * @return Version List
      */
     public List<Version> getVersionList(K handle, List<Version> def) {
+        return get(handle, def).asVersionList();
+    }
+
+    /**
+     * Get a Version List by Handle
+     *
+     * @param handle Handle
+     * @param def Default
+     * @return Version List
+     */
+    public List<Version> getVersionList(K handle, Supplier<? extends List<Version>> def) {
         return get(handle, def).asVersionList();
     }
 
