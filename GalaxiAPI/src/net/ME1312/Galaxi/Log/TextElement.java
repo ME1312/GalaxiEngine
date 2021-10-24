@@ -66,7 +66,7 @@ public class TextElement {
      * @return Message
      */
     public String message() {
-        return element.getRawString("msg");
+        return element.getString("msg");
     }
 
     /**

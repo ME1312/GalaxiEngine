@@ -215,7 +215,7 @@ public class ConsoleText extends TextElement {
     public URL onClick() {
         try {
             if (element.contains("a")) {
-                return new URL(element.getRawString("a"));
+                return new URL(element.getString("a"));
             } else return null;
         } catch (MalformedURLException e) {
             return null;
