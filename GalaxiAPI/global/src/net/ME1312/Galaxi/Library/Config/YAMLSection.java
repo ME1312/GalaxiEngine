@@ -101,7 +101,7 @@ public class YAMLSection extends ObjectMap<String> {
     }
 
     @Override
-    protected ObjectMap<String> constructMap(Map<? extends String, ?> map) {
+    protected YAMLSection constructMap(Map<? extends String, ?> map) {
         return new YAMLSection(map, yaml);
     }
 
@@ -133,7 +133,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @param def Default
      * @return Object Map
      */
-    public YAMLSection getSection(String handle, ObjectMap<? extends String> def) {
+    public YAMLSection getSection(String handle, YAMLSection def) {
         return (YAMLSection) super.getMap(handle, def);
     }
 
@@ -144,7 +144,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @param def Default
      * @return Object Map
      */
-    public YAMLSection getSection(String handle, Supplier<? extends ObjectMap<? extends String>> def) {
+    public YAMLSection getSection(String handle, Supplier<? extends YAMLSection> def) {
         return (YAMLSection) super.getMap(handle, def);
     }
 
@@ -176,7 +176,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @param def Default
      * @return Object Map List
      */
-    public List<YAMLSection> getSectionList(String handle, List<? extends ObjectMap<? extends String>> def) {
+    public List<YAMLSection> getSectionList(String handle, List<? extends YAMLSection> def) {
         return (List<YAMLSection>) (List) super.getMapList(handle, def);
     }
 
@@ -187,7 +187,7 @@ public class YAMLSection extends ObjectMap<String> {
      * @param def Default
      * @return Object Map List
      */
-    public List<YAMLSection> getSectionList(String handle, Supplier<? extends List<? extends ObjectMap<? extends String>>> def) {
+    public List<YAMLSection> getSectionList(String handle, Supplier<? extends List<? extends YAMLSection>> def) {
         return (List<YAMLSection>) (List) super.getMapList(handle, def);
     }
 

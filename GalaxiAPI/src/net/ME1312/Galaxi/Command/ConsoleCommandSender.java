@@ -51,7 +51,7 @@ public class ConsoleCommandSender implements CommandSender {
      * Send a message as Console
      *
      * @param message Message to send
-     * @see InputSender#chat(String) ConsoleCommandSender should be of type InputSender when this method is implemented
+     * @see InputSender#chat(String) <i>ConsoleCommandSender</i> should be of type <i>InputSender</i> when this method is implemented
      * @throws UnsupportedOperationException when not implemented
      */
     public void chat(String message) {
@@ -62,7 +62,7 @@ public class ConsoleCommandSender implements CommandSender {
      * Send a message as Console
      *
      * @param message Message to send
-     * @see InputSender#chat(TextElement) ConsoleCommandSender should be of type InputSender when this method is implemented
+     * @see InputSender#chat(TextElement) <i>ConsoleCommandSender</i> should be of type <i>InputSender</i> when this method is implemented
      * @throws UnsupportedOperationException when not implemented
      */
     public void chat(TextElement message) {

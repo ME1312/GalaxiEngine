@@ -234,7 +234,18 @@ public final class Util {
     }
 
     /**
-     * Parse escapes in a Java String
+     * Sneak an exception past the compiler
+     *
+     * @param e Exception
+     * @return Nothing &mdash; this method will always throw the given exception
+     * @see Try Use <i>Try</i> for sneaky exception handling
+     */
+    public static RuntimeException sneakyThrow(Throwable e) {
+        return Try.<RuntimeException>sneakyThrow(e);
+    }
+
+    /**
+     * Parse Java escapes in a String
      *
      * @param str String
      * @return Unescaped String

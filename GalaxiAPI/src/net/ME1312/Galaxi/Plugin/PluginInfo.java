@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 /**
  * Plugin Info Class
  *
- * @see Plugin
+ * @see Plugin @Plugin
  */
 public class PluginInfo implements ExtraDataHandler {
     private static final String ID_PATTERN = ".*?([A-Za-z0-9!#$&+\\-_. ]*).*?";

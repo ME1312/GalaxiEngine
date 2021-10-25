@@ -4,7 +4,7 @@ package net.ME1312.Galaxi.Event;
  * Listener Order Defaults Class<br>
  * Listeners will be called from Short.MIN_VALUE to Short.MAX_VALUE unless the event is annotated by @ReverseOrder
  *
- * @see ReverseOrder
+ * @see ReverseOrder @ReverseOrder
  */
 public final class ListenerOrder {
     private ListenerOrder() {}

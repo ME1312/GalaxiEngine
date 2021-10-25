@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 /**
  * Plugin Dependency Annotation
  *
- * @see Plugin
+ * @see Plugin @Plugin
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})

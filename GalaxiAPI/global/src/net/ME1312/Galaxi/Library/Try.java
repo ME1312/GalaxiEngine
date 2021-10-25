@@ -14,7 +14,9 @@ public final class Try {
     public static final Try all = new Try(true);
 
     /**
-     * Handle no exceptions (api for sneaky throwing)
+     * Handle no exceptions
+     *
+     * @see Util#sneakyThrow(Throwable)
      */
     public static final Try none = new Try(false);
 
@@ -217,7 +219,7 @@ public final class Try {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Throwable> T sneakyThrow(Throwable e) throws T {
+    static <T extends Throwable> T sneakyThrow(Throwable e) throws T {
         throw (T) e;
     }
 
