@@ -1,13 +1,9 @@
 package net.ME1312.Galaxi.Library.Map;
 
 import net.ME1312.Galaxi.Library.Try;
-import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Object Map Class
@@ -49,7 +45,7 @@ public class ObjectMapValue<K> {
      */
     public List<ObjectMapValue<K>> asList() {
         if (obj != null) {
-            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
+            List<ObjectMapValue<K>> values = new LinkedList<ObjectMapValue<K>>();
             for (Object value : (List<?>) obj) {
                 values.add(up.wrap(null, value));
             }
@@ -232,8 +228,18 @@ public class ObjectMapValue<K> {
      * @return UUID
      */
     public UUID asUUID() {
-        if (obj != null) return UUID.fromString(asString());
-        else return null;
+        return parseUUID(obj);
+    }
+    private static UUID parseUUID(Object obj) {
+        if (obj instanceof Collection) {
+            Iterator<Long> i = ((Collection<Long>) obj).iterator();
+            return new UUID(i.next(), i.next());
+        } else if (obj != null) {
+            System.out.println(obj.toString());
+            return UUID.fromString(obj.toString());
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -243,9 +249,9 @@ public class ObjectMapValue<K> {
      */
     public List<UUID> asUUIDList() {
         if (obj != null) {
-            List<UUID> values = new ArrayList<UUID>();
-            for (String value : asStringList()) {
-                values.add((value == null)?null:UUID.fromString(value));
+            List<UUID> values = new LinkedList<UUID>();
+            for (Object value : (List<?>) obj) {
+                values.add(parseUUID(value));
             }
             return values;
         } else return null;
@@ -268,7 +274,7 @@ public class ObjectMapValue<K> {
      */
     public List<Version> asVersionList() {
         if (obj != null) {
-            List<Version> values = new ArrayList<Version>();
+            List<Version> values = new LinkedList<Version>();
             for (String value : asStringList()) {
                 values.add((value == null)?null:Version.fromString(value));
             }
@@ -336,7 +342,7 @@ public class ObjectMapValue<K> {
      * @return UUID Status
      */
     public boolean isUUID() {
-        return (obj instanceof String && Try.all.run(() -> UUID.fromString(asString())));
+        return ((obj instanceof List && Try.all.run(() -> asLongList().get(1).longValue())) || (obj instanceof String && Try.all.run(() -> UUID.fromString(asString()))));
     }
 
     @Override

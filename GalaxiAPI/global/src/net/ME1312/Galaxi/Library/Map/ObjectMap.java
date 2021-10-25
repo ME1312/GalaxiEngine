@@ -165,7 +165,7 @@ public class ObjectMap<K> {
             for (int i = 0; i < ((Object[]) value).length; i++) list.add(complicate(((Object[]) value)[i]));
             return list;
         } else if (value instanceof UUID) {
-            return value.toString();
+            return Arrays.asList(((UUID) value).getMostSignificantBits(), ((UUID) value).getLeastSignificantBits());
         } else if (value instanceof Version) {
             return ((Version) value).toFullString();
         } else {
@@ -210,7 +210,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Set Object into this Map
+     * Set an Object into this Map
      *
      * @param handle Handle
      * @param value Value
@@ -221,7 +221,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Set Object into this Map without overwriting existing value
+     * Set an Object into this Map without overwriting the existing value
      *
      * @param handle Handle
      * @param value Value
@@ -232,7 +232,18 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Set All Objects into this Map
+     * Set an Object into this Map without overwriting the existing value
+     *
+     * @param handle Handle
+     * @param value Value
+     */
+    public void safeSet(K handle, Supplier<?> value) {
+        Util.nullpo(handle, value);
+        if (!contains(handle)) set(handle, value.get());
+    }
+
+    /**
+     * Set all Objects into this Map
      *
      * @param values Map to set
      */
@@ -244,7 +255,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Set All Objects into this Map without overwriting existing values
+     * Set all Objects into this Map without overwriting existing values
      *
      * @param values Map to set
      */
@@ -256,7 +267,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Copy All Values to this Map
+     * Copy all Objects to this Map
      *
      * @param values Object Map to merge
      */
@@ -266,7 +277,7 @@ public class ObjectMap<K> {
     }
 
     /**
-     * Copy All to this Map without overwriting existing values
+     * Copy all Objects to this Map without overwriting existing values
      *
      * @param values Object Map to merge
      */
@@ -362,7 +373,7 @@ public class ObjectMap<K> {
         if (map.get(handle) != null) {
             return getList(handle);
         } else if (def != null) {
-            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
+            List<ObjectMapValue<K>> values = new LinkedList<ObjectMapValue<K>>();
             for (Object value : def) {
                 values.add(wrap(null, value));
             }
@@ -382,7 +393,7 @@ public class ObjectMap<K> {
         if (map.get(handle) != null) {
             return getList(handle);
         } else if (def != null) {
-            List<ObjectMapValue<K>> values = new ArrayList<ObjectMapValue<K>>();
+            List<ObjectMapValue<K>> values = new LinkedList<ObjectMapValue<K>>();
             for (Object value : def.get()) {
                 values.add(wrap(null, value));
             }
