@@ -19,6 +19,7 @@ public final class Util {
      *
      * @param value Value to check
      * @throws NullPointerException if any are null
+     * @return Value
      */
     public static <T> T nullpo(T value) {
         if (value == null) throw new NullPointerException("Illegal null value");
@@ -55,6 +56,7 @@ public final class Util {
      * @return If any are null
      */
     public static boolean isNull(Object... values) {
+        if (values == null) return true;
         for (Object value : values) {
             if (value == null) {
                 return true;
@@ -138,24 +140,23 @@ public final class Util {
     }
 
     /**
-     * Copy from the Class Loader
+     * Copy a file from the ClassLoader
      *
      * @param loader ClassLoader
      * @param resource Location From
      * @param destination Location To
      */
     public static void copyFromJar(ClassLoader loader, String resource, String destination) {
-        InputStream resStreamIn = loader.getResourceAsStream(resource);
         File resDestFile = new File(destination);
-        try {
-            OutputStream resStreamOut = new FileOutputStream(resDestFile);
+        try (
+                InputStream resStreamIn = loader.getResourceAsStream(resource);
+                OutputStream resStreamOut = new FileOutputStream(resDestFile)
+        ) {
             int readBytes;
             byte[] buffer = new byte[4096];
             while ((readBytes = resStreamIn.read(buffer)) > 0) {
                 resStreamOut.write(buffer, 0, readBytes);
             }
-            resStreamOut.close();
-            resStreamIn.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -172,11 +173,12 @@ public final class Util {
      */
     @SuppressWarnings("unchecked")
     public static <R> R reflect(Field field, Object instance) throws IllegalAccessException {
-        R value;
         field.setAccessible(true);
-        value = (R) field.get(instance);
-        field.setAccessible(false);
-        return value;
+        try {
+            return (R) field.get(instance);
+        } finally {
+            field.setAccessible(false);
+        }
     }
 
     /**
@@ -189,8 +191,11 @@ public final class Util {
      */
     public static void reflect(Field field, Object instance, Object value) throws IllegalAccessException {
         field.setAccessible(true);
-        field.set(instance, value);
-        field.setAccessible(false);
+        try {
+            field.set(instance, value);
+        } finally {
+            field.setAccessible(false);
+        }
     }
 
     /**
@@ -206,11 +211,12 @@ public final class Util {
      */
     @SuppressWarnings("unchecked")
     public static <R> R reflect(Method method, Object instance, Object... arguments) throws InvocationTargetException, IllegalAccessException {
-        R value;
         method.setAccessible(true);
-        value = (R) method.invoke(instance, arguments);
-        method.setAccessible(false);
-        return value;
+        try {
+            return (R) method.invoke(instance, arguments);
+        } finally {
+            method.setAccessible(false);
+        }
     }
 
     /**
@@ -226,11 +232,12 @@ public final class Util {
      */
     @SuppressWarnings("unchecked")
     public static <R> R reflect(Constructor<?> constructor, Object... arguments) throws InvocationTargetException, IllegalAccessException, InstantiationException {
-        R value;
         constructor.setAccessible(true);
-        value = (R) constructor.newInstance(arguments);
-        constructor.setAccessible(false);
-        return value;
+        try {
+            return (R) constructor.newInstance(arguments);
+        } finally {
+            constructor.setAccessible(false);
+        }
     }
 
     /**

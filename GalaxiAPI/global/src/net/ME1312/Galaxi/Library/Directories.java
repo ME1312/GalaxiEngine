@@ -76,23 +76,17 @@ public final class Directories {
         File dir = (folder.isFile())?folder.getParentFile():folder;
         byte[] buffer = new byte[4096];
 
-        try {
-            ZipOutputStream zos = new ZipOutputStream(zip);
-
+        try (ZipOutputStream zos = new ZipOutputStream(zip)) {
             for (String next : search(folder)) {
                 zos.putNextEntry(new ZipEntry(next.replace(File.separatorChar, '/')));
-                FileInputStream in = new FileInputStream(dir.getAbsolutePath() + File.separator + next);
-
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    zos.write(buffer, 0, len);
+                try (FileInputStream in = new FileInputStream(dir.getAbsolutePath() + File.separator + next)) {
+                    int len;
+                    while ((len = in.read(buffer)) != -1) {
+                        zos.write(buffer, 0, len);
+                    }
                 }
-
-                in.close();
             }
-
             zos.closeEntry();
-            zos.close();
         } catch(IOException ex) {
             ex.printStackTrace();
         }
@@ -106,8 +100,7 @@ public final class Directories {
      */
     public static void unzip(InputStream zip, File folder) {
         byte[] buffer = new byte[4096];
-        try{
-            ZipInputStream zis = new ZipInputStream(zip);
+        try (ZipInputStream zis = new ZipInputStream(zip)) {
             ZipEntry ze;
             while ((ze = zis.getNextEntry()) != null) {
                 File newFile = new File(folder + File.separator + ze.getName().replace('/', File.separatorChar));
@@ -124,16 +117,14 @@ public final class Directories {
                 } else if (!newFile.getParentFile().exists()) {
                     newFile.getParentFile().mkdirs();
                 }
-                FileOutputStream fos = new FileOutputStream(newFile);
-                int len;
-                while ((len = zis.read(buffer)) != -1) {
-                    fos.write(buffer, 0, len);
+                try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                    int len;
+                    while ((len = zis.read(buffer)) != -1) {
+                        fos.write(buffer, 0, len);
+                    }
                 }
-
-                fos.close();
             }
             zis.closeEntry();
-            zis.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -15,7 +15,7 @@ public abstract class Event {
      *
      * @return Get the GalaxiEngine API
      */
-    public Galaxi getEngine() {
+    public final Galaxi getEngine() {
         return Galaxi.getInstance();
     }
 
@@ -24,7 +24,7 @@ public abstract class Event {
      *
      * @return Plugin Info
      */
-    public PluginInfo getPlugin() {
+    public final PluginInfo getPlugin() {
         return plugin.value;
     }
 }

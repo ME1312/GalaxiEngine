@@ -14,5 +14,6 @@
         <module>GalaxiRT</module>
         <module>GalaxiRT/UI</module>
         <module>GalaxiRT/X</module>
+        <module>GalaxiTest</module>
     </modules>
 </project>

@@ -21,7 +21,7 @@ public final class LogStream {
     LogStream(Logger logger, LogLevel level) {
         this.logger = logger;
         this.level = level;
-        this.primitive = Try.all.get(() -> new PrintStream(new OutputStream() {
+        this.primitive = Try.none.get(() -> new PrintStream(new OutputStream() {
             final ByteArrayOutputStream pending = new ByteArrayOutputStream();
 
             @Override

@@ -15,8 +15,7 @@ public final class Try {
 
     /**
      * Handle no exceptions
-     *
-     * @see Util#sneakyThrow(Throwable)
+     * @see Util#sneakyThrow(Throwable) Use <i>Util.sneakyThrow()</i> to sneaky throw exceptions directly
      */
     public static final Try none = new Try(false);
 
@@ -211,11 +210,7 @@ public final class Try {
             }
         }
         if (suppress) return;
-        throw throwAnyway(e);
-    }
-
-    private static RuntimeException throwAnyway(Throwable e) {
-        return Try.<RuntimeException>sneakyThrow(e);
+        Try.<RuntimeException>sneakyThrow(e);
     }
 
     @SuppressWarnings("unchecked")
@@ -240,6 +235,14 @@ public final class Try {
     }
 
     /**
+     * BiConsumer that could throw an exception
+     * @see java.util.function.BiConsumer
+     */
+    public interface BiConsumer<T1, T2> {
+        void run(T1 arg1, T2 arg2) throws Throwable;
+    }
+
+    /**
      * Supplier that could throw an exception
      * @see java.util.function.Supplier
      */
@@ -253,5 +256,13 @@ public final class Try {
      */
     public interface Function<T, R> {
         R run(T arg) throws Throwable;
+    }
+
+    /**
+     * BiFunction that could throw an exception
+     * @see java.util.function.BiFunction
+     */
+    public interface BiFunction<T1, T2, R> {
+        R run(T1 arg1, T2 arg2) throws Throwable;
     }
 }
