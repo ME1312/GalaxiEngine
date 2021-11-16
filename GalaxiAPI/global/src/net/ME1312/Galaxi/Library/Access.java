@@ -18,30 +18,6 @@ import static java.lang.invoke.MethodType.methodType;
  */
 @SuppressWarnings("unchecked")
 public final class Access {
-    private static final MethodType GENERIC_TYPE = methodType(Object.class);
-    private static final MethodType VOID_TYPE = methodType(void.class);
-    private static final BiFunction<Class<?>, Lookup, Lookup> ACCESS;
-    static {
-        BiFunction<Class<?>, Lookup, Lookup> access;
-        try { // Attempt Java 9+ module accessor
-            final MethodHandle handle = MethodHandles.publicLookup().findStatic(MethodHandles.class, "privateLookupIn", methodType(Lookup.class, new Class[]{ Class.class, Lookup.class }));
-            access = (type, module) -> {
-                try {
-                    return (Lookup) handle.invokeExact(type, module);
-                } catch (Throwable e) {
-                    throw Util.sneakyThrow(e);
-                }
-            };
-        } catch (Throwable e) {
-            try { // Fallback to Java 8 master accessor
-                final Lookup lookup = Util.reflect(Lookup.class.getDeclaredField("IMPL_LOOKUP"), null);
-                access = (type, module) -> lookup;
-            } catch (Throwable x) {
-                throw Util.sneakyThrow(e);
-            }
-        }
-        ACCESS = access;
-    }
     private final Lookup module;
     private Access(Lookup module) {
         this.module = Util.nullpo(module);
@@ -63,68 +39,117 @@ public final class Access {
     }
 
     /**
-     * Access a Constructor
+     * Access a Class
      *
-     * @param clazz Containing Class
-     * @return Constructor Accessor
+     * @param clazz Class
+     * @return Class Accessor
      */
-    public Constructor constructor(Class<?> clazz) {
-        return new Constructor(ACCESS.apply(clazz, module), clazz);
-    }
-
-    /**
-     * Access a Method
-     *
-     * @param clazz Containing Class
-     * @param name Method Name
-     * @return Method Accessor
-     */
-    public Method method(Class<?> clazz, String name) {
-        return new Method(ACCESS.apply(clazz, module), clazz, name);
-    }
-
-    /**
-     * Access a Field
-     *
-     * @param clazz Containing Class
-     * @param name Field Name
-     * @return Field Accessor
-     */
-    public Field field(Class<?> clazz, String name) {
-        return new Field(ACCESS.apply(clazz, module), clazz, name);
+    public Type type(Class<?> clazz) {
+        return new Type(module, clazz);
     }
 
     /*
-     * Cached MethodHandle Constructor Class
+     * Base Accessor Class
      */
-    private static final class Cached<T> {
-        private final Try.Function<T, MethodHandle> constructor;
-        private final Try.BiFunction<MethodHandle, Class<?>[], MethodHandle> invocation;
-        private Cached(Try.Function<T, MethodHandle> constructor, Try.BiFunction<MethodHandle, Class<?>[], MethodHandle> invocation) {
-            this.constructor = constructor;
-            this.invocation = invocation;
+    private static abstract class Base {
+        static final MethodType GENERIC_TYPE = methodType(Object.class);
+        static final MethodType VOID_TYPE = methodType(void.class);
+
+        final Lookup search;
+        final Class<?> clazz;
+        private Base(Lookup search, Class<?> clazz) {
+            this.search = search;
+            this.clazz = clazz;
         }
-        private Cached(Try.Function<T, MethodHandle> constructor) {
-            this(constructor, null);
+    }
+
+    /**
+     * Type Accessor Class
+     */
+    public static final class Type extends Base {
+        private static final BiFunction<Class<?>, Lookup, Lookup> ACCESS; static {
+            BiFunction<Class<?>, Lookup, Lookup> access;
+            try { // Attempt Java 9+ module accessor
+                final MethodHandle handle = MethodHandles.publicLookup().findStatic(MethodHandles.class, "privateLookupIn", methodType(Lookup.class, new Class[]{ Class.class, Lookup.class }));
+                access = (type, module) -> {
+                    try {
+                        return (Lookup) handle.invokeExact(type, module);
+                    } catch (Throwable e) {
+                        throw Util.sneakyThrow(e);
+                    }
+                };
+            } catch (Throwable e) {
+                try { // Fallback to Java 8 master accessor
+                    final Lookup lookup = Util.reflect(Lookup.class.getDeclaredField("IMPL_LOOKUP"), null);
+                    access = (type, module) -> lookup;
+                } catch (Throwable x) {
+                    throw Util.sneakyThrow(e);
+                }
+            }
+            ACCESS = access;
+        }
+        private Type(Lookup module, Class<?> clazz) {
+            super(ACCESS.apply(clazz, module), clazz);
+        }
+
+        /**
+         * Access a Constructor
+         *
+         * @return Constructor Accessor
+         */
+        public Constructor constructor() {
+            return new Constructor(search, clazz);
+        }
+
+        /**
+         * Access a Method
+         *
+         * @param name Method Name
+         * @return Method Accessor
+         */
+        public Method method(String name) {
+            return new Method(search, clazz, name);
+        }
+
+        /**
+         * Access a Field
+         *
+         * @param name Field Name
+         * @return Field Accessor
+         */
+        public Field field(String name) {
+            return new Field(search, clazz, name);
+        }
+    }
+
+    /*
+     * MethodHandle API Translator Class
+     */
+    private static final class Translator<T> {
+        private final Try.Function<T, MethodHandle> LOW_LEVEL;
+        private final Try.BiFunction<MethodHandle, Class<?>[], MethodHandle> HIGH_LEVEL;
+        private Translator(Try.Function<T, MethodHandle> low, Try.BiFunction<MethodHandle, Class<?>[], MethodHandle> high) {
+            this.LOW_LEVEL = low;
+            this.HIGH_LEVEL = high;
+        }
+        private Translator(Try.Function<T, MethodHandle> low) {
+            this(low, null);
         }
     }
 
     /**
      * Constructor Accessor Class
      */
-    public static final class Constructor {
-        private static final Cached<Constructor> WITHOUT_PARAMETERS = new Cached<>(c -> c.search.findConstructor(c.clazz, VOID_TYPE), (h, t) -> h.asType(GENERIC_TYPE));
-        private static final Cached<Constructor> WITH_PARAMETERS = new Cached<>(c -> c.search.findConstructor(c.clazz, methodType(void.class, c.params)).asFixedArity(), (h, t) -> h.asType(methodType(Object.class, t)));
+    public static final class Constructor extends Base {
+        private static final Translator<Constructor> WITHOUT_PARAMETERS = new Translator<>(c -> c.search.findConstructor(c.clazz, VOID_TYPE), (h, t) -> h.asType(GENERIC_TYPE));
+        private static final Translator<Constructor> WITH_PARAMETERS = new Translator<>(c -> c.search.findConstructor(c.clazz, methodType(void.class, c.params)).asFixedArity(), (h, t) -> h.asType(methodType(Object.class, t)));
 
         private MethodHandle handle, invoke;
-        private Cached<Constructor> accessor;
-        private final Lookup search;
-        private final Class<?> clazz;
+        private Translator<Constructor> access;
         private Class<?>[] params;
         private Constructor(Lookup search, Class<?> clazz) {
-            this.search = search;
-            this.clazz = clazz;
-            this.accessor = WITHOUT_PARAMETERS;
+            super(search, clazz);
+            this.access = WITHOUT_PARAMETERS;
         }
 
         /**
@@ -136,10 +161,10 @@ public final class Access {
         public Constructor parameters(Class<?>... types) {
             if (types.length == 0) {
                 this.params = null;
-                this.accessor = WITHOUT_PARAMETERS;
+                this.access = WITHOUT_PARAMETERS;
             } else {
                 this.params = types;
-                this.accessor = WITH_PARAMETERS;
+                this.access = WITH_PARAMETERS;
             }
             return this;
         }
@@ -158,10 +183,10 @@ public final class Access {
          */
         public Constructor bind() throws Throwable {
             if (invoke == null) {
-                Cached<Constructor> accessor = this.accessor;
+                Translator<Constructor> access = this.access;
                 MethodHandle handle = this.handle;
-                if (handle == null) this.handle = handle = accessor.constructor.run(this);
-                invoke = (accessor.invocation == null)? handle : accessor.invocation.run(handle, params);
+                if (handle == null) this.handle = handle = access.LOW_LEVEL.run(this);
+                invoke = (access.HIGH_LEVEL == null)? handle : access.HIGH_LEVEL.run(handle, params);
             }
             return this;
         }
@@ -172,7 +197,7 @@ public final class Access {
          * @return MethodHandle
          */
         public MethodHandle handle() throws Throwable {
-            if (handle == null) return handle = accessor.constructor.run(this);
+            if (handle == null) return handle = access.LOW_LEVEL.run(this);
             return handle;
         }
 
@@ -201,39 +226,36 @@ public final class Access {
     /**
      * Method Accessor Class
      */
-    public static final class Method {
+    public static final class Method extends Base {
         private static final int INSTANCE_FLAG = 1;
         private static final int RETURN_TYPE_FLAG = 2;
         private static final int PARAMETERS_FLAG = 4;
-        private static final Cached<Method>[] ACCESSORS = new Cached[] {
+        private static final Translator<Method>[] ACCESS = new Translator[] {
             // static method, void return type, no parameters
-            new Cached<Method>(m -> m.search.findStatic(m.clazz, m.name, VOID_TYPE)),
+            new Translator<Method>(m -> m.search.findStatic(m.clazz, m.name, VOID_TYPE)),
             // instance method, void return type, no parameters
-            new Cached<Method>(m -> m.search.findVirtual(m.clazz, m.name, VOID_TYPE).bindTo(m.instance)),
+            new Translator<Method>(m -> m.search.findVirtual(m.clazz, m.name, VOID_TYPE).bindTo(m.instance)),
             // static method, object return type, no parameters
-            new Cached<Method>(m -> m.search.findStatic(m.clazz, m.name, methodType(m.returns)), (h, t) -> h.asType(GENERIC_TYPE)),
+            new Translator<Method>(m -> m.search.findStatic(m.clazz, m.name, methodType(m.returns)), (h, t) -> h.asType(GENERIC_TYPE)),
             // instance method, object return type, no parameters
-            new Cached<Method>(m -> m.search.findVirtual(m.clazz, m.name, methodType(m.returns)).bindTo(m.instance), (h, t) -> h.asType(GENERIC_TYPE)),
+            new Translator<Method>(m -> m.search.findVirtual(m.clazz, m.name, methodType(m.returns)).bindTo(m.instance), (h, t) -> h.asType(GENERIC_TYPE)),
             // static method, void return type, with parameters
-            new Cached<Method>(m -> m.search.findStatic(m.clazz, m.name, methodType(void.class, m.params)).asFixedArity()),
+            new Translator<Method>(m -> m.search.findStatic(m.clazz, m.name, methodType(void.class, m.params)).asFixedArity()),
             // instance method, void return type, with parameters
-            new Cached<Method>(m -> m.search.findVirtual(m.clazz, m.name, methodType(void.class, m.params)).asFixedArity().bindTo(m.instance)),
+            new Translator<Method>(m -> m.search.findVirtual(m.clazz, m.name, methodType(void.class, m.params)).asFixedArity().bindTo(m.instance)),
             // static method, object return type, with parameters
-            new Cached<Method>(m -> m.search.findStatic(m.clazz, m.name, methodType(m.returns, m.params)).asFixedArity(), (h, t) -> h.asType(methodType(Object.class, t))),
+            new Translator<Method>(m -> m.search.findStatic(m.clazz, m.name, methodType(m.returns, m.params)).asFixedArity(), (h, t) -> h.asType(methodType(Object.class, t))),
             // instance method, object return type, with parameters
-            new Cached<Method>(m -> m.search.findVirtual(m.clazz, m.name, methodType(m.returns, m.params)).asFixedArity().bindTo(m.instance), (h, t) -> h.asType(methodType(Object.class, t))),
+            new Translator<Method>(m -> m.search.findVirtual(m.clazz, m.name, methodType(m.returns, m.params)).asFixedArity().bindTo(m.instance), (h, t) -> h.asType(methodType(Object.class, t))),
         };
         private int type = 0;
         private MethodHandle handle, invoke;
-        private final Lookup search;
-        private final Class<?> clazz;
         private final String name;
         private Object instance;
         private Class<?> returns;
         private Class<?>[] params;
         private Method(Lookup search, Class<?> clazz, String name) {
-            this.search = search;
-            this.clazz = clazz;
+            super(search, clazz);
             this.name = name;
         }
 
@@ -320,10 +342,10 @@ public final class Access {
          */
         public Method bind() throws Throwable {
             if (invoke == null) {
-                Cached<Method> accessor = ACCESSORS[type];
+                Translator<Method> access = ACCESS[type];
                 MethodHandle handle = this.handle;
-                if (handle == null) this.handle = handle = accessor.constructor.run(this);
-                invoke = (accessor.invocation == null)? handle : accessor.invocation.run(handle, params);
+                if (handle == null) this.handle = handle = access.LOW_LEVEL.run(this);
+                invoke = (access.HIGH_LEVEL == null)? handle : access.HIGH_LEVEL.run(handle, params);
             }
             return this;
         }
@@ -334,7 +356,7 @@ public final class Access {
          * @return MethodHandle
          */
         public MethodHandle handle() throws Throwable {
-            if (handle == null) return handle = ACCESSORS[type].constructor.run(this);
+            if (handle == null) return handle = ACCESS[type].LOW_LEVEL.run(this);
             return handle;
         }
 
@@ -363,27 +385,24 @@ public final class Access {
     /**
      * Field Accessor Class
      */
-    public static final class Field {
-        private static final Cached<Field>[] STATIC = new Cached[] {
-            new Cached<Field>(f -> f.search.findStaticGetter(f.clazz, f.name, f.type), (h, t) -> h.asType(GENERIC_TYPE)),
-            new Cached<Field>(f -> f.search.findStaticSetter(f.clazz, f.name, f.type).asFixedArity()),
+    public static final class Field extends Base {
+        private static final Translator<Field>[] STATIC = new Translator[] {
+            new Translator<Field>(f -> f.search.findStaticGetter(f.clazz, f.name, f.value), (h, t) -> h.asType(GENERIC_TYPE)),
+            new Translator<Field>(f -> f.search.findStaticSetter(f.clazz, f.name, f.value).asFixedArity()),
         };
-        private static final Cached<Field>[] INSTANCE = new Cached[] {
-            new Cached<Field>(f -> f.search.findGetter(f.clazz, f.name, f.type).bindTo(f.instance), (h, t) -> h.asType(GENERIC_TYPE)),
-            new Cached<Field>(f -> f.search.findSetter(f.clazz, f.name, f.type).asFixedArity().bindTo(f.instance)),
+        private static final Translator<Field>[] INSTANCE = new Translator[] {
+            new Translator<Field>(f -> f.search.findGetter(f.clazz, f.name, f.value).bindTo(f.instance), (h, t) -> h.asType(GENERIC_TYPE)),
+            new Translator<Field>(f -> f.search.findSetter(f.clazz, f.name, f.value).asFixedArity().bindTo(f.instance)),
         };
         private MethodHandle setter, getter, invoke;
-        private Cached<Field>[] accessor;
-        private final Lookup search;
-        private final Class<?> clazz;
+        private Translator<Field>[] access;
         private final String name;
         private Object instance;
-        private Class<?> type;
+        private Class<?> value;
         private Field(Lookup search, Class<?> clazz, String name) {
-            this.search = search;
-            this.clazz = clazz;
+            super(search, clazz);
             this.name = name;
-            this.accessor = STATIC;
+            this.access = STATIC;
         }
 
         /**
@@ -395,10 +414,10 @@ public final class Access {
         public Field instance(Object instance) {
             if (instance == null) {
                 this.instance = null;
-                this.accessor = STATIC;
+                this.access = STATIC;
             } else {
                 this.instance = instance;
-                this.accessor = INSTANCE;
+                this.access = INSTANCE;
             }
             return this;
         }
@@ -413,23 +432,23 @@ public final class Access {
         }
 
         /**
-         * Define the data type of this field<br>
+         * Define the value type of this field<br>
          * Calling this method is required to successfully select a field
          *
-         * @param type Field Type
+         * @param type Value Type
          */
-        public Field type(Class<?> type) {
-            this.type = type;
+        public Field value(Class<?> type) {
+            this.value = type;
             return this;
         }
 
         /**
-         * Get the defined data type of this field
+         * Get the defined value type of this field
          *
-         * @return Field Type
+         * @return Value Type
          */
-        public Class<?> type() {
-            return type;
+        public Class<?> value() {
+            return value;
         }
 
         /**
@@ -438,10 +457,10 @@ public final class Access {
          */
         public Field bind() throws Throwable {
             if (invoke == null) {
-                Cached<Field> accessor = this.accessor[0];
+                Translator<Field> accessor = this.access[0];
                 MethodHandle getter = this.getter;
-                if (getter == null) this.getter = getter = accessor.constructor.run(this);
-                invoke = (accessor.invocation == null)? getter : accessor.invocation.run(getter, null);
+                if (getter == null) this.getter = getter = accessor.LOW_LEVEL.run(this);
+                invoke = (accessor.HIGH_LEVEL == null)? getter : accessor.HIGH_LEVEL.run(getter, null);
             }
             return this;
         }
@@ -452,7 +471,7 @@ public final class Access {
          * @return MethodHandle
          */
         public MethodHandle setter() throws Throwable {
-            if (setter == null) return setter = accessor[1].constructor.run(this);
+            if (setter == null) return setter = access[1].LOW_LEVEL.run(this);
             return setter;
         }
 
@@ -462,7 +481,7 @@ public final class Access {
          * @return MethodHandle
          */
         public MethodHandle getter() throws Throwable {
-            if (getter == null) return getter = accessor[0].constructor.run(this);
+            if (getter == null) return getter = access[0].LOW_LEVEL.run(this);
             return getter;
         }
 
