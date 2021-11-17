@@ -44,33 +44,18 @@ public final class Access {
      * @param clazz Class
      * @return Class Accessor
      */
-    public Type type(Class<?> clazz) {
-        return new Type(module, clazz);
-    }
-
-    /*
-     * Base Accessor Class
-     */
-    private static abstract class Base {
-        static final MethodType GENERIC_TYPE = methodType(Object.class);
-        static final MethodType VOID_TYPE = methodType(void.class);
-
-        final Lookup search;
-        final Class<?> clazz;
-        private Base(Lookup search, Class<?> clazz) {
-            this.search = search;
-            this.clazz = clazz;
-        }
+    public Class type(java.lang.Class<?> clazz) {
+        return new Class(module, clazz);
     }
 
     /**
      * Type Accessor Class
      */
-    public static final class Type extends Base {
-        private static final BiFunction<Class<?>, Lookup, Lookup> ACCESS; static {
-            BiFunction<Class<?>, Lookup, Lookup> access;
+    public static final class Class extends Base {
+        private static final BiFunction<java.lang.Class<?>, Lookup, Lookup> ACCESS; static {
+            BiFunction<java.lang.Class<?>, Lookup, Lookup> access;
             try { // Attempt Java 9+ module accessor
-                final MethodHandle handle = MethodHandles.publicLookup().findStatic(MethodHandles.class, "privateLookupIn", methodType(Lookup.class, new Class[]{ Class.class, Lookup.class }));
+                final MethodHandle handle = MethodHandles.publicLookup().findStatic(MethodHandles.class, "privateLookupIn", methodType(Lookup.class, new java.lang.Class[]{ java.lang.Class.class, Lookup.class }));
                 access = (type, module) -> {
                     try {
                         return (Lookup) handle.invokeExact(type, module);
@@ -88,7 +73,7 @@ public final class Access {
             }
             ACCESS = access;
         }
-        private Type(Lookup module, Class<?> clazz) {
+        private Class(Lookup module, java.lang.Class<?> clazz) {
             super(ACCESS.apply(clazz, module), clazz);
         }
 
@@ -112,13 +97,25 @@ public final class Access {
         }
 
         /**
+         * Access a Method
+         *
+         * @param rtype Method Return Type
+         * @param name Method Name
+         * @return Method Accessor
+         */
+        public Method method(java.lang.Class<?> rtype, String name) {
+            return new Method(search, clazz, name, rtype);
+        }
+
+        /**
          * Access a Field
          *
+         * @param ftype Field Type
          * @param name Field Name
          * @return Field Accessor
          */
-        public Field field(String name) {
-            return new Field(search, clazz, name);
+        public Field field(java.lang.Class<?> ftype, String name) {
+            return new Field(search, clazz, name, ftype);
         }
     }
 
@@ -127,13 +124,28 @@ public final class Access {
      */
     private static final class Translator<T> {
         private final Try.Function<T, MethodHandle> LOW_LEVEL;
-        private final Try.BiFunction<MethodHandle, Class<?>[], MethodHandle> HIGH_LEVEL;
-        private Translator(Try.Function<T, MethodHandle> low, Try.BiFunction<MethodHandle, Class<?>[], MethodHandle> high) {
+        private final Try.BiFunction<MethodHandle, java.lang.Class<?>[], MethodHandle> HIGH_LEVEL;
+        private Translator(Try.Function<T, MethodHandle> low, Try.BiFunction<MethodHandle, java.lang.Class<?>[], MethodHandle> high) {
             this.LOW_LEVEL = low;
             this.HIGH_LEVEL = high;
         }
         private Translator(Try.Function<T, MethodHandle> low) {
             this(low, null);
+        }
+    }
+
+    /*
+     * Base Accessor Class
+     */
+    private static abstract class Base {
+        static final MethodType GENERIC_TYPE = methodType(Object.class);
+        static final MethodType VOID_TYPE = methodType(void.class);
+
+        final Lookup search;
+        final java.lang.Class<?> clazz;
+        private Base(Lookup search, java.lang.Class<?> clazz) {
+            this.search = search;
+            this.clazz = clazz;
         }
     }
 
@@ -146,10 +158,23 @@ public final class Access {
 
         private MethodHandle handle, invoke;
         private Translator<Constructor> access;
-        private Class<?>[] params;
-        private Constructor(Lookup search, Class<?> clazz) {
+        private java.lang.Class<?>[] params;
+        private Constructor(Lookup search, java.lang.Class<?> clazz) {
             super(search, clazz);
             this.access = WITHOUT_PARAMETERS;
+        }
+
+        /**
+         * Create an editable clone of this accessor
+         *
+         * @return Cloned Constructor Accessor
+         */
+        @Override
+        public Constructor clone() {
+            Constructor c = new Constructor(search, clazz);
+            c.access = access;
+            c.params = params;
+            return c;
         }
 
         /**
@@ -158,7 +183,7 @@ public final class Access {
          *
          * @param types Parameter Types
          */
-        public Constructor parameters(Class<?>... types) {
+        public Constructor parameters(java.lang.Class<?>... types) {
             if (types.length == 0) {
                 this.params = null;
                 this.access = WITHOUT_PARAMETERS;
@@ -170,12 +195,12 @@ public final class Access {
         }
 
         /**
-         * Get the defined parameter types of this constructor
+         * Get the parameter types of this constructor
          *
          * @return Parameter Types
          */
-        public Class<?>[] parameters() {
-            return params;
+        public java.lang.Class<?>[] parameters() {
+            return (params == null)? null : params.clone();
         }
 
         /**
@@ -252,11 +277,95 @@ public final class Access {
         private MethodHandle handle, invoke;
         private final String name;
         private Object instance;
-        private Class<?> returns;
-        private Class<?>[] params;
-        private Method(Lookup search, Class<?> clazz, String name) {
+        private java.lang.Class<?> returns;
+        private java.lang.Class<?>[] params;
+        private Method(Lookup search, java.lang.Class<?> clazz, String name) {
             super(search, clazz);
             this.name = name;
+        }
+        private Method(Lookup search, java.lang.Class<?> clazz, String name, java.lang.Class<?> type) {
+            super(search, clazz);
+            this.name = name;
+            if (type != null && type != void.class) {
+                this.returns = type;
+                this.type = RETURN_TYPE_FLAG;
+            }
+        }
+
+        /**
+         * Create an editable clone of this accessor
+         *
+         * @return Cloned Method Accessor
+         */
+        @Override
+        public Method clone() {
+            Method m = new Method(search, clazz, name);
+            m.type = type;
+            m.instance = instance;
+            m.returns = returns;
+            m.params = params;
+            return m;
+        }
+
+        /**
+         * Get the name of this method
+         *
+         * @return Method Name
+         */
+        public String name() {
+            return name;
+        }
+
+        /**
+         * Define the return type of this method<br>
+         * If this method is not called, the return type is assumed to be <i>void</i>
+         *
+         * @param type Return Type
+         */
+        public Method returns(java.lang.Class<?> type) {
+            if (type == null || type == void.class) {
+                this.returns = null;
+                this.type &= ~RETURN_TYPE_FLAG;
+            } else {
+                this.returns = type;
+                this.type |= RETURN_TYPE_FLAG;
+            }
+            return this;
+        }
+
+        /**
+         * Get the return type of this method
+         *
+         * @return Return Type
+         */
+        public java.lang.Class<?> returns() {
+            return returns;
+        }
+
+        /**
+         * Define the parameters of this method<br>
+         * If this method is not called, it is assumed that there are no parameters
+         *
+         * @param types Parameter Types
+         */
+        public Method parameters(java.lang.Class<?>... types) {
+            if (types.length == 0) {
+                this.params = null;
+                this.type &= ~PARAMETERS_FLAG;
+            } else {
+                this.params = types;
+                this.type |= PARAMETERS_FLAG;
+            }
+            return this;
+        }
+
+        /**
+         * Get the parameter types of this method
+         *
+         * @return Parameter Types
+         */
+        public java.lang.Class<?>[] parameters() {
+            return (params == null)? null : params.clone();
         }
 
         /**
@@ -277,64 +386,12 @@ public final class Access {
         }
 
         /**
-         * Get the instance of this method
+         * Get the instance this method will run under
          *
          * @return Instance
          */
         public Object instance() {
             return instance;
-        }
-
-        /**
-         * Define the return type of this method<br>
-         * If this method is not called, the return type is assumed to be <i>void</i>
-         *
-         * @param type Return Type
-         */
-        public Method returns(Class<?> type) {
-            if (type == null) {
-                this.returns = null;
-                this.type &= ~RETURN_TYPE_FLAG;
-            } else {
-                this.returns = type;
-                this.type |= RETURN_TYPE_FLAG;
-            }
-            return this;
-        }
-
-        /**
-         * Get the defined return type of this method
-         *
-         * @return Return Type
-         */
-        public Class<?> returns() {
-            return returns;
-        }
-
-        /**
-         * Define the parameters of this method<br>
-         * If this method is not called, it is assumed that there are no parameters
-         *
-         * @param types Parameter Types
-         */
-        public Method parameters(Class<?>... types) {
-            if (types.length == 0) {
-                this.params = null;
-                this.type &= ~PARAMETERS_FLAG;
-            } else {
-                this.params = types;
-                this.type |= PARAMETERS_FLAG;
-            }
-            return this;
-        }
-
-        /**
-         * Get the defined parameter types of this method
-         *
-         * @return Parameter Types
-         */
-        public Class<?>[] parameters() {
-            return params;
         }
 
         /**
@@ -387,22 +444,41 @@ public final class Access {
      */
     public static final class Field extends Base {
         private static final Translator<Field>[] STATIC = new Translator[] {
-            new Translator<Field>(f -> f.search.findStaticGetter(f.clazz, f.name, f.value), (h, t) -> h.asType(GENERIC_TYPE)),
-            new Translator<Field>(f -> f.search.findStaticSetter(f.clazz, f.name, f.value).asFixedArity()),
+            new Translator<Field>(f -> f.search.findStaticGetter(f.clazz, f.name, f.type), (h, t) -> h.asType(GENERIC_TYPE)),
+            new Translator<Field>(f -> f.search.findStaticSetter(f.clazz, f.name, f.type).asFixedArity()),
         };
         private static final Translator<Field>[] INSTANCE = new Translator[] {
-            new Translator<Field>(f -> f.search.findGetter(f.clazz, f.name, f.value).bindTo(f.instance), (h, t) -> h.asType(GENERIC_TYPE)),
-            new Translator<Field>(f -> f.search.findSetter(f.clazz, f.name, f.value).asFixedArity().bindTo(f.instance)),
+            new Translator<Field>(f -> f.search.findGetter(f.clazz, f.name, f.type).bindTo(f.instance), (h, t) -> h.asType(GENERIC_TYPE)),
+            new Translator<Field>(f -> f.search.findSetter(f.clazz, f.name, f.type).asFixedArity().bindTo(f.instance)),
         };
         private MethodHandle setter, getter, invoke;
         private Translator<Field>[] access;
         private final String name;
+        private final java.lang.Class<?> type;
         private Object instance;
-        private Class<?> value;
-        private Field(Lookup search, Class<?> clazz, String name) {
+        private Field(Lookup search, java.lang.Class<?> clazz, String name, java.lang.Class<?> type) {
             super(search, clazz);
             this.name = name;
+            this.type = type;
             this.access = STATIC;
+        }
+
+        /**
+         * Get the name of this field
+         *
+         * @return Field Name
+         */
+        public String name() {
+            return name;
+        }
+
+        /**
+         * Get the data type of this field
+         *
+         * @return Field Data Type
+         */
+        public java.lang.Class<?> type() {
+            return type;
         }
 
         /**
@@ -423,32 +499,12 @@ public final class Access {
         }
 
         /**
-         * Get the instance of this field
+         * Get the instance this field belongs to
          *
          * @return Instance
          */
         public Object instance() {
             return instance;
-        }
-
-        /**
-         * Define the value type of this field<br>
-         * Calling this method is required to successfully select a field
-         *
-         * @param type Value Type
-         */
-        public Field value(Class<?> type) {
-            this.value = type;
-            return this;
-        }
-
-        /**
-         * Get the defined value type of this field
-         *
-         * @return Value Type
-         */
-        public Class<?> value() {
-            return value;
         }
 
         /**
