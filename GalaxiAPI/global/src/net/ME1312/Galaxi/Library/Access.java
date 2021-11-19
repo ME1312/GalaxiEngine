@@ -17,16 +17,47 @@ import static java.lang.invoke.MethodType.methodType;
  * @see MethodHandle See <i>MethodHandle</i> for more advanced functionality
  */
 @SuppressWarnings("unchecked")
-public final class Access {
-    private final Lookup module;
+public class Access {
+    private static final BiFunction<java.lang.Class<?>, Lookup, Lookup> ACCESS; static {
+        BiFunction<java.lang.Class<?>, Lookup, Lookup> access;
+        try { // Attempt Java 9+ module accessor
+            AccessJ9.init();
+            access = (type, module) -> {
+                try {
+                    return AccessJ9.nonPublic(type, module);
+                } catch (Throwable e) {
+                    throw Util.sneakyThrow(e);
+                }
+            };
+        } catch (Throwable e) {
+            try { // Fallback to Java 8 master accessor
+                final Lookup lookup = Util.reflect(Lookup.class.getDeclaredField("IMPL_LOOKUP"), null);
+                access = (type, module) -> lookup;
+            } catch (Throwable x) {
+                throw Util.sneakyThrow(e);
+            }
+        }
+        ACCESS = access;
+    }
+    final Lookup module;
     private Access(Lookup module) {
         this.module = Util.nullpo(module);
     }
 
     /**
-     * Access a resource shared by this module
+     * Access a resource that has been shared to all modules; a public resource
      */
-    public static final Access shared = new Access(MethodHandles.lookup());
+    public static final Access shared = new Access(MethodHandles.publicLookup()) {
+        @Override
+        public Class type(java.lang.Class<?> clazz) {
+            return new Class(module, clazz);
+        }
+    };
+
+    /**
+     * Access a resource from the unnamed module; the same module as Galaxi
+     */
+    public static final Access unnamed = new Access(MethodHandles.lookup());
 
     /**
      * Access a resource from another module
@@ -45,36 +76,15 @@ public final class Access {
      * @return Class Accessor
      */
     public Class type(java.lang.Class<?> clazz) {
-        return new Class(module, clazz);
+        return new Class(ACCESS.apply(clazz, module), clazz);
     }
 
     /**
      * Type Accessor Class
      */
     public static final class Class extends Base {
-        private static final BiFunction<java.lang.Class<?>, Lookup, Lookup> ACCESS; static {
-            BiFunction<java.lang.Class<?>, Lookup, Lookup> access;
-            try { // Attempt Java 9+ module accessor
-                final MethodHandle handle = MethodHandles.publicLookup().findStatic(MethodHandles.class, "privateLookupIn", methodType(Lookup.class, new java.lang.Class[]{ java.lang.Class.class, Lookup.class }));
-                access = (type, module) -> {
-                    try {
-                        return (Lookup) handle.invokeExact(type, module);
-                    } catch (Throwable e) {
-                        throw Util.sneakyThrow(e);
-                    }
-                };
-            } catch (Throwable e) {
-                try { // Fallback to Java 8 master accessor
-                    final Lookup lookup = Util.reflect(Lookup.class.getDeclaredField("IMPL_LOOKUP"), null);
-                    access = (type, module) -> lookup;
-                } catch (Throwable x) {
-                    throw Util.sneakyThrow(e);
-                }
-            }
-            ACCESS = access;
-        }
-        private Class(Lookup module, java.lang.Class<?> clazz) {
-            super(ACCESS.apply(clazz, module), clazz);
+        private Class(Lookup search, java.lang.Class<?> clazz) {
+            super(search, clazz);
         }
 
         /**
