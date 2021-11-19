@@ -55,12 +55,13 @@ public class Access {
     };
 
     /**
-     * Access a resource from the unnamed module; the same module as Galaxi
+     * Access a resource from the unnamed module; the same module as Galaxi<br>
+     * This short-hand will be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      */
     public static final Access unnamed = new Access(MethodHandles.lookup());
 
     /**
-     * Access a resource from another module
+     * Access a resource from a module that <i>opens</i> to you
      *
      * @param module Module Lookup
      * @return Module Accessor

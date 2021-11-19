@@ -163,7 +163,8 @@ public final class Util {
     }
 
     /**
-     * Get a Field's value using Reflection
+     * Get a Field's value using Reflection<br>
+     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param field Field to grab
      * @param instance Object Instance (Null for static fields)
@@ -182,7 +183,8 @@ public final class Util {
     }
 
     /**
-     * Set a Field's value using Reflection
+     * Set a Field's value using Reflection<br>
+     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param field Field to write to
      * @param instance Object Instance (Null for static fields)
@@ -199,7 +201,8 @@ public final class Util {
     }
 
     /**
-     * Call a method using Reflection
+     * Call a method using Reflection<br>
+     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param method Method to call
      * @param instance Object Instance (Null for static methods)
@@ -220,7 +223,8 @@ public final class Util {
     }
 
     /**
-     * Construct an object using Reflection
+     * Construct an object using Reflection<br>
+     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param constructor Constructor to use
      * @param arguments Constructor Arguments
