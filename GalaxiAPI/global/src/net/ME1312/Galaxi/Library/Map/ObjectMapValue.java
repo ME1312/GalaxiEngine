@@ -235,7 +235,6 @@ public class ObjectMapValue<K> {
             Iterator<Long> i = ((Collection<Long>) obj).iterator();
             return new UUID(i.next(), i.next());
         } else if (obj != null) {
-            System.out.println(obj.toString());
             return UUID.fromString(obj.toString());
         } else {
             return null;
