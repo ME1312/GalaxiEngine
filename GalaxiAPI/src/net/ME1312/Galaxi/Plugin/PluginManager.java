@@ -144,11 +144,11 @@ public abstract class PluginManager {
      * @param listeners Listeners
      * @param <T> Event Type
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("rawtypes")
     @SafeVarargs
     public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<? extends T>... listeners) {
-        Util.nullpo(plugin, event, listeners);
-        Util.nullpo((Object[]) listeners);
+        Util.nullpo(plugin, event);
+        Util.nullpo(listeners);
         synchronized (this.listeners) {
             for (Listener listener : listeners) {
                 try {
@@ -199,7 +199,7 @@ public abstract class PluginManager {
      * @param listeners Listeners
      */
     public void unregisterListeners(PluginInfo plugin, Object... listeners) {
-        Util.nullpo(plugin, listeners);
+        Util.nullpo(plugin);
         Util.nullpo(listeners);
         synchronized (this.listeners) {
             LinkedList<Class<? extends Event>> update = new LinkedList<>();

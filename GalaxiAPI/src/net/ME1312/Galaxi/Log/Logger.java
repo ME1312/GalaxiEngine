@@ -5,6 +5,7 @@ import net.ME1312.Galaxi.Library.Util;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.PrimitiveIterator;
 import java.util.concurrent.ExecutorService;
@@ -19,19 +20,29 @@ public final class Logger {
     private static ExecutorService service = null;
     static LogStream.MessageHandler writer = null;
 
+    private static final HashMap<String, Logger> loggers = new HashMap<String, Logger>();
     private static final LinkedList<LogFilter> gFilters = new LinkedList<LogFilter>();
     private final LinkedList<LogFilter> lFilters = new LinkedList<LogFilter>();
     private final java.util.logging.Logger primitive;
     final String prefix;
 
     /**
-     * Gets a new Logger
+     * Get a static logger
+     *
+     * @param prefix Log Prefix
+     * @return Logger
+     */
+    public static Logger get(String prefix) {
+        return loggers.computeIfAbsent(prefix, Logger::new);
+    }
+
+    /**
+     * Creates a new Logger
      *
      * @param prefix Log Prefix
      */
     public Logger(String prefix) {
-        Util.nullpo(prefix);
-        if (prefix.length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty prefix");
+        if (Util.nullpo(prefix).length() == 0) throw new StringIndexOutOfBoundsException("Cannot use an empty prefix");
         debug = new LogStream(this, DEBUG);
         message = new LogStream(this, MESSAGE);
         info = new LogStream(this, INFO);

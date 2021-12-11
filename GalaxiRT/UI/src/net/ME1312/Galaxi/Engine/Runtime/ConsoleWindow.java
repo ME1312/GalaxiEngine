@@ -852,7 +852,7 @@ public final class ConsoleWindow implements ConsoleUI {
 
                                         "If this is not happening, for whatever reason,\n" +
                                         "you can terminate the program from this screen.\n" +
-                                        "Terminating a program can cause some undersirable consequences,\n" +
+                                        "Terminating a program can cause some undesirable consequences,\n" +
                                         "however, such as data loss or corruption.\n\n" +
 
                                         "You can also choose to finish running the program in the background,\u00A0\u00A0\n" +

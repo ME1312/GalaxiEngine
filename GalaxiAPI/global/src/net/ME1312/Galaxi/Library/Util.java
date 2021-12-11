@@ -31,12 +31,15 @@ public final class Util {
      *
      * @param values Values to check
      * @throws NullPointerException if any are null
+     * @return Values
      */
-    public static void nullpo(Object... values) {
+    @SafeVarargs
+    public static <T> T[] nullpo(T... values) {
         if (values == null) throw new NullPointerException("Illegal null array");
         for (int i = 0; i < values.length; ++i) {
             if (values[i] == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
         }
+        return values;
     }
 
     /**
@@ -57,10 +60,8 @@ public final class Util {
      */
     public static boolean isNull(Object... values) {
         if (values == null) return true;
-        for (Object value : values) {
-            if (value == null) {
-                return true;
-            }
+        for (int i = 0; i < values.length; ++i) {
+            if (values[i] == null) return true;
         }
         return false;
     }
