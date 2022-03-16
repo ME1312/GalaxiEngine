@@ -381,10 +381,8 @@ class Console extends CommandParser {
                                     if ((PARSE_CONSOLE_VARIABLES.value())
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('$', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
-                                        String replacement;
-                                        if (System.getProperty(var) != null) {
-                                            replacement = System.getProperty(var);
-                                        } else {
+                                        String replacement = System.getProperty(var);
+                                        if (replacement == null) {
                                             replacement = "null";
                                         }
                                         part.append(replacement);
@@ -404,10 +402,8 @@ class Console extends CommandParser {
                                     if ((PARSE_CONSOLE_VARIABLES.value())
                                             && i + 1 <= LINE.codePoints().count() && (varEnd = LINE.indexOf('%', i+1)) > i) {
                                         String var = LINE.substring(i + 1, varEnd);
-                                        String replacement;
-                                        if (System.getenv(var) != null) {
-                                            replacement = System.getenv(var);
-                                        } else {
+                                        String replacement = System.getenv(var);
+                                        if (replacement == null) {
                                             replacement = "null";
                                         }
                                         part.append(replacement);

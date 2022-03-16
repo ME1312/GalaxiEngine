@@ -10,7 +10,7 @@ public abstract class CommandProcessor {
     // Console UI served by RT
     protected abstract Object openWindow(boolean exit);
     protected abstract Object getWindow();
-    protected abstract void closeWindow(boolean exit);
+    protected abstract void closeWindow(boolean destroy);
 
     /**
      * Galaxi Command Status Class

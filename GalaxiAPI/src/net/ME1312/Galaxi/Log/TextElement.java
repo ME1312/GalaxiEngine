@@ -190,10 +190,7 @@ public class TextElement {
      * @return Text Element
      */
     public TextElement before(TextElement... elements) {
-        LinkedList<TextElement> before = new LinkedList<TextElement>();
-        before.addAll(Arrays.asList(elements));
-        Collections.reverse(before);
-        for (TextElement element : before) this.before.addFirst(element);
+        for (int i = elements.length; i > 0;) before.addFirst(elements[--i]);
         return this;
     }
 
@@ -204,10 +201,33 @@ public class TextElement {
      * @return Text Element
      */
     public TextElement prepend(TextElement... elements) {
-        LinkedList<TextElement> before = new LinkedList<TextElement>();
-        before.addAll(Arrays.asList(elements));
-        Collections.reverse(before);
-        for (TextElement element : before) this.prepend.addFirst(element);
+        for (int i = elements.length; i > 0;) prepend.addFirst(elements[--i]);
+        return this;
+    }
+
+    /**
+     * Add additional text before the existing text
+     *
+     * @param text Text to add
+     * @return Text Element
+     */
+    public TextElement prepend(String... text) {
+        StringBuilder msg = new StringBuilder(element.getString("msg"));
+        for (int i = text.length; i > 0;) msg.insert(0, text[--i]);
+        element.set("msg", msg.toString());
+        return this;
+    }
+
+    /**
+     * Add additional text behind the existing text
+     *
+     * @param text Text to add
+     * @return Text Element
+     */
+    public TextElement append(String... text) {
+        StringBuilder msg = new StringBuilder(element.getString("msg"));
+        for (String s : text) msg.append(s);
+        element.set("msg", msg.toString());
         return this;
     }
 

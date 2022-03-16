@@ -29,10 +29,7 @@ public abstract class PluginManager {
      * @param name Plugin Name
      * @return PluginInfo
      */
-    public PluginInfo getPlugin(String name) {
-        Util.nullpo(name);
-        return getPlugins().get(name.toLowerCase());
-    }
+    public abstract PluginInfo getPlugin(String name);
 
     /**
      * Gets a Plugin

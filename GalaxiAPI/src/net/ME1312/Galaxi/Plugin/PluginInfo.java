@@ -388,25 +388,20 @@ public class PluginInfo implements ExtraDataHandler {
      * @return Full Dependencies List
      */
     public List<PluginInfo> scanDependencies() {
-        List<PluginInfo> used = new ArrayList<PluginInfo>();
-        used.add(this);
-        return scanDependencies(this, used);
+        LinkedList<PluginInfo> output = new LinkedList<>();
+        scanDependencies(output);
+        output.removeLast();
+        return output;
     }
-    private List<PluginInfo> scanDependencies(PluginInfo info, List<PluginInfo> used) {
-        LinkedList<PluginInfo> output = new LinkedList<PluginInfo>();
+    private void scanDependencies(LinkedList<PluginInfo> output) {
+        output.addFirst(this);
 
-        for (PluginInfo.Dependency depend : info.getDependencies()) {
-            if (Galaxi.getInstance().getPluginManager().getPlugins().get(depend.getName().toLowerCase()) != null) {
-                output.addAll(scanDependencies(Galaxi.getInstance().getPluginManager().getPlugin(depend.getName().toLowerCase()), used));
+        for (PluginInfo.Dependency depend : getDependencies()) {
+            PluginInfo plugin = Galaxi.getInstance().getPluginManager().getPlugin(depend.getName());
+            if (plugin != null && !output.contains(plugin)) {
+                plugin.scanDependencies(output);
             }
         }
-
-        if (!used.contains(info)) {
-            output.add(info);
-            used.add(info);
-        }
-
-        return output;
     }
 
     /**

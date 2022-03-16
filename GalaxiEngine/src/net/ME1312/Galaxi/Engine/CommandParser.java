@@ -38,7 +38,7 @@ public abstract class CommandParser extends CommandProcessor {
     public abstract Parsed parseCommand(String command);
 
     /**
-     * Parsed Input Class
+     * Parsed Command Class
      */
     public interface Parsed {
         /**

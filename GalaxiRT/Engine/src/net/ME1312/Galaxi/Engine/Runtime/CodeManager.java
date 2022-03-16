@@ -318,4 +318,10 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
     public Map<String, PluginInfo> getPlugins() {
         return new LinkedHashMap<String, PluginInfo>(plugins);
     }
+
+    @Override
+    public PluginInfo getPlugin(String name) {
+        Util.nullpo(name);
+        return plugins.getOrDefault(name.toLowerCase(), null);
+    }
 }

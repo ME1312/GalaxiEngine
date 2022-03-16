@@ -25,6 +25,15 @@ public class AsyncConsolidator {
     }
 
     /**
+     * Call this before running multiple tasks
+     *
+     * @param amount Amount of reservations
+     */
+    public synchronized void reserve(int amount) {
+        tasks += amount;
+    }
+
+    /**
      * Call this after running each task
      */
     public synchronized void release() {
