@@ -3,6 +3,7 @@ package net.ME1312.Galaxi.Library.Map;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Library.Version.Version;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -162,7 +163,7 @@ public class ObjectMap<K> {
             return list;
         } else if (value.getClass().isArray()) {
             List<Object> list = new LinkedList<Object>();
-            for (int i = 0; i < ((Object[]) value).length; i++) list.add(complicate(((Object[]) value)[i]));
+            for (int i = 0, length = Array.getLength(value); i < length; i++) list.add(complicate(Array.get(value, i)));
             return list;
         } else if (value instanceof UUID) {
             return Arrays.asList(((UUID) value).getMostSignificantBits(), ((UUID) value).getLeastSignificantBits());

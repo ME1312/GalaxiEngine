@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.ME1312.Galaxi</groupId>
-    <artifactId>GalaxiUtil</artifactId>
+    <artifactId>GalaxiBase</artifactId>
     <version>-PLACEHOLDER</version>
     <packaging>jar</packaging>
 
@@ -19,13 +19,13 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <version>1.30</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
 
     <build>
-        <directory>../../out/compile/target/GalaxiUtil</directory>
+        <directory>../../out/compile/target/GalaxiBase</directory>
         <sourceDirectory>src</sourceDirectory>
         <resources>
             <resource>
@@ -68,7 +68,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
-                    <finalName>GalaxiUtil</finalName>
+                    <finalName>GalaxiBase</finalName>
                     <outputDirectory>../../Artifacts/Maven</outputDirectory>
                 </configuration>
             </plugin>
@@ -83,12 +83,12 @@
                             <goal>javadoc</goal>
                         </goals>
                         <configuration>
-                            <windowtitle>GalaxiUtil Javadoc</windowtitle>
-                            <doctitle>GalaxiUtil Javadoc</doctitle>
+                            <windowtitle>GalaxiBase Javadoc</windowtitle>
+                            <doctitle>GalaxiBase Javadoc</doctitle>
                             <show>public</show>
                             <destDir>./</destDir>
-                            <outputDirectory>${basedir}/../../Javadoc/GalaxiUtil</outputDirectory>
-                            <reportOutputDirectory>${basedir}/../../Javadoc/GalaxiUtil</reportOutputDirectory>
+                            <outputDirectory>${basedir}/../../Javadoc/GalaxiBase</outputDirectory>
+                            <reportOutputDirectory>${basedir}/../../Javadoc/GalaxiBase</reportOutputDirectory>
                             <additionalOptions>-Xdoclint:none</additionalOptions>
                         </configuration>
                     </execution>

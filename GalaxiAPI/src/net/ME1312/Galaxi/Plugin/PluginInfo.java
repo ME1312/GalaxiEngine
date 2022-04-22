@@ -166,7 +166,7 @@ public class PluginInfo implements ExtraDataHandler {
                     pluginMap.put(mainClass, plugin);
                     usedNames.add(name.toLowerCase());
                 } else {
-                    throw new IllegalStateException("Class not annotated by @App or @Plugin: " + mainClass.getCanonicalName());
+                    throw new IllegalStateException("Class not annotated by @App or @Plugin: " + mainClass.getTypeName());
                 }
             } catch (Throwable e) {
                 throw new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main);

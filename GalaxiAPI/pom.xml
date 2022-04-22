@@ -12,7 +12,7 @@
     <dependencies>
         <dependency>
             <groupId>net.ME1312.Galaxi</groupId>
-            <artifactId>GalaxiUtil</artifactId>
+            <artifactId>GalaxiBase</artifactId>
             <version>-PLACEHOLDER</version>
             <scope>compile</scope>
         </dependency>
@@ -86,7 +86,7 @@
                             <additionalOptions>-Xdoclint:none</additionalOptions>
                             <includeDependencySources>true</includeDependencySources>
                             <dependencySourceIncludes>
-                                <dependencySourceInclude>net.ME1312.Galaxi:GalaxiUtil:*</dependencySourceInclude>
+                                <dependencySourceInclude>net.ME1312.Galaxi:GalaxiBase:*</dependencySourceInclude>
                             </dependencySourceIncludes>
                         </configuration>
                     </execution>

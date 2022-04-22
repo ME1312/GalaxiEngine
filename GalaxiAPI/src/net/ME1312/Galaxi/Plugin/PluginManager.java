@@ -99,14 +99,14 @@ public abstract class PluginManager {
                                 if (!update.contains(event)) update.add((Class<? extends Event>) event);
                             } else {
                                 plugin.getLogger().error.println(
-                                        "Cannot register listener \"" + listener.getClass().getCanonicalName() + '.' + method.getName() + "(" + event.getCanonicalName() + ")\":",
-                                        "\"" + event.getCanonicalName() + "\" is not an Event");
+                                        "Cannot register listener \"" + listener.getClass().getTypeName() + '.' + method.getName() + "(" + event.getTypeName() + ")\":",
+                                        "\"" + event.getTypeName() + "\" is not an Event");
                             }
                         } else {
                             LinkedList<String> args = new LinkedList<String>();
-                            for (Class<?> clazz : method.getParameterTypes()) args.add(clazz.getCanonicalName());
+                            for (Class<?> clazz : method.getParameterTypes()) args.add(clazz.getTypeName());
                             plugin.getLogger().error.println(
-                                    "Cannot register listener \"" + listener.getClass().getCanonicalName() + '.' + method.getName() + "(" + args.toString().substring(1, args.toString().length() - 1) + ")\":",
+                                    "Cannot register listener \"" + listener.getClass().getTypeName() + '.' + method.getName() + "(" + args.toString().substring(1, args.toString().length() - 1) + ")\":",
                                     ((method.getParameterTypes().length > 0) ? "Too many" : "No") + " parameters for method to be executed");
                         }
                     }
@@ -290,7 +290,7 @@ public abstract class PluginManager {
     @SuppressWarnings("unchecked")
     public <T extends Event> void executeEvent(Class<T> type, T event) {
         Util.nullpo(event);
-        if (!type.isInstance(event)) throw new ClassCastException(event.getClass().getCanonicalName() + " cannot be cast to " + type.getCanonicalName());
+        if (!type.isInstance(event)) throw new ClassCastException(event.getClass().getTypeName() + " cannot be cast to " + type.getTypeName());
         List<BakedListener> listeners = this.baked.get(type);
 
         if (listeners != null && listeners.size() != 0) {
@@ -302,7 +302,7 @@ public abstract class PluginManager {
                         try {
                             listener.method.invoke(listener.listener, event);
                         } catch (IllegalAccessException e) {
-                            listener.plugin.getLogger().error.println("Cannot access method: \"" + listener.getClass().getCanonicalName() + '.' + listener.method.getName() + "(" + type.getTypeName() + ")\"");
+                            listener.plugin.getLogger().error.println("Cannot access method: \"" + listener.getClass().getTypeName() + '.' + listener.method.getName() + "(" + type.getTypeName() + ")\"");
                             listener.plugin.getLogger().error.println(e);
                         } catch (InvocationTargetException e) {
                             listener.plugin.getLogger().error.println("Event listener for \"" + type.getTypeName() + "\" had an unhandled exception:");
