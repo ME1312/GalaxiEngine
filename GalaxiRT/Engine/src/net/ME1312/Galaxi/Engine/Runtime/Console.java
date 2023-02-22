@@ -5,8 +5,6 @@ import net.ME1312.Galaxi.Engine.CommandParser;
 import net.ME1312.Galaxi.Event.Engine.CommandEvent;
 import net.ME1312.Galaxi.Event.Engine.ConsoleInputEvent;
 import net.ME1312.Galaxi.Galaxi;
-import net.ME1312.Galaxi.Library.Container.ContainedPair;
-import net.ME1312.Galaxi.Library.Container.Pair;
 import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -15,15 +13,16 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.awt.*;
 import java.io.IOError;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 import static net.ME1312.Galaxi.Engine.GalaxiOption.*;
 
 class Console extends CommandParser {
     volatile boolean jstatus;
+    final String jprefix;
     final LineReader jline;
     ConsoleUI window;
     final Thread thread;
@@ -34,6 +33,7 @@ class Console extends CommandParser {
         this.engine = engine;
 
         TerminalBuilder jtb = TerminalBuilder.builder();
+        jprefix = (USE_JLINE.value())? ">" : "";
         if (!USE_JLINE.value()) jtb.dumb(true);
         if (!USE_ANSI.value()) jtb.jansi(false);
         this.jstatus = false;
@@ -114,10 +114,10 @@ class Console extends CommandParser {
             return ANSI_COLOR_MAP[color];
         } else if (color < 232) {
             float x = color - 16;
-            int r = (int) (Math.floor(x / 36f) * 51);
-                  x =                (x % 36f)      ;
-            int g = (int) (Math.floor(x /  6f) * 51);
-            int b = (int) (Math.floor(x %  6f) * 51);
+            int r = (int) ((x / 36f) * 51);
+                  x =      (x % 36f)      ;
+            int g = (int) ((x /  6f) * 51);
+            int b = (int) ((x %  6f) * 51);
             return new Color(r, g, b);
         } else if (color < 256) {
             int gray = (int) (10.2f * (color - 231));
@@ -137,12 +137,17 @@ class Console extends CommandParser {
     public List<String> complete(CommandSender sender, Parsed command) {
         Util.nullpo(sender, command);
 
-        LinkedList<String> candidates = new LinkedList<String>();
+        ArrayList<String> candidates = new ArrayList<String>();
         if (command != null && command.line().codePoints().count() > 0 && (!(command instanceof ParsedInput) || ((ParsedInput) command).isCommand())) {
-            LinkedList<String> arguments = command.words();
-            String label = arguments.getFirst();
-            arguments.removeFirst();
-            String[] args = arguments.toArray(new String[0]);
+            List<String> words;
+            String label = (words = command.words()).get(0);
+            int i = 0, length = command.wordIndex();
+            if (length != 0 && command.rawWordLength() == 0) --length;
+
+            String[] args = new String[length];
+            for (ListIterator<String> li = words.listIterator(1); i < length;) {
+                args[i++] = li.next();
+            }
 
             TreeMap<String, Command> commands = engine.code.commands;
 
@@ -163,33 +168,43 @@ class Console extends CommandParser {
     }
 
     private void read() {
-        jstatus = true;
+        int interrupts = 0;
         try {
-            boolean interrupted = false;
-            do {
+            for (String line;;) try {
                 try {
-                    String line;
-                    while (engine.running && (line = jline.readLine((USE_JLINE.value())?">":"")) != null) {
-                        if (!engine.running || line.replaceAll("\\s", "").length() == 0) continue;
-                        jstatus = false;
-                        read(line);
-                        jstatus = true;
-                    }
-                } catch (UserInterruptException e) {
-                    if (!interrupted) {
-                        interrupted = true;
-                        new Thread(() -> {
-                            engine.getAppInfo().getLogger().warn.println("Interrupt Received");
-                            engine.stop();
-                        }, Galaxi.getInstance().getEngineInfo().getName() + "::Process_Interrupt").start();
-                    }
+                    jstatus = true;
+                    line = jline.readLine(jprefix);
+                } finally {
+                    jstatus = false;
                 }
-            } while (engine.running);
-        } catch (IOError e) {
-        } catch (Exception e) {
+                if (!engine.running) return;
+                if (line.trim().length() == 0) continue;
+                read(line);
+            } catch (UserInterruptException e) {
+                if ((!engine.stopping && !USE_TERMINAL_INTERRUPTS.value()) || e.getPartialLine().trim().length() != 0) {
+                    if (USE_ANSI.value()) {
+                        PrintWriter writer = jline.getTerminal().writer();
+                        writer.print("\u001B[1A\u001B[2K");
+                        writer.print(jprefix);
+                        writer.print(e.getPartialLine());
+                        writer.println("^C");
+                        jline.getTerminal().flush();
+                    }
+                } else if (interrupts < 10) {
+                    jline.getTerminal().writer().println("Terminal interrupt received (press " + (10 - interrupts) + " more time" + ((interrupts == 9)?"":"s") + " to terminate forcefully)");
+                    jline.getTerminal().flush();
+                    if (interrupts++ == 0 && !engine.stopping) new Thread(engine::stop, Galaxi.getInstance().getEngineInfo().getName() + "::Terminal_Interrupt").start();
+                } else {
+                    jline.getTerminal().writer().println("Terminal interrupt received");
+                    jline.getTerminal().flush();
+                    System.exit(Integer.MAX_VALUE);
+                    return;
+                }
+            }
+        } catch (IOError | EndOfFileException e) {
+        } catch (Throwable e) {
             engine.getAppInfo().getLogger().error.println(e);
         }
-        jstatus = false;
     }
     void read(String line) {
         Util.nullpo(line);
@@ -216,11 +231,15 @@ class Console extends CommandParser {
     public Status runCommand(CommandSender sender, Parsed command) {
         Util.nullpo(sender, command);
 
-        LinkedList<String> arguments = command.words();
-        String label = arguments.getFirst();
-        arguments.removeFirst();
-        if (command.rawWordLength() <= 0) arguments.removeLast();
-        String[] args = arguments.toArray(new String[0]);
+        List<String> words;
+        String label = (words = command.words()).get(0);
+        int i = 0, length = command.wordIndex();
+        if (length != 0 && command.rawWordLength() == 0) --length;
+
+        String[] args = new String[length];
+        for (ListIterator<String> li = words.listIterator(1); i < length;) {
+            args[i++] = li.next();
+        }
 
         CommandEvent event = new CommandEvent(engine, sender, (!command.line().startsWith("/"))?command.line():command.line().substring(1), label, args);
         engine.code.executeEvent(event);
@@ -269,10 +288,10 @@ class Console extends CommandParser {
         return builder.toString();
     }
 
-    private String escapeArgument(Pair<String, String> start, String arg, boolean literal, boolean whitespaced, boolean complete) {
+    private String escapeArgument(ParsedInput partial, String arg, boolean literal, boolean whitespaced, boolean complete) {
         Util.nullpo((Object) arg);
-        boolean append = start != null && arg.startsWith(start.value());
-        if (append) arg = arg.substring(start.value().length());
+        boolean append = partial != null && arg.startsWith(partial.word());
+        if (append) arg = arg.substring(partial.word().length());
 
         if (literal) {
             if (!append)
@@ -297,7 +316,7 @@ class Console extends CommandParser {
                 arg += '\"';
             }
         }
-        if (append) arg = start.key() + arg;
+        if (append) arg = partial.rawWord() + arg;
         else if (whitespaced) arg = '\"' + arg;
         return arg;
     }
@@ -306,11 +325,6 @@ class Console extends CommandParser {
     public ParsedInput parseCommand(String command) {
         Util.nullpo(command);
         return parser.parse(command, (int) command.codePoints().count(), true);
-    }
-
-    ParsedInput parse(String input, boolean command) {
-        Util.nullpo(input);
-        return parser.parse(input, (int) input.codePoints().count(), command);
     }
 
     ParsedInput parse(String input) {
@@ -325,7 +339,8 @@ class Console extends CommandParser {
         }
 
         public ParsedInput parse(final String LINE, final int CURSOR, boolean command) throws SyntaxError {
-            final LinkedList<ContainedPair<String, String>> MAPPINGS = new LinkedList<ContainedPair<String, String>>();
+            final ArrayList<String> words = new ArrayList<>();
+            final ArrayList<String> rwords = new ArrayList<>();
 
             StringBuilder part = new StringBuilder();
             int wcursor = 0;
@@ -359,7 +374,8 @@ class Console extends CommandParser {
                     } else {
                         if (!whitespaced && ch == ' ') {
                             if (!between) { // Ends the current word
-                                MAPPINGS.add(new ContainedPair<>(LINE.substring(start, i), part.toString()));
+                                words.add(part.toString());
+                                rwords.add(LINE.substring(start, i));
                                 part = new StringBuilder(LINE.length());
                             }
                             start = i + 1;
@@ -526,20 +542,25 @@ class Console extends CommandParser {
 
             // Construct Data Element
 
-            final String WORD = part.toString();
-            final String RAW_WORD = LINE.substring(start);
+            final String WORD;
+            final String RAW_WORD;
+            final List<String> WORDS = Collections.unmodifiableList(words);
+            final List<String> RAW_WORDS = Collections.unmodifiableList(rwords);
             final int WORD_CURSOR = wcursor;
             final int RAW_WORD_CURSOR = rwcursor;
 
+            final int INDEX = words.size();
             final boolean COMMAND = command;
             final boolean LITERAL = literal;
             final boolean WHITESPACED = whitespaced;
 
-            MAPPINGS.add(new ContainedPair<>(LINE.substring(start), WORD));
+            words.add(WORD = part.toString());
+            rwords.add(RAW_WORD = LINE.substring(start));
             return new ParsedInput() {
+
                 @Override
                 public CharSequence escape(CharSequence argument, boolean complete) {
-                    return escapeArgument(translation(), argument.toString(), LITERAL, WHITESPACED, complete);
+                    return escapeArgument(this, argument.toString(), LITERAL, WHITESPACED, complete);
                 }
 
                 @Override
@@ -553,10 +574,8 @@ class Console extends CommandParser {
                 }
 
                 @Override
-                public LinkedList<String> words() {
-                    LinkedList<String> list = new LinkedList<>();
-                    for (Pair<String, String> e : MAPPINGS) list.add(e.value());
-                    return list;
+                public List<String> words() {
+                    return WORDS;
                 }
 
                 @Override
@@ -566,17 +585,7 @@ class Console extends CommandParser {
 
                 @Override
                 public int wordIndex() {
-                    return (MAPPINGS.size() == 0)?0:MAPPINGS.size() - 1;
-                }
-
-                @Override
-                public Pair<String, String> translation() {
-                    return (MAPPINGS.size() == 0)?null:MAPPINGS.getLast();
-                }
-
-                @Override
-                public LinkedList<Pair<String, String>> translations() {
-                    return new LinkedList<>(MAPPINGS);
+                    return INDEX;
                 }
 
                 @Override
@@ -585,10 +594,8 @@ class Console extends CommandParser {
                 }
 
                 @Override
-                public LinkedList<String> rawWords() {
-                    LinkedList<String> list = new LinkedList<>();
-                    for (Pair<String, String> e : MAPPINGS) list.add(e.key());
-                    return list;
+                public List<String> rawWords() {
+                    return RAW_WORDS;
                 }
 
                 @Override

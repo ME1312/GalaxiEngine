@@ -5,25 +5,18 @@ package net.ME1312.Galaxi.Library;
  * Remember that use of this class should always make your code shorter &mdash; it is not a replacement for native try-catch blocks
  */
 public final class Try {
-    private final Class<? extends Throwable>[] types;
-    private final boolean suppress;
+    private final java.util.function.Consumer<Throwable> sup;
 
     /**
      * Handle all exceptions
      */
-    public static final Try all = new Try(true);
+    public static final Try all = new Try(Try::suppress);
 
     /**
      * Handle no exceptions
      * @see Util#sneakyThrow(Throwable) Use <i>Util.sneakyThrow()</i> to sneaky throw exceptions directly
      */
-    public static final Try none = new Try(false);
-
-    @SuppressWarnings("unchecked")
-    private Try(boolean suppress) {
-        this.types = new Class[0];
-        this.suppress = suppress;
-    }
+    public static final Try none = new Try(Try::sneakyThrow);
 
     /**
      * Handle specific exceptions
@@ -33,13 +26,28 @@ public final class Try {
      */
     @SafeVarargs
     public static Try expect(Class<? extends Throwable>... exceptions) {
-        return new Try(exceptions);
+        return new Try(Util.nullpo(exceptions));
+    }
+    private Try(Class<? extends Throwable>[] $) {
+        this.sup = new java.util.function.Consumer<Throwable>() {
+            public void accept(Throwable e) {
+                for (Class<? extends Throwable> t : $) {
+                    if (t.isInstance(e)) {
+                        return;
+                    }
+                }
+                Try.sneakyThrow(e);
+            }
+        };
     }
 
-    private Try(Class<? extends Throwable>[] exceptions) {
-        Util.nullpo((Object[]) exceptions);
-        this.types = exceptions;
-        this.suppress = false;
+    /**
+     * Handle specific exceptions
+     *
+     * @param suppressor Exception suppressor
+     */
+    public Try(java.util.function.Consumer<Throwable> suppressor) {
+        this.sup = Util.nullpo(suppressor);
     }
 
     /**
@@ -53,7 +61,7 @@ public final class Try {
             code.run();
             return true;
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             return false;
         }
     }
@@ -71,7 +79,7 @@ public final class Try {
             code.run();
             return true;
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             err.accept(e);
             return false;
         }
@@ -87,8 +95,8 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
-            return null;
+            sup.accept(e);
+            return sneakyNull();
         }
     }
 
@@ -103,7 +111,7 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             return def;
         }
     }
@@ -121,7 +129,7 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             err.accept(e);
             return def;
         }
@@ -139,9 +147,9 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             err.accept(e);
-            return null;
+            return sneakyNull();
         }
     }
 
@@ -157,7 +165,7 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             return def.get();
         }
     }
@@ -174,7 +182,7 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             return def.apply(e);
         }
     }
@@ -192,30 +200,40 @@ public final class Try {
         try {
             return value.run();
         } catch (Throwable e) {
-            suppress(e);
+            sup.accept(e);
             err.accept(e);
             return def.get();
         }
     }
 
     /**
-     * Suppresses an exception that we're handling
+     * Suppresses all exceptions
      *
      * @param e Exception
      */
-    private void suppress(Throwable e) {
-        for (Class<? extends Throwable> t : types) {
-            if (t.isInstance(e)) {
-                return;
-            }
-        }
-        if (suppress) return;
-        Try.<RuntimeException>sneakyThrow(e);
+    @SuppressWarnings("UnnecessaryReturnStatement")
+    private static void suppress(Throwable e) {
+        return;
     }
 
+    /**
+     * Re-throws all exceptions
+     *
+     * @param e Exception
+     * @throws T The supplied Exception
+     */
     @SuppressWarnings("unchecked")
     static <T extends Throwable> T sneakyThrow(Throwable e) throws T {
         throw (T) e;
+    }
+
+    /**
+     * Supplies a null value in the event of an expected exception
+     *
+     * @return <i>null</i>
+     */
+    private <T> T sneakyNull() {
+        return null;
     }
 
     /**

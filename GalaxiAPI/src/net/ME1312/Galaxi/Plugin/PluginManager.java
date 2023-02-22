@@ -7,13 +7,12 @@ import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.*;
 
 public abstract class PluginManager {
-    private final Map<Class<? extends Event>, Map<Short, Map<PluginInfo, Map<Object, List<BakedListener>>>>> listeners = new HashMap<>();
-    private final Map<Class<? extends Event>, List<BakedListener>> baked = new HashMap<>();
+    private final Map<Class<? extends Event>, EventManager> events = new HashMap<>();
     protected final TreeMap<String, Command> commands = new TreeMap<String, Command>();
 
     /**
@@ -79,51 +78,60 @@ public abstract class PluginManager {
     /**
      * Register Event Listeners
      *
-     * @see Subscribe
-     * @param plugin Plugin
+     * @param plugin    Plugin
      * @param listeners Listeners
+     * @see Subscribe @Subscribe
      */
     @SuppressWarnings("unchecked")
     public void registerListeners(PluginInfo plugin, Object... listeners) {
         Util.nullpo(plugin);
         Util.nullpo(listeners);
-        synchronized (this.listeners) {
-            LinkedList<Class<? extends Event>> update = new LinkedList<>();
-            for (Object listener : listeners) {
-                for (Method method : listener.getClass().getMethods()) {
-                    if (method.isAnnotationPresent(Subscribe.class)) {
-                        if (method.getParameterTypes().length == 1) {
-                            Class<?> event = method.getParameterTypes()[0];
-                            if (Event.class.isAssignableFrom(event)) {
-                                registerListener((Class<? extends Event>) event, method.getAnnotation(Subscribe.class).order(), plugin, listener, method, method.getAnnotation(Subscribe.class).override());
-                                if (!update.contains(event)) update.add((Class<? extends Event>) event);
-                            } else {
-                                plugin.getLogger().error.println(
-                                        "Cannot register listener \"" + listener.getClass().getTypeName() + '.' + method.getName() + "(" + event.getTypeName() + ")\":",
-                                        "\"" + event.getTypeName() + "\" is not an Event");
+        List<EventManager> managers = new ArrayList<>();
+        for (Object listener : listeners) {
+            for (Method method : listener.getClass().getMethods()) {
+                Subscribe annotation = method.getAnnotation(Subscribe.class);
+                if (annotation != null) {
+                    if (method.getParameterTypes().length == 1) {
+                        Class<?> event = method.getParameterTypes()[0];
+                        if (Event.class.isAssignableFrom(event)) {
+                            EventManager manager = EventManager.get(events, (Class<? extends Event>) event);
+                            try {
+                                manager.register(new EventSubscription(-1, -1,
+                                        (Class<? extends Event>) event,
+                                        annotation.order(),
+                                        plugin,
+                                        listener,
+                                        method, MethodHandles.publicLookup().unreflect(method).bindTo(listener).asType(EventSubscription.HANDLE_TYPE),
+                                        annotation.override()
+                                ));
+                                managers.add(manager);
+                            } catch (IllegalAccessException e) {
+                                plugin.getLogger().error.println(e);
                             }
                         } else {
-                            LinkedList<String> args = new LinkedList<String>();
-                            for (Class<?> clazz : method.getParameterTypes()) args.add(clazz.getTypeName());
                             plugin.getLogger().error.println(
-                                    "Cannot register listener \"" + listener.getClass().getTypeName() + '.' + method.getName() + "(" + args.toString().substring(1, args.toString().length() - 1) + ")\":",
-                                    ((method.getParameterTypes().length > 0) ? "Too many" : "No") + " parameters for method to be executed");
+                                    "Cannot register listener \"" + listener.getClass().getTypeName() + '.' + method.getName() + "(" + event.getTypeName() + ")\":",
+                                    "\"" + event.getTypeName() + "\" is not an Event");
                         }
+                    } else {
+                        String args = Arrays.toString(method.getParameterTypes());
+                        plugin.getLogger().error.println(
+                                "Cannot register listener \"" + listener.getClass().getTypeName() + '.' + method.getName() + "(" + args.substring(1, args.length() - 1) + ")\":",
+                                ((method.getParameterTypes().length > 0)? "Too many" : "No") + " parameters for method to be executed");
                     }
                 }
             }
-
-            bakeEvents(update);
         }
+        for (Iterator<EventManager> i = managers.iterator(); i.hasNext(); i.next().bake());
     }
 
     /**
      * Register Event Listeners
      *
-     * @param plugin Plugin
-     * @param event Event Type
+     * @param plugin    Plugin
+     * @param event     Event Type
      * @param listeners Listeners
-     * @param <T> Event Type
+     * @param <T>       Event Type
      */
     @SafeVarargs
     public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Listener<? extends T>... listeners) {
@@ -134,50 +142,47 @@ public abstract class PluginManager {
     /**
      * Register Event Listeners
      *
-     * @see ListenerOrder
-     * @param plugin Plugin
-     * @param event Event Type
-     * @param order Listener Order (will convert to short)
+     * @param plugin    Plugin
+     * @param event     Event Type
+     * @param order     Listener Order (will convert to short)
      * @param listeners Listeners
-     * @param <T> Event Type
+     * @param <T>       Event Type
+     * @see ListenerOrder
      */
-    @SuppressWarnings("rawtypes")
     @SafeVarargs
     public final <T extends Event> void registerListener(PluginInfo plugin, Class<T> event, Number order, Listener<? extends T>... listeners) {
         Util.nullpo(plugin, event);
         Util.nullpo(listeners);
-        synchronized (this.listeners) {
-            for (Listener listener : listeners) {
-                try {
-                    short o;
-                    Method m = Listener.class.getMethod("run", Event.class);
-                    if (order == null) {
-                        if (m.isAnnotationPresent(Subscribe.class)) {
-                            o = m.getAnnotation(Subscribe.class).order();
-                        } else o = ListenerOrder.NORMAL;
-                    } else o = order.shortValue();
+        EventManager manager = EventManager.get(events, event);
+        for (int i = 0; i < listeners.length; ++i) {
+            try {
+                Method method = Listener.class.getMethod("run", Event.class);
+                Subscribe annotation = method.getAnnotation(Subscribe.class);
 
-                    registerListener(event, o, plugin, listener, null, m.isAnnotationPresent(Subscribe.class) && m.getAnnotation(Subscribe.class).override());
-                } catch (NoSuchMethodException e) {
-                    Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
-                }
+                manager.register(new EventSubscription(-1, -1,
+                        event,
+                        (order == null)? ((annotation == null)? ListenerOrder.NORMAL : annotation.order()) : order.shortValue(),
+                        plugin,
+                        listeners[i],
+                        method, null,
+                        annotation == null || annotation.override()
+                ));
+            } catch (NoSuchMethodException e) {
+                Galaxi.getInstance().getAppInfo().getLogger().error.println(e);
             }
-
-            bakeEvent(event);
         }
+        manager.bake();
     }
 
-    private void registerListener(Class<? extends Event> event, short order, PluginInfo plugin, Object listener, Method method, boolean override) {
-        Map<Short, Map<PluginInfo, Map<Object, List<BakedListener>>>> orders = this.listeners.getOrDefault(event, new TreeMap<>());
-        Map<PluginInfo, Map<Object, List<BakedListener>>> plugins = orders.getOrDefault(order, new LinkedHashMap<>());
-        Map<Object, List<BakedListener>> listeners = plugins.getOrDefault(plugin, new LinkedHashMap<>());
-        List<BakedListener> actions = listeners.getOrDefault(listener, new LinkedList<>());
-
-        actions.add(new BakedListener(event, order, plugin, listener, method, override));
-        listeners.put(listener, actions);
-        plugins.put(plugin, listeners);
-        orders.put(order, plugins);
-        this.listeners.put(event, orders);
+    /**
+     * Get Registered Event Listeners
+     *
+     * @param type Event Type
+     * @return Event Listeners
+     */
+    public List<Subscriber> getListeners(Class<? extends Event> type) {
+        EventManager manager = events.get(type);
+        return (manager == null)? Collections.emptyList() : Collections.unmodifiableList(Arrays.asList(manager.snapshot.normal));
     }
 
     /**
@@ -186,139 +191,88 @@ public abstract class PluginManager {
      * @param plugin Plugin
      */
     public void unregisterListeners(PluginInfo plugin) {
-        unregisterListeners(plugin, (Object[]) null);
+        EventManager.get(events, Event.class).unregister(plugin, null).bake();
     }
 
     /**
      * Unregister Event Listeners
      *
-     * @param plugin Plugin
+     * @param plugin    Plugin
      * @param listeners Listeners
      */
     public void unregisterListeners(PluginInfo plugin, Object... listeners) {
-        Util.nullpo(plugin);
         Util.nullpo(listeners);
-        synchronized (this.listeners) {
-            LinkedList<Class<? extends Event>> update = new LinkedList<>();
-            for (Map.Entry<Class<? extends Event>, Map<Short, Map<PluginInfo, Map<Object, List<BakedListener>>>>> event : this.listeners.entrySet()) {
-                for (Map<PluginInfo, Map<Object, List<BakedListener>>> plugins : event.getValue().values()) {
-                    if (plugins.containsKey(plugin)) {
-                        if (listeners == null) {
-                            plugins.remove(plugin);
-                            if (!update.contains(event.getKey())) update.add(event.getKey());
-                        } else {
-                            Map<Object, List<BakedListener>> map = plugins.get(plugin);
-                            for (Object listener : listeners) {
-                                if (map.containsKey(listener)) {
-                                    map.remove(listener);
-                                    if (!update.contains(event.getKey())) update.add(event.getKey());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            bakeEvents(update);
-        }
-    }
-
-    private static final class BakedListener {
-        private final Class<? extends Event> event;
-        private final short order;
-        private final PluginInfo plugin;
-        private final Object listener;
-        private final Method method;
-        private final boolean override;
-
-        private BakedListener(Class<? extends Event> event, short order, PluginInfo plugin, Object listener, Method method, boolean override) {
-            this.event = event;
-            this.order = order;
-            this.plugin = plugin;
-            this.listener = listener;
-            this.method = method;
-            this.override = override;
-        }
-    }
-
-    private void bakeEvents(List<Class<? extends Event>> events) {
-        for (Class<? extends Event> event : events) {
-            bakeEvent(event);
-        }
-    }
-
-    private void bakeEvent(Class<? extends Event> event) {
-        LinkedList<BakedListener> baked = new LinkedList<BakedListener>();
-        boolean reverse = event.isAnnotationPresent(ReverseOrder.class);
-        if (this.listeners.containsKey(event)) {
-            for (Map.Entry<Short, Map<PluginInfo, Map<Object, List<BakedListener>>>> order : this.listeners.get(event).entrySet()) {
-                for (Map.Entry<PluginInfo, Map<Object, List<BakedListener>>> plugin : order.getValue().entrySet()) {
-                    for (Map.Entry<Object, List<BakedListener>> listener : plugin.getValue().entrySet()) {
-                        for (BakedListener action : listener.getValue()) {
-                            if (reverse) {
-                                baked.addFirst(action);
-                            } else {
-                                baked.addLast(action);
-                            }
-                        }
-                    }
-                }
-            }
-            this.baked.put(event, baked);
-        } else {
-            this.baked.remove(event);
-        }
+        EventManager.get(events, Event.class).unregister(plugin, listeners).bake();
     }
 
     /**
      * Run an Event
      *
-     * @param event SubEvent
+     * @param event Event
      */
     @SuppressWarnings("unchecked")
-    public void executeEvent(Event event) {
-        executeEvent((Class<Event>) event.getClass(), event);
+    public boolean executeEvent(Event event) {
+        return executeEvent((Class<Event>) event.getClass(), event);
     }
 
     /**
-     * Run an Event (as super class)
+     * Run an Event (as its super class)
      *
-     * @param type Super Class
-     * @param event SubEvent
-     * @param <T> Event Type
+     * @param type  Super Class
+     * @param event Event
+     * @param <T>   Event Type
+     * @return <i>true</i> if the event was not cancelled
      */
-    @SuppressWarnings("unchecked")
-    public <T extends Event> void executeEvent(Class<T> type, T event) {
-        Util.nullpo(event);
-        if (!type.isInstance(event)) throw new ClassCastException(event.getClass().getTypeName() + " cannot be cast to " + type.getTypeName());
-        List<BakedListener> listeners = this.baked.get(type);
+    @SuppressWarnings({"unchecked", "AssignmentUsedAsCondition"})
+    public <T extends Event> boolean executeEvent(Class<T> type, T event) {
+        if (Util.nullpo(type) == Event.class) throw new IllegalArgumentException("Cannot execute the base event class");
+        if (!type.isInstance(event)) throw new ClassCastException(event.getClass().getTypeName() + '@' + Integer.toHexString(event.hashCode()) + " is not an instance of " + type.getTypeName());
+        EventManager manager = events.get(type);
 
-        if (listeners != null && listeners.size() != 0) {
-            Container<PluginInfo> plugin = Try.all.getOrSupply(() -> Util.reflect(Event.class.getDeclaredField("plugin"), event), Container::new);
-            for (BakedListener listener : listeners) {
-                plugin.value = listener.plugin;
-                if (!(event instanceof Cancellable) || !((Cancellable) event).isCancelled() || listener.override) {
-                    if (listener.method != null) {
-                        try {
-                            listener.method.invoke(listener.listener, event);
-                        } catch (IllegalAccessException e) {
-                            listener.plugin.getLogger().error.println("Cannot access method: \"" + listener.getClass().getTypeName() + '.' + listener.method.getName() + "(" + type.getTypeName() + ")\"");
-                            listener.plugin.getLogger().error.println(e);
-                        } catch (InvocationTargetException e) {
-                            listener.plugin.getLogger().error.println("Event listener for \"" + type.getTypeName() + "\" had an unhandled exception:");
-                            listener.plugin.getLogger().error.println(e.getTargetException());
+        if (manager != null) {
+            Cancellable cancel = (event instanceof Cancellable)? ((Cancellable) event) : new Cancellable() {
+                @Override
+                public boolean isCancelled() {
+                    return false;
+                }
+            };
+            boolean normal;
+            EventSnapshot snapshot = manager.snapshot;
+            EventSubscription[] current = (normal = !cancel.isCancelled())? snapshot.normal : snapshot.overrides;
+
+            if (current.length != 0) {
+                Container<PluginInfo> plugin = Try.none.get(() -> (Container<PluginInfo>) EventManager.PLUGIN_REFERENCE.invokeExact((Event) event));
+
+                if (manager.reversed) {
+                    for (int i = current.length; i > 0;) {
+                        if (cancel.isCancelled() != current[--i].execute(plugin, cancel, event)) {
+                            if (!(normal = !normal)) { // if (normal == true)
+                                i = current[i].iOverride;
+                                current = snapshot.overrides;
+                            } else {
+                                i = current[i].iNormal;
+                                current = snapshot.normal;
+                            }
                         }
-                    } else if (listener.listener instanceof Listener) {
-                        try {
-                            ((Listener<T>) listener.listener).run(event);
-                        } catch (Throwable e) {
-                            listener.plugin.getLogger().error.println("Event listener for \"" + type.getTypeName() + "\" had an unhandled exception:");
-                            listener.plugin.getLogger().error.println(e);
+                    }
+                } else {
+                    for (int i = 0; i < current.length; ++i) {
+                        if (cancel.isCancelled() != current[i].execute(plugin, cancel, event)) {
+                            if (!(normal = !normal)) { // if (normal == true)
+                                i = current[i].iOverride;
+                                current = snapshot.overrides;
+                            } else {
+                                i = current[i].iNormal;
+                                current = snapshot.normal;
+                            }
                         }
                     }
                 }
+                plugin.value = null;
+                return normal;
             }
-            plugin.value = null;
         }
+        return true;
     }
+
 }

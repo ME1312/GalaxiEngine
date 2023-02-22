@@ -8,6 +8,9 @@ import net.ME1312.Galaxi.Library.Try;
 import net.ME1312.Galaxi.Library.Util;
 import net.ME1312.Galaxi.Log.ConsoleText;
 
+import org.fusesource.jansi.AnsiMode;
+import org.fusesource.jansi.io.AnsiOutputStream;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
@@ -52,7 +55,7 @@ public final class ConsoleWindow implements ConsoleUI {
     private JTextPane log;
     private JScrollPane vScroll;
     private JScrollBar hScroll;
-    private List<Integer> eScroll = new ArrayList<Integer>();
+    private HashSet<Integer> eScroll = new HashSet<Integer>();
     private JPanel find;
     private JTextField findT;
     private JButton findN;
@@ -66,7 +69,7 @@ public final class ConsoleWindow implements ConsoleUI {
     private long sbytes = -Long.MAX_VALUE;
     private LinkedList<Long> slines = new LinkedList<Long>();
     private LinkedList<Runnable> spost = new LinkedList<Runnable>();
-    private AnsiUIOutputStream stream = HTMLogger.wrap(new OutputStream() {
+    private AnsiOutputStream stream = HTMLogger.wrap(new OutputStream() {
         private final ByteArrayOutputStream scache = new ByteArrayOutputStream();
 
         private int countLines(String str) {
@@ -109,10 +112,16 @@ public final class ConsoleWindow implements ConsoleUI {
             spost.clear();
             scache.reset();
         }
-    }, new HTMLogger.HTMConstructor<AnsiUIOutputStream>() {
+
         @Override
-        public AnsiUIOutputStream construct(OutputStream raw, OutputStream wrapped) {
-            return new AnsiUIOutputStream(raw, wrapped);
+        public void close() throws IOException {
+            super.close();
+            open = false;
+        }
+    }, new HTMLogger.New() {
+        @Override
+        public HTMLogger value(OutputStream raw, OutputStream wrapped) {
+            return new HTMExtension(raw, wrapped);
         }
     });
     private boolean[] kpressed = new boolean[65535];
@@ -382,7 +391,7 @@ public final class ConsoleWindow implements ConsoleUI {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                stream.ansi(((AbstractButton) event.getSource()).getModel().isSelected());
+                stream.setMode((stream.getMode() == AnsiMode.Strip)? AnsiMode.Default : AnsiMode.Strip);
                 ConsoleWindow.this.clear();
                 ConsoleWindow.this.loadContent();
                 ConsoleWindow.this.hScroll();
@@ -640,7 +649,7 @@ public final class ConsoleWindow implements ConsoleUI {
                     eScroll.add(event.getValue());
                     hScroll.setValue(event.getValue());
                 } else {
-                    eScroll.remove((Object) event.getValue());
+                    eScroll.remove(event.getValue());
                 }
             }
         });
@@ -651,7 +660,7 @@ public final class ConsoleWindow implements ConsoleUI {
                     eScroll.add(event.getValue());
                     vScroll.getHorizontalScrollBar().setValue(event.getValue());
                 } else {
-                    eScroll.remove((Object) event.getValue());
+                    eScroll.remove(event.getValue());
                 }
             }
         });
@@ -802,8 +811,7 @@ public final class ConsoleWindow implements ConsoleUI {
 
             // Submit a newline if necessary
             if (i != -1) {
-                stream.closeAttributes();
-                stream.write("\u00A0".getBytes(UTF_8));
+                stream.write("\u001B[m\u00A0".getBytes(UTF_8));
                 stream.flush();
                 stream.write("\n\u00A0".getBytes(UTF_8));
                 slines.add(sbytes);
@@ -841,41 +849,37 @@ public final class ConsoleWindow implements ConsoleUI {
     }
 
     private void shutdown() {
-        new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Shutdown") {
-            @Override
-            public void run() {
-                try {
-                    if (Engine.getInstance().stopping) {
-                        Object[] options = {"\u00A0Terminate Program\u00A0", "\u00A0Run in the Background\u00A0", "\u00A0Close This Window\u00A0"};
-                        switch (JOptionPane.showOptionDialog(window,
-                                Galaxi.getInstance().getAppInfo().getDisplayName() + " is shutting down and will close automatically.\n\n" +
+        if (Engine.getInstance().stopping) {
+            Object[] options = {"\u00A0Terminate Program\u00A0", "\u00A0Run in the Background\u00A0", "\u00A0Close This Window\u00A0"};
+            switch (JOptionPane.showOptionDialog(window,
+                    Galaxi.getInstance().getAppInfo().getDisplayName() + " is shutting down and will close automatically.\n\n" +
 
-                                        "If this is not happening, for whatever reason,\n" +
-                                        "you can terminate the program from this screen.\n" +
-                                        "Terminating a program can cause some undesirable consequences,\n" +
-                                        "however, such as data loss or corruption.\n\n" +
+                            "If this is not happening, for whatever reason,\n" +
+                            "you can terminate the program from this screen.\n" +
+                            "Terminating a program can cause some undesirable consequences,\n" +
+                            "however, such as data loss or corruption.\n\n" +
 
-                                        "You can also choose to finish running the program in the background,\u00A0\u00A0\n" +
-                                        "but you will not be able to reopen this console window.\n\n" +
+                            "You can also choose to finish running the program in the background,\u00A0\u00A0\n" +
+                            "but you will not be able to reopen this console window.\n\n" +
 
-                                        "What would you like to do?\n",
-                                "End Program",
-                                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2])) {
-                            case JOptionPane.YES_OPTION:
-                                System.exit(Integer.MAX_VALUE);
-                                break;
-                            case JOptionPane.NO_OPTION:
-                                Engine.getInstance().getCommandProcessor().closeWindow(true);
-                                break;
-                        }
-                    } else {
-                        Engine.getInstance().stop();
-                    }
-                } catch (Exception ex) {
-                    Galaxi.getInstance().getAppInfo().getLogger().error.println(ex);
-                }
+                            "What would you like to do?\n",
+                    "End Program",
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2])) {
+                case JOptionPane.YES_OPTION:
+                    System.exit(Integer.MAX_VALUE);
+                    break;
+                case JOptionPane.NO_OPTION:
+                    Engine.getInstance().getCommandProcessor().closeWindow(true);
+                    break;
             }
-        }.start();
+        } else {
+            new Thread(Galaxi.getInstance().getEngineInfo().getName() + "::AWT_Shutdown") {
+                @Override
+                public void run() {
+                    Engine.getInstance().stop();
+                }
+            }.start();
+        }
     }
 
     private void hScroll() {
@@ -1046,18 +1050,14 @@ public final class ConsoleWindow implements ConsoleUI {
             }
         }
     }
-    private class AnsiUIOutputStream extends HTMLogger {
-        private AnsiUIOutputStream(OutputStream raw, OutputStream wrapped) {
+    private class HTMExtension extends HTMLogger {
+        private HTMExtension(OutputStream raw, OutputStream wrapped) {
             super(raw, wrapped);
             nbsp = true;
         }
 
-        private void ansi(boolean value) {
-            ansi = value;
-        }
-
         @Override
-        protected boolean allowHyperlink(String link) {
+        protected boolean allowHyperlinks(String link) {
             return true;
         }
 
@@ -1073,7 +1073,7 @@ public final class ConsoleWindow implements ConsoleUI {
 
         @Override
         protected void processEraseScreen(int mode) throws IOException {
-            if (ansi) spost.add(new Runnable() {
+            spost.add(new Runnable() {
                 @Override
                 public void run() {
                     ConsoleWindow.this.clear();
@@ -1084,7 +1084,7 @@ public final class ConsoleWindow implements ConsoleUI {
 
         @Override
         protected void processDeleteLine(final int amount) throws IOException {
-            if (ansi) spost.add(new Runnable() {
+            spost.add(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -1100,12 +1100,6 @@ public final class ConsoleWindow implements ConsoleUI {
                     } catch (Exception e) {}
                 }
             });
-        }
-
-        @Override
-        public void close() throws IOException {
-            open = false;
-            super.close();
         }
     }
     private class SmartScroller implements AdjustmentListener {

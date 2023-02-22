@@ -1,6 +1,7 @@
 package net.ME1312.Galaxi.Event.Engine;
 
-import net.ME1312.Galaxi.Event.CancellableEvent;
+import net.ME1312.Galaxi.Event.Cancellable;
+import net.ME1312.Galaxi.Event.Event;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
 
@@ -9,7 +10,7 @@ import net.ME1312.Galaxi.Library.Util;
  *
  * @see CommandEvent Command-specific Event
  */
-public class ConsoleInputEvent extends CancellableEvent {
+public class ConsoleInputEvent extends Event implements Cancellable {
     private final String input;
 
     /**

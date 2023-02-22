@@ -8,8 +8,16 @@ import java.lang.annotation.*;
  *
  * @see ListenerOrder
  */
+@Inherited
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface ReverseOrder {
+
+    /**
+     * This can be set to revert the effect of this annotation
+     *
+     * @return Reversed Status
+     */
+    boolean value() default true;
 }

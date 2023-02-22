@@ -1,10 +1,5 @@
 package net.ME1312.Galaxi.Engine.Runtime;
 
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiString;
-
-import static net.ME1312.Galaxi.Engine.GalaxiOption.USE_ANSI;
-
 final class ConsoleLogger {
     private StringBuilder buffer;
     private final Console console;
@@ -32,10 +27,7 @@ final class ConsoleLogger {
                     buffer.append(s);
                 }
 
-                if (USE_ANSI.value()) {
-                    buffer.append(Ansi.ansi().a(Ansi.Attribute.RESET));
-                    console.jline.printAbove(buffer.toString());
-                } else console.jline.printAbove((String) new AnsiString(buffer.toString()).getPlain());
+                console.jline.printAbove(buffer.append("\u001B[m").toString());
                 console.jline.getTerminal().flush();
             } else {
                 buffer.append(s);

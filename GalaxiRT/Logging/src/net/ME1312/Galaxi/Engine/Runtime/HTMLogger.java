@@ -2,7 +2,11 @@ package net.ME1312.Galaxi.Engine.Runtime;
 
 import net.ME1312.Galaxi.Library.Container.Container;
 
-import org.fusesource.jansi.AnsiOutputStream;
+import org.fusesource.jansi.AnsiColors;
+import org.fusesource.jansi.AnsiMode;
+import org.fusesource.jansi.AnsiType;
+import org.fusesource.jansi.io.AnsiOutputStream;
+import org.fusesource.jansi.io.AnsiProcessor;
 
 import java.awt.*;
 import java.io.IOException;
@@ -12,7 +16,7 @@ import java.util.Locale;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-class HTMLogger extends AnsiOutputStream {
+class HTMLogger extends AnsiProcessor {
     private static final String[] ANSI_COLOR_MAP = new String[8];
     private static final String[] ANSI_BRIGHT_COLOR_MAP = new String[8];
     private static final byte[] BYTES_NBSP = "\u00A0".getBytes(UTF_8);
@@ -21,23 +25,18 @@ class HTMLogger extends AnsiOutputStream {
     private LinkedList<String> currentAttributes = new LinkedList<String>();
     private LinkedList<String> queue = new LinkedList<String>();
     private OutputStream raw;
-    boolean ansi = true;
     boolean nbsp = false;
     private boolean underline = false;
     private boolean strikethrough = false;
 
-    static HTMLogger wrap(OutputStream raw) {
-        return wrap(raw, HTMLogger::new);
-    }
-
-    static <T extends HTMLogger> T wrap(OutputStream raw, HTMConstructor<T> constructor) {
-        Container<T> html = new Container<T>(null);
-        html.value(constructor.construct(raw, new OutputStream() {
+    static AnsiOutputStream wrap(OutputStream raw, New constructor) {
+        Container<HTMLogger> html = new Container<>();
+        OutputStream wrapped = new OutputStream() {
             private boolean nbsp = false;
 
             @Override
             public void write(int data) throws IOException {
-                HTMLogger htm = html.value();
+                HTMLogger htm = html.value;
                 if (htm.queue.size() > 0) {
                     LinkedList<String> queue = htm.queue;
                     htm.queue = new LinkedList<>();
@@ -69,15 +68,36 @@ class HTMLogger extends AnsiOutputStream {
                     }
                 }
             }
-        }));
-        return html.value();
+
+            @Override
+            public void flush() throws IOException {
+                raw.flush();
+            }
+
+            @Override
+            public void close() throws IOException {
+                html.value.closeAttributes();
+                raw.close();
+            }
+        };
+
+        return new AnsiOutputStream(
+                wrapped, () -> Integer.MAX_VALUE,
+                AnsiMode.Default, html.value = constructor.value(raw, wrapped),
+                AnsiType.Native, AnsiColors.TrueColor,
+                UTF_8,
+                null, null,
+                true
+        );
     }
+
+    interface New {
+        HTMLogger value(OutputStream raw, OutputStream wrapped);
+    }
+
     HTMLogger(final OutputStream raw, OutputStream wrapped) {
         super(wrapped);
         this.raw = raw;
-    }
-    public interface HTMConstructor<T extends HTMLogger> {
-        T construct(OutputStream raw, OutputStream wrapped);
     }
 
     private void write(String s) throws IOException {
@@ -155,7 +175,7 @@ class HTMLogger extends AnsiOutputStream {
 
     @Override
     protected void processSetAttribute(int attribute) throws IOException {
-        if (ansi) switch(attribute) {
+        switch(attribute) {
             case 1:
                 closeAttribute("b");
                 writeAttribute("b");
@@ -203,17 +223,17 @@ class HTMLogger extends AnsiOutputStream {
     @Override
     protected void processUnknownOperatingSystemCommand(int label, String arg) {
         try {
-            if (ansi && label == 8) {
+            if (label == 8) {
                 closeAttribute("a");
                 String[] args = arg.split(";", 3);
-                if (args.length > 1 && args[1].length() > 0 && allowHyperlink(args[1])) {
+                if (args.length > 1 && args[1].length() > 0 && allowHyperlinks(args[1])) {
                     writeAttribute("a href=\"" + args[1].replace("&", "&amp;").replace("<", "&lt;").replace("\"", "&quot;") + "\" target=\"_blank\"");
                 }
             }
         } catch (Exception e) {}
     }
 
-    protected boolean allowHyperlink(String link) {
+    protected boolean allowHyperlinks(String link) {
         if (link.toLowerCase(Locale.ENGLISH).startsWith("mailto:execute@galaxi.engine")) {
             return false;
         } else {
@@ -222,7 +242,7 @@ class HTMLogger extends AnsiOutputStream {
     }
 
     @Override
-    protected void processAttributeRest() throws IOException {
+    protected void processAttributeReset() throws IOException {
         closeAttributes();
     }
 
@@ -258,29 +278,23 @@ class HTMLogger extends AnsiOutputStream {
 
     @Override
     protected void processSetForegroundColor(int color, boolean bright) throws IOException {
-        if (ansi) {
-            processDefaultTextColor();
-            writeAttribute("span style=\"color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
-            renderTextDecoration();
-        }
+        processDefaultTextColor();
+        writeAttribute("span style=\"color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
+        renderTextDecoration();
     }
 
     @Override
     protected void processSetForegroundColorExt(int index) throws IOException {
-        if (ansi) {
-            processDefaultTextColor();
-            writeAttribute("span style=\"color:#" + parse256(index) + "\"");
-            renderTextDecoration();
-        }
+        processDefaultTextColor();
+        writeAttribute("span style=\"color:#" + parse256(index) + "\"");
+        renderTextDecoration();
     }
 
     @Override
     protected void processSetForegroundColorExt(int r, int g, int b) throws IOException {
-        if (ansi) {
-            processDefaultTextColor();
-            writeAttribute("span style=\"color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
-            renderTextDecoration();
-        }
+        processDefaultTextColor();
+        writeAttribute("span style=\"color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
+        renderTextDecoration();
     }
 
     @Override
@@ -295,38 +309,19 @@ class HTMLogger extends AnsiOutputStream {
 
     @Override
     protected void processSetBackgroundColor(int color, boolean bright) throws IOException {
-        if (ansi) {
-            processDefaultBackgroundColor();
-            writeAttribute("span style=\"background-color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
-        }
+        processDefaultBackgroundColor();
+        writeAttribute("span style=\"background-color:#" + ((!bright)?ANSI_COLOR_MAP:ANSI_BRIGHT_COLOR_MAP)[color] + "\"");
     }
 
     @Override
     protected void processSetBackgroundColorExt(int index) throws IOException {
-        if (ansi) {
-            processDefaultBackgroundColor();
-            writeAttribute("span style=\"background-color:#" + parse256(index) + "\"");
-        }
+        processDefaultBackgroundColor();
+        writeAttribute("span style=\"background-color:#" + parse256(index) + "\"");
     }
 
     @Override
     protected void processSetBackgroundColorExt(int r, int g, int b) throws IOException {
-        if (ansi) {
-            processDefaultBackgroundColor();
-            writeAttribute("span style=\"background-color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
-        }
-    }
-
-    @Override
-    public void flush() throws IOException {
-        super.flush();
-        raw.flush();
-    }
-
-    @Override
-    public void close() throws IOException {
-        closeAttributes();
-        super.close();
-        raw.close();
+        processDefaultBackgroundColor();
+        writeAttribute("span style=\"background-color:#" + ((r >= 16)?"":"0") + Integer.toString(r, 16) + ((g >= 16)?"":"0") + Integer.toString(g, 16) + ((b >= 16)?"":"0") + Integer.toString(b, 16) + "\"");
     }
 }

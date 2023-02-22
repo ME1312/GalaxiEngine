@@ -2,9 +2,7 @@ package net.ME1312.Galaxi.Engine;
 
 import net.ME1312.Galaxi.Command.CommandProcessor;
 import net.ME1312.Galaxi.Command.CommandSender;
-import net.ME1312.Galaxi.Library.Container.Pair;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -62,7 +60,7 @@ public abstract class CommandParser extends CommandProcessor {
          *
          * @return Word List
          */
-        LinkedList<String> words();
+        List<String> words();
 
         /**
          * Get the current Word Cursor
@@ -79,20 +77,6 @@ public abstract class CommandParser extends CommandProcessor {
         int wordIndex();
 
         /**
-         * Get the current Word Translation
-         *
-         * @return Word Translation
-         */
-        Pair<String, String> translation();
-
-        /**
-         * Get the Word Translation List
-         *
-         * @return Word Translation List
-         */
-        LinkedList<Pair<String, String>> translations();
-
-        /**
          * Get the current Raw Word
          *
          * @return Raw Word
@@ -104,7 +88,7 @@ public abstract class CommandParser extends CommandProcessor {
          *
          * @return Raw Word List
          */
-        LinkedList<String> rawWords();
+        List<String> rawWords();
 
         /**
          * Get the current Raw Word Cursor

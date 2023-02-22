@@ -1,10 +1,7 @@
 package net.ME1312.Galaxi.Library;
 
 import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -18,8 +15,8 @@ public final class Util {
      * Checks a value to make sure it's not null
      *
      * @param value Value to check
-     * @throws NullPointerException if any are null
-     * @return Value
+     * @throws NullPointerException if it is null
+     * @return The value
      */
     public static <T> T nullpo(T value) {
         if (value == null) throw new NullPointerException("Illegal null value");
@@ -30,8 +27,8 @@ public final class Util {
      * Checks values to make sure they're not null
      *
      * @param values Values to check
-     * @throws NullPointerException if any are null
-     * @return Values
+     * @throws NullPointerException if anything is null
+     * @return The values array
      */
     @SafeVarargs
     public static <T> T[] nullpo(T... values) {
@@ -43,10 +40,27 @@ public final class Util {
     }
 
     /**
+     * Checks an array of values to make sure they're not null and returns a trusted copy
+     *
+     * @param values Array & values to check
+     * @throws NullPointerException if anything is null
+     * @return A trusted copy of the values array
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T[] nullpoCopy(T[] values) {
+        if (values == null) throw new NullPointerException("Illegal null array");
+        T[] copy = (T[]) Array.newInstance(values.getClass().getComponentType(), values.length);
+        for (int i = 0; i < values.length; ++i) {
+            if ((copy[i] = values[i]) == null) throw new NullPointerException("Illegal null value at position: [" + i + "]");
+        }
+        return copy;
+    }
+
+    /**
      * Checks a value to make sure it's not null
      *
      * @param value Value to check
-     * @return If any are null
+     * @return <i>true</i> if it is null
      */
     public static boolean isNull(Object value) {
         return value == null;
@@ -56,7 +70,7 @@ public final class Util {
      * Checks values to make sure they're not null
      *
      * @param values Values to check
-     * @return If any are null
+     * @return <i>true</i> if anything is null
      */
     public static boolean isNull(Object... values) {
         if (values == null) return true;
@@ -165,7 +179,6 @@ public final class Util {
 
     /**
      * Get a Field's value using Reflection<br>
-     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param field Field to grab
      * @param instance Object Instance (Null for static fields)
@@ -185,7 +198,6 @@ public final class Util {
 
     /**
      * Set a Field's value using Reflection<br>
-     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param field Field to write to
      * @param instance Object Instance (Null for static fields)
@@ -203,7 +215,6 @@ public final class Util {
 
     /**
      * Call a method using Reflection<br>
-     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param method Method to call
      * @param instance Object Instance (Null for static methods)
@@ -225,7 +236,6 @@ public final class Util {
 
     /**
      * Construct an object using Reflection<br>
-     * This method is likely to be removed the moment <a target="_blank" href="https://openjdk.java.net/projects/jigsaw/spec/issues/#module-artifacts">multi-module JPMS jarfiles</a> become available to us
      *
      * @param constructor Constructor to use
      * @param arguments Constructor Arguments
@@ -253,7 +263,7 @@ public final class Util {
      * @see Try Use <i>Try</i> for sneaky exception handling
      */
     public static RuntimeException sneakyThrow(Throwable e) {
-        return Try.<RuntimeException>sneakyThrow(e);
+        return Try.sneakyThrow(e);
     }
 
     /**

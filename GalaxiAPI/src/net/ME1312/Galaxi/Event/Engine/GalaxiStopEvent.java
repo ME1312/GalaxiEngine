@@ -1,6 +1,7 @@
 package net.ME1312.Galaxi.Event.Engine;
 
-import net.ME1312.Galaxi.Event.CancellableEvent;
+import net.ME1312.Galaxi.Event.Cancellable;
+import net.ME1312.Galaxi.Event.Event;
 import net.ME1312.Galaxi.Event.ReverseOrder;
 import net.ME1312.Galaxi.Galaxi;
 import net.ME1312.Galaxi.Library.Util;
@@ -9,7 +10,7 @@ import net.ME1312.Galaxi.Library.Util;
  * Galaxi Engine Stop Event Class
  */
 @ReverseOrder
-public class GalaxiStopEvent extends CancellableEvent {
+public class GalaxiStopEvent extends Event implements Cancellable {
     private final int code;
 
     /**

@@ -36,6 +36,7 @@ public final class GalaxiOption<T> extends Value<T> {
     // Terminal
     public static final GalaxiOption<Boolean> USE_ANSI = $("galaxi.terminal.ansi", Boolean::parseBoolean, true, USR_DEF);
     public static final GalaxiOption<Boolean> USE_JLINE = $("galaxi.terminal.jline", Boolean::parseBoolean, true, USR_DEF);
+    public static final GalaxiOption<Boolean> USE_TERMINAL_INTERRUPTS = $("galaxi.terminal.interruptable", Boolean::parseBoolean, true, USR_APP_DEF);
 
     // Everything Else
     public static final GalaxiOption<Boolean> ENABLE_RELOAD = $(false, APP_DEF);

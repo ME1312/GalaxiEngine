@@ -116,21 +116,22 @@ public class PluginInfo implements ExtraDataHandler {
      * @throws InvocationTargetException
      */
     public static PluginInfo load(Object main) throws InvocationTargetException {
-        Class<?> mainClass = main.getClass();
-        if (!pluginMap.containsKey(mainClass)) {
+        Class<?> clazz = main.getClass();
+        if (!pluginMap.containsKey(clazz)) {
             try {
-                if (mainClass.isAnnotationPresent(Plugin.class)) {
-                    String name = mainClass.getAnnotation(Plugin.class).name().replaceAll(ID_PATTERN, "$1");
-                    String display = (mainClass.getAnnotation(Plugin.class).display().length() > 0)?mainClass.getAnnotation(Plugin.class).display():mainClass.getAnnotation(Plugin.class).name();
-                    Version version = Version.fromString(mainClass.getAnnotation(Plugin.class).version());
-                    Version build = (mainClass.getAnnotation(Plugin.class).build().length() > 0)?Version.fromString(mainClass.getAnnotation(Plugin.class).build()):null;
-                    String state = (mainClass.getAnnotation(Plugin.class).build().length() > 0)?mainClass.getAnnotation(Plugin.class).state():null;
-                    List<String> authors = Arrays.asList(mainClass.getAnnotation(Plugin.class).authors());
-                    String description = (mainClass.getAnnotation(Plugin.class).description().length() > 0)?mainClass.getAnnotation(Plugin.class).description():null;
-                    URL website = (mainClass.getAnnotation(Plugin.class).website().length() > 0)?new URL(mainClass.getAnnotation(Plugin.class).website()):null;
-                    List<String> loadBefore = Arrays.asList(mainClass.getAnnotation(Plugin.class).loadBefore());
+                if (clazz.isAnnotationPresent(Plugin.class)) {
+                    Plugin annotation = clazz.getAnnotation(Plugin.class);
+                    String name = annotation.name().replaceAll(ID_PATTERN, "$1");
+                    String display = (annotation.display().length() > 0)?annotation.display():annotation.name();
+                    Version version = Version.fromString(annotation.version());
+                    Version build = (annotation.build().length() > 0)?Version.fromString(annotation.build()):null;
+                    String state = (annotation.build().length() > 0)?annotation.state():null;
+                    List<String> authors = Arrays.asList(annotation.authors());
+                    String description = (annotation.description().length() > 0)?annotation.description():null;
+                    URL website = (annotation.website().length() > 0)?new URL(annotation.website()):null;
+                    List<String> loadBefore = Arrays.asList(annotation.loadBefore());
                     List<Dependency> dependencies = new LinkedList<Dependency>();
-                    for (net.ME1312.Galaxi.Plugin.Dependency dependency : mainClass.getAnnotation(Plugin.class).dependencies()) {
+                    for (net.ME1312.Galaxi.Plugin.Dependency dependency : annotation.dependencies()) {
                         String dname = dependency.name().replaceAll(ID_PATTERN, "$1");
                         Version dminversion = (dependency.minVersion().length() > 0)?Version.fromString(dependency.minVersion()):null;
                         Version dmaxversion = (dependency.maxVersion().length() > 0)?Version.fromString(dependency.maxVersion()):null;
@@ -146,33 +147,34 @@ public class PluginInfo implements ExtraDataHandler {
                     plugin.setBuild(build);
                     plugin.setState(state);
 
-                    pluginMap.put(mainClass, plugin);
+                    pluginMap.put(clazz, plugin);
                     usedNames.add(name.toLowerCase());
-                } else if (mainClass.isAnnotationPresent(App.class)) {
-                    String name = mainClass.getAnnotation(App.class).name().replaceAll(ID_PATTERN, "$1");
-                    String display = (mainClass.getAnnotation(App.class).display().length() > 0)?mainClass.getAnnotation(App.class).display():mainClass.getAnnotation(App.class).name();
-                    Version version = Version.fromString(mainClass.getAnnotation(App.class).version());
-                    Version build = (mainClass.getAnnotation(App.class).build().length() > 0)?Version.fromString(mainClass.getAnnotation(App.class).build()):null;
-                    String state = (mainClass.getAnnotation(App.class).build().length() > 0)?mainClass.getAnnotation(App.class).state():null;
-                    List<String> authors = Arrays.asList(mainClass.getAnnotation(App.class).authors());
-                    String description = (mainClass.getAnnotation(App.class).description().length() > 0)?mainClass.getAnnotation(App.class).description():null;
-                    URL website = (mainClass.getAnnotation(App.class).website().length() > 0)?new URL(mainClass.getAnnotation(App.class).website()):null;
+                } else if (clazz.isAnnotationPresent(App.class)) {
+                    App annotation = clazz.getAnnotation(App.class);
+                    String name = annotation.name().replaceAll(ID_PATTERN, "$1");
+                    String display = (annotation.display().length() > 0)?annotation.display():annotation.name();
+                    Version version = Version.fromString(annotation.version());
+                    Version build = (annotation.build().length() > 0)?Version.fromString(annotation.build()):null;
+                    String state = (annotation.build().length() > 0)?annotation.state():null;
+                    List<String> authors = Arrays.asList(annotation.authors());
+                    String description = (annotation.description().length() > 0)?annotation.description():null;
+                    URL website = (annotation.website().length() > 0)?new URL(annotation.website()):null;
 
                     PluginInfo plugin = new PluginInfo(main, name, version, authors, description, website, Collections.emptyList(), Collections.emptyList());
                     plugin.setDisplayName(display);
                     plugin.setBuild(build);
                     plugin.setState(state);
 
-                    pluginMap.put(mainClass, plugin);
+                    pluginMap.put(clazz, plugin);
                     usedNames.add(name.toLowerCase());
                 } else {
-                    throw new IllegalStateException("Class not annotated by @App or @Plugin: " + mainClass.getTypeName());
+                    throw new IllegalStateException("Class not annotated by @App or @Plugin: " + clazz.getTypeName());
                 }
             } catch (Throwable e) {
                 throw new IllegalPluginException(e, "Couldn't load plugin descriptor for main class: " + main);
             }
         }
-        return get(mainClass);
+        return get(clazz);
     }
 
     /**

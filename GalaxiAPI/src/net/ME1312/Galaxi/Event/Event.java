@@ -9,6 +9,7 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
  */
 public abstract class Event {
     private final Container<PluginInfo> plugin = new Container<>();
+    volatile boolean cancel = false;
 
     /**
      * Get the GalaxiEngine API

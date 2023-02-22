@@ -31,7 +31,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
 
     @Override
     public String[] catalogLibrary(Class<?> clazz) throws IOException {
-        LinkedList<String> classes = new LinkedList<String>();
+        LinkedHashSet<String> classes = new LinkedHashSet<String>();
         try {
             URL source = clazz.getProtectionDomain().getCodeSource().getLocation();
             if (source != null && source.getProtocol().equals("file")) {
@@ -42,7 +42,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                         if (!(new File(file.getAbsolutePath() + File.separator + entry).isDirectory()) && entry.endsWith(".class")) {
                             String e = entry.substring(0, entry.length() - 6).replace(File.separatorChar, '.');
                             if (!knownClasses.containsKey(e)) knownClasses.put(e, clazz.getClassLoader());
-                            if (!classes.contains(e)) classes.add(e);
+                            classes.add(e);
                         }
                     }
                 }
@@ -55,7 +55,7 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                         if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
                             String e = entry.getName().substring(0, entry.getName().length() - 6).replace('/', '.');
                             if (!knownClasses.containsKey(e)) knownClasses.put(e, clazz.getClassLoader());
-                            if (!classes.contains(e)) classes.add(e);
+                            classes.add(e);
                         }
                     }
                 }
@@ -95,10 +95,11 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                             knownClasses.put(cname, loader);
                             try {
                                 Class<?> clazz = loader.loadClass(cname);
-                                if (clazz.isAnnotationPresent(Plugin.class)) {
+                                Plugin annotation = clazz.getAnnotation(Plugin.class);
+                                if (annotation != null) {
                                     ContainedPair<LinkedList<String>, LinkedHashMap<String, String>> jarmap = (classes.containsKey(loader))?classes.get(loader):new ContainedPair<LinkedList<String>, LinkedHashMap<String, String>>(new LinkedList<String>(), new LinkedHashMap<>());
-                                    for (Dependency dependency : clazz.getAnnotation(Plugin.class).dependencies()) jarmap.key().add(dependency.name());
-                                    jarmap.value().put(clazz.getAnnotation(Plugin.class).name(), cname);
+                                    for (Dependency dependency : annotation.dependencies()) jarmap.key().add(dependency.name());
+                                    jarmap.value().put(annotation.name(), cname);
                                     classes.put(loader, jarmap);
                                     isplugin = true;
                                 }
@@ -140,9 +141,6 @@ class CodeManager extends net.ME1312.Galaxi.Engine.CodeManager {
                             String main = classes.get(loader).value().get(name);
                             try {
                                 Class<?> clazz = loader.loadClass(main);
-                                if (!clazz.isAnnotationPresent(Plugin.class))
-                                    throw new ClassCastException("Cannot find plugin descriptor");
-
                                 Object obj = clazz.getConstructor().newInstance();
                                 try {
                                     PluginInfo plugin = PluginInfo.load(obj);

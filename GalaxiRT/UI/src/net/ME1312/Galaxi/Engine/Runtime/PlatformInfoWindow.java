@@ -1,5 +1,6 @@
 package net.ME1312.Galaxi.Engine.Runtime;
 
+import net.ME1312.Galaxi.Library.Container.Container;
 import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import javax.swing.*;
@@ -70,7 +71,7 @@ public class PlatformInfoWindow extends JDialog {
         });
 
         final StringSelection clipboard = new StringSelection(infoText.toString());
-        final net.ME1312.Galaxi.Library.Container.Container<Timer> timer = new net.ME1312.Galaxi.Library.Container.Container<>();
+        final Container<Timer> timer = new Container<>();
         copy.setDefaultCapable(false);
         copy.setFont(copy.getFont().deriveFont((float) (12 * scale)));
         copy.setText("\u00A0Copy\u00A0");

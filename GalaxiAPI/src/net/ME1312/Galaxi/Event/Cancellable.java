@@ -6,16 +6,20 @@ package net.ME1312.Galaxi.Event;
 public interface Cancellable {
 
     /**
-     * Gets if the Event has been Cancelled
+     * Determine if the Event has been Cancelled
      *
-     * @return Cancelled Status
+     * @return Cancel Status
      */
-    boolean isCancelled();
+    default boolean isCancelled() {
+        return ((Event) this).cancel;
+    }
 
     /**
      * Sets if the Event is Cancelled
      *
-     * @param value
+     * @param value Cancel Status
      */
-    void setCancelled(boolean value);
+    default void setCancelled(boolean value) {
+        ((Event) this).cancel = value;
+    }
 }
