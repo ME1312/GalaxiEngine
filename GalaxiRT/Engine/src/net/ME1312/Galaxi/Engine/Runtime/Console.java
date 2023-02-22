@@ -113,15 +113,13 @@ class Console extends CommandParser {
         if (color < 16) {
             return ANSI_COLOR_MAP[color];
         } else if (color < 232) {
-            float x = color - 16;
-            int r = (int) ((x / 36f) * 51);
-                  x =      (x % 36f)      ;
-            int g = (int) ((x /  6f) * 51);
-            int b = (int) ((x %  6f) * 51);
-            return new Color(r, g, b);
+            return new Color(
+                    ((color -= 16) / 36) * 51,
+                    ((color %= 36) /  6) * 51,
+                     (color %   6) * 51
+            );
         } else if (color < 256) {
-            int gray = (int) (10.2f * (color - 231));
-            return new Color(gray, gray, gray);
+            return new Color(color = (int) (10.2f * (color - 231)), color, color);
         } else {
             throw new IllegalArgumentException("Invalid 8-bit color: " + color);
         }
