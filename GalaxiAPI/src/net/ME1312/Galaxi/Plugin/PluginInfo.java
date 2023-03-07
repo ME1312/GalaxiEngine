@@ -285,7 +285,7 @@ public class PluginInfo implements ExtraDataHandler {
      * @param value Value (or null to reset)
      */
     public void setDisplayName(String value) {
-        if (value == null || value.length() == 0 || getName().equals(value)) {
+        if (value == null || value.length() == 0 || name.equals(value)) {
             this.display = null;
         } else {
             this.display = value;

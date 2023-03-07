@@ -42,7 +42,7 @@ class Commands {
                             item = "  " + item;
                             stack.add(item);
                         }
-                        sender.sendMessage("These are the platforms and versions that are running " + ((args.length == 0)?engine.getAppInfo().getName():engine.code.getPlugin(args[0]).getName()) +":");
+                        sender.sendMessage("These are the platforms and versions that are running " + ((args.length == 0)?engine.getAppInfo():engine.code.getPlugin(args[0])).getDisplayName() +":");
                         sender.sendMessage(stack.toArray(new String[0]));
 
                         if (args.length > 0) {

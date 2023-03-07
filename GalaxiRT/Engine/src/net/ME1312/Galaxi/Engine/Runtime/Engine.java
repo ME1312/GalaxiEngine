@@ -97,7 +97,7 @@ class Engine extends GalaxiEngine {
                         }
                     }
                     if (updcount != 0) {
-                        getAppInfo().getLogger().message.println(engine.getName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
+                        getAppInfo().getLogger().message.println(engine.getDisplayName() + " v" + updversion + " is available. You are " + updcount + " version" + ((updcount == 1)?"":"s") + " behind.");
                         return true;
                     }
                 } catch (Exception e) {}
