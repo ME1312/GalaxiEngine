@@ -276,7 +276,7 @@ public class PluginInfo implements ExtraDataHandler {
      * @return Display Name
      */
     public String getDisplayName() {
-        return (display == null)?getName():display;
+        return (display == null)? name : display;
     }
 
     /**
@@ -423,7 +423,7 @@ public class PluginInfo implements ExtraDataHandler {
         ));
 
         if (engine != app)
-            stack.add(app.getName() + " v" + app.getVersion().toExtendedString() + ((app.getBuild() != null)?" (" + app.getBuild() + ')':"") + ((app.getState() != null)?" [" + app.getState() + ']':"") + ((app == this)?"":","));
+            stack.add(app.getDisplayName() + " v" + app.getVersion().toExtendedString() + ((app.getBuild() != null)?" (" + app.getBuild() + ')':"") + ((app.getState() != null)?" [" + app.getState() + ']':"") + ((app == this)?"":","));
         if (app != this) {
             for (PluginInfo plugin : scanDependencies()) {
                 stack.add(plugin.getDisplayName() + " v" + plugin.getVersion().toExtendedString() + ((plugin.getBuild() != null)?" (" + plugin.getBuild() + ')':"") + ((plugin.getState() != null)?" [" + plugin.getState() + ']':"") + ',');
