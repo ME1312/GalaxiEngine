@@ -6,7 +6,6 @@ package net.ME1312.Galaxi.Library;
 public class Merger {
     private final Runnable action;
     private volatile int tasks = 0;
-    private volatile boolean active = true;
 
     /**
      * Create a Thread Consolidator
@@ -55,11 +54,6 @@ public class Merger {
      * Call this at the end of each thread
      */
     public synchronized void release() {
-        if (tasks > 0) {
-            --tasks;
-        } else if (active) {
-            active = false;
-            action.run();
-        }
+        if (--tasks == 0) action.run();
     }
 }
