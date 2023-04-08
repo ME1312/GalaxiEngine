@@ -108,8 +108,10 @@ public class YAMLConfig {
         DumperOptions options = new DumperOptions();
         Try.all.run(() -> options.setAllowUnicode(false));
         Try.all.run(() -> options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK));
-        Try.all.run(() -> options.setSplitLines(false));
         Try.all.run(() -> options.setIndent(2));
+        Try.all.run(() -> options.setSplitLines(false));
+        Try.all.run(() -> options.setLineBreak(DumperOptions.LineBreak.UNIX));
+        Try.all.run(() -> options.setNonPrintableStyle(DumperOptions.NonPrintableStyle.ESCAPE));
 
         return options;
     }
