@@ -5,10 +5,7 @@ import net.ME1312.Galaxi.Plugin.PluginInfo;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.font.TextAttribute;
 import java.util.Map;
 
@@ -116,6 +113,14 @@ public class AboutWindow extends JDialog {
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 dispose();
+            }
+        });
+
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "esc");
+        getRootPane().getActionMap().put("esc", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AboutWindow.this.dispose();
             }
         });
     }

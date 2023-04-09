@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Locale;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,8 +12,8 @@ import java.util.regex.Pattern;
  */
 public enum Platform {
     WINDOWS("Windows", new File((System.getenv("APPDATALOCAL") != null)?System.getenv("APPDATALOCAL"):System.getenv("APPDATA"), "GalaxiEngine")),
-    MAC_OS("Mac OS", new File(System.getProperty("user.home"), "Library/Application Support/GalaxiEngine")),
-    UNIX("Unix-based", new File(System.getProperty("user.home"), ".GalaxiEngine")),
+    MAC_OS("macOS", new File(System.getProperty("user.home"), "Library/Application Support/GalaxiEngine")),
+    UNIX("Unix-like", new File(System.getProperty("user.home"), ".GalaxiEngine")),
     ;
     private static final Platform OS;
     private static final String OS_NAME;
@@ -148,7 +147,7 @@ public enum Platform {
             OS_VERSION = osversion;
         }
 
-        final String[] osarch;
+        String osarch;
         if (OS == WINDOWS) {
             String osbuild = null;
             try {
@@ -157,49 +156,50 @@ public enum Platform {
             } catch (IOException e) {}
 
             OS_BUILD = osbuild;
-            osarch = new String[] {
-                    System.getenv("PROCESSOR_ARCHITEW6432"),
-                    System.getenv("PROCESSOR_ARCHITECTURE")
-            };
+            if ((osarch = System.getenv("PROCESSOR_ARCHITEW6432")) == null) {
+                osarch = System.getenv("PROCESSOR_ARCHITECTURE");
+            }
         } else {
             OS_BUILD = null;
-            osarch = new String[] {
-                    System.getProperty("os.arch")
-            };
+            osarch = System.getProperty("os.arch");
         }
+
 
         boolean x86 = false;
-        if (isArch(osarch, arch -> arch.equals("ia64") || arch.equals("em64t") || arch.equals("amd64") || arch.equals("x86_64"))) {
-            OS_ARCH = "x64";
-            x86 = true;
-        } else if (isArch(osarch, arch -> Pattern.compile("^(?:i\\d|x)86$").matcher(arch).find())) {
-            OS_ARCH = "x86";
-            x86 = true;
-        } else {
-            int i = -1;
-            String arch = "unknown";
-            for (int e = 0; e < osarch.length; ++e) if (osarch[e] != null) {
-                arch = osarch[e].toLowerCase(Locale.ENGLISH);
-                i = e;
-                break;
-            }
-
-            if (i == -1 || arch.equals("arm") || arch.equals("arm64")) {
-                OS_ARCH = arch;
+        if (osarch != null) {
+            osarch = osarch.replaceAll("[^a-zA-Z0-9]", "").toLowerCase(Locale.ROOT);
+            if (osarch.matches("^((amd|x86|x)64|em64t|ia32e)$")) {
+                OS_ARCH = "x64"; x86 = true;
+            } else if (osarch.matches("^((i[3-6]|x)86|(ia|x86|x)32)$")) {
+                OS_ARCH = "x86"; x86 = true;
+            } else if (osarch.equals("aarch64") || osarch.equals("arm64")) {
+                OS_ARCH = "arm64";
+            } else if (osarch.equals("aarch32") || osarch.startsWith("arm")) {
+                OS_ARCH = "arm";
             } else {
-                OS_ARCH = osarch[i];
+                OS_ARCH = osarch;
             }
+        } else {
+            OS_ARCH = "unknown";
         }
 
-        String jarch = System.getProperty("sun.arch.data.model", "unknown");
-        if (!Try.all.run(() -> Long.parseLong(jarch))) {
-            JAVA_ARCH = jarch;
-        } else if (x86 && jarch.equals("32")) {
-            JAVA_ARCH = "x86";
-        } else if (x86 && jarch.equals("64")) {
-            JAVA_ARCH = "x64";
-        } else {
-            JAVA_ARCH = jarch + "-bit";
+        final String jarch = System.getProperty("sun.arch.data.model", "unknown");
+        for (;;) {
+            if (x86) {
+                if (jarch.equals("64")) {
+                    JAVA_ARCH = "x64";
+                    break;
+                } else if (jarch.equals("32")) {
+                    JAVA_ARCH = "x86";
+                    break;
+                }
+            }
+            if (Try.all.run(() -> Long.parseLong(jarch))) {
+                JAVA_ARCH = jarch + "-bit";
+            } else {
+                JAVA_ARCH = jarch;
+            }
+            break;
         }
 
         String jversion = System.getProperty("java.specification.version");
@@ -209,12 +209,5 @@ public enum Platform {
         } else {
             JAVA_LANG = Integer.MAX_VALUE;
         }
-    }
-
-    private static boolean isArch(String[] array, Function<String, Boolean> operation) {
-        for (String object : array) if (object != null && operation.apply(object.toLowerCase(Locale.ENGLISH))) {
-            return true;
-        }
-        return false;
     }
 }
