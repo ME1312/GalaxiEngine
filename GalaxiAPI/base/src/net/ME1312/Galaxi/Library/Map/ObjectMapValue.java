@@ -232,8 +232,8 @@ public class ObjectMapValue<K> {
     }
     private static UUID parseUUID(Object obj) {
         if (obj instanceof Collection) {
-            Iterator<Long> i = ((Collection<Long>) obj).iterator();
-            return new UUID(i.next(), i.next());
+            Iterator<Number> i = ((Collection<Number>) obj).iterator();
+            return new UUID(i.next().longValue(), i.next().longValue());
         } else if (obj != null) {
             return UUID.fromString(obj.toString());
         } else {
@@ -341,7 +341,16 @@ public class ObjectMapValue<K> {
      * @return UUID Status
      */
     public boolean isUUID() {
-        return ((obj instanceof List && Try.all.run(() -> asLongList().get(1).longValue())) || (obj instanceof String && Try.all.run(() -> UUID.fromString(asString()))));
+        if (obj instanceof Collection) {
+            Iterator<Number> i = ((Collection<Number>) obj).iterator();
+            if (i.hasNext()) {
+                i.next();
+                return i.hasNext();
+            }
+        } else if (obj instanceof String) {
+            return true;
+        }
+        return false;
     }
 
     @Override
